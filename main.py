@@ -3,6 +3,8 @@ from typing import Dict, List
 from terminusdb_client import Client
 from random import random
 
+from fastapi import FastAPI
+
 # might re-write the schema as classes like they do in their example: https://github.com/terminusdb/terminusdb-client-python?tab=readme-ov-file
 class BaseDatabase:
     def __init__(self, addr: str, account: str, team: str, key: str, db_name: str, schema: Dict[str, str]):
@@ -90,15 +92,22 @@ class NotesDatabase(BaseDatabase):
     ''' implement version control later '''
 
 db = NotesDatabase()
-print('get_all', list(db.get_all()))
-print()
-print('add', db.add(str(random()), str(random())))
-print()
-print('get_all', list(db.get_all()))
-print()
-first = list(db.get_all())[0]
-print('get_by_id', db.get_by_id(first['@id']))
-print()
-print('get_by_id', db.get_by_id('dis aint it'))
-print()
-print('remove_by_id', db.remove_by_id(first['@id']))
+app = FastAPI()
+
+@app.get('/')
+def read_root():
+    return db.get_all()
+
+# note that the IDs given from TerminusDB have a "Note/" prefix, which must be removed for the `note_id` value
+@app.get('/notes/{note_id}')
+def read_note_by_id(note_id):
+    return db.get_by_id(f'Note/{note_id}')
+
+@app.post('/add-note')
+def add_note(author: str, text: str):
+    return db.add(author, text)
+
+# just like with getting a note with by ID, we add in the prefix
+@app.delete('/delete-note/{note_id}')
+def delete_note_by_id(note_id):
+    return db.remove_by_id(f'Note/{note_id}')
