@@ -37,6 +37,18 @@ class BaseDatabase:
     @property
     def schema(self) -> Dict[str, str]: return self._schema
 
+    def get_all(self) -> List:
+        raise NotImplementedError
+
+    def get_by_id(self, _id: str) -> Dict:
+        raise NotImplementedError
+    
+    def add(self, author: str, text: str) -> None:
+        raise NotImplementedError
+    
+    def remove_by_id(self, _id: str) -> Dict:
+        raise NotImplementedError
+
 '''
 A lot of the documentation did not make sense to me, so I just glanced at the actual source code
 connect: https://github.com/terminusdb/terminusdb-client-python/blob/30fe3957a2ccd4fe4c15b3d36fc5419bcf166a85/terminusdb_client/client/Client.py#L308
