@@ -1,9 +1,18 @@
 from typing import Dict, List
 
-from terminusdb_client import Client
 from random import random
 
+from terminusdb_client import Client
 from fastapi import FastAPI
+from pydantic import BaseModel
+
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+I_AM_A_TEAPOT = 418 # no actually look it up it's legit
+
+class Note(BaseModel):
+    ID: str
+    text: str
+    author: str
 
 # might re-write the schema as classes like they do in their example: https://github.com/terminusdb/terminusdb-client-python?tab=readme-ov-file
 class BaseDatabase:
@@ -43,10 +52,13 @@ class BaseDatabase:
     def get_by_id(self, _id: str) -> Dict:
         raise NotImplementedError
     
-    def add(self, author: str, text: str) -> None:
+    def add(self, author: str, text: str) -> Dict:
         raise NotImplementedError
     
     def remove_by_id(self, _id: str) -> Dict:
+        raise NotImplementedError
+    
+    def update(self, obj) -> Dict:
         raise NotImplementedError
 
 '''
@@ -82,15 +94,19 @@ class NotesDatabase(BaseDatabase):
     def client(self) -> Client: return self._client
 
     def get_all(self) -> List:
-        return list(self._client.get_all_documents())
+        # the try/catch seems a bit overkill, but we'll just add it anyway
+        try:
+            return list(self._client.get_all_documents())
+        except Exception as e:
+            return {'status:': 500, 'message': e.__dict__}
     
     def get_by_id(self, _id: str) -> Dict:
         try:
             return self._client.get_document(_id)
         except Exception as e:
-            return e.__dict__
+            return {'status:': 500, 'message': e.__dict__}
     
-    def add(self, author: str, text: str) -> None:
+    def add(self, author: str, text: str) -> Dict:
         result = self._client.insert_document({'text': text, 'author': author})
         return {'status': 200, 'result': result}
     
@@ -99,7 +115,30 @@ class NotesDatabase(BaseDatabase):
             self._client.delete_document(_id)
             return {'status': 200}
         except Exception as e:
-            return e.__dict__
+            return {'status:': 500, 'message': e.__dict__}
+        
+    def update(self, obj) -> Dict:
+        to_ignore = ['@type', '@id']
+        new_obj = {}
+        for key in self.schema.keys():
+            if key in to_ignore:
+                continue
+            elif key not in obj:
+                print(obj)
+                return {'status': I_AM_A_TEAPOT, 'message': f'Required key \'{key}\' not found in data.'}
+            new_obj[key] = obj[key]
+        if 'ID' not in obj:
+            return {'status': I_AM_A_TEAPOT, 'message': f'\'ID\' key is required.'}
+        
+        # Add fields we ignored earlier
+        new_obj['@id'] = f'Note/{obj['ID']}'
+        new_obj['@type'] = 'Note'
+        try:
+            self._client.update_document(new_obj)
+            return {'status': 200}
+        except Exception as e:
+            return {'status:': 500, 'message': e.__dict__}
+            
     
     ''' implement version control later '''
 
@@ -112,7 +151,7 @@ def read_root():
 
 # note that the IDs given from TerminusDB have a "Note/" prefix, which must be removed for the `note_id` value
 @app.get('/notes/{note_id}')
-def read_note_by_id(note_id):
+def read_note_by_id(note_id: str):
     return db.get_by_id(f'Note/{note_id}')
 
 @app.post('/add-note')
@@ -121,5 +160,9 @@ def add_note(author: str, text: str):
 
 # just like with getting a note with by ID, we add in the prefix
 @app.delete('/delete-note/{note_id}')
-def delete_note_by_id(note_id):
+def delete_note_by_id(note_id: str):
     return db.remove_by_id(f'Note/{note_id}')
+
+@app.put('/update-note/')
+def update_note(note_obj: Note):
+    return db.update(note_obj.dict())
