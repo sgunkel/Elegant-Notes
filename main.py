@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from random import random
 
@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 I_AM_A_TEAPOT = 418 # no actually look it up it's legit
+UNPROCESSED_ENTITY = 422
 
 class Note(BaseModel):
     ID: str
@@ -41,10 +42,10 @@ class BaseDatabase:
     def db_name(self) -> str: return self._db_name
 
     @property
-    def branch(self) -> str: return self._branch
+    def schema(self) -> Dict[str, str]: return self._schema
 
     @property
-    def schema(self) -> Dict[str, str]: return self._schema
+    def current_branch(self) -> str: raise NotImplementedError
 
     def get_all(self) -> List:
         raise NotImplementedError
@@ -59,6 +60,24 @@ class BaseDatabase:
         raise NotImplementedError
     
     def update(self, obj) -> Dict:
+        raise NotImplementedError
+    
+    def get_branches(self) -> List:
+        raise NotImplementedError
+    
+    def create_branch(self, name: str) -> Dict:
+        raise NotImplementedError
+    
+    def delete_branch(self, name: str) -> Dict:
+        raise NotImplementedError
+    
+    def change_branch(self, name: str) -> Dict:
+        raise NotImplementedError
+    
+    def apply(self, branch_name_to_apply: str) -> Dict:
+        raise NotImplementedError
+    
+    def diff(self, branch_to_diff_on) -> Dict:
         raise NotImplementedError
 
 '''
@@ -93,7 +112,9 @@ class NotesDatabase(BaseDatabase):
     @property
     def client(self) -> Client: return self._client
 
-    def get_all(self) -> List:
+    ''' CRUD operations '''
+
+    def get_all(self) -> Union[List, Dict]:
         # the try/catch seems a bit overkill, but we'll just add it anyway
         try:
             return list(self._client.get_all_documents())
@@ -137,16 +158,83 @@ class NotesDatabase(BaseDatabase):
             self._client.update_document(new_obj)
             return {'status': 200}
         except Exception as e:
-            return {'status:': 500, 'message': e.__dict__}
+            return {'status': 500, 'message': e.__dict__}
             
     
-    ''' implement version control later '''
+    ''' Version Control operations '''
+
+    @property
+    def current_branch(self) -> str:
+        return self._client.branch
+
+    def get_branches(self) -> Union[List, Dict]:
+        try:
+            return self._client.get_all_branches()
+        except Exception as e:
+            return {'status': I_AM_A_TEAPOT, 'message': e.__dict__}
+    
+    def _get_branch_names(self) -> List[str]:
+        try:
+            return [obj['name'] for obj in self._client.get_all_branches()]
+        except:
+            return []
+    
+    def create_branch(self, name: str) -> Dict:
+        try:
+            if name in self._get_branch_names():
+                return {'status': UNPROCESSED_ENTITY, 'message': f'Branch \'{name}\' already exists.'}
+
+            self._client.create_branch(name)
+            self._client.branch = name
+            return {'status': 200, 'message': f'Now on branch {name}', 'branchName': name}
+        except Exception as e:
+            return {'status': 500, 'message': e.__dict__}
+    
+    def delete_branch(self, name: str) -> Dict:
+        try:
+            if name in 'main':
+                return {'status': I_AM_A_TEAPOT, 'message': 'Cannot delete main branch.'}
+            elif name not in self._get_branch_names():
+                return {'status': I_AM_A_TEAPOT, 'message': f'Branch \'{name}\' does not exist.'}
+            
+            self._client.delete_branch(name)
+            return {'status': 200, 'message': f'Branch {name} deleted.'}
+        except Exception as e:
+            return {'status': 500, 'message': e.__dict__}
+    
+    def change_branch(self, name: str) -> Dict:
+        try:
+            if name not in self._get_branch_names():
+                return {'status': 404, 'message': f'Branch \'{name}\' does not exist.'}
+
+            self._client.branch = name
+            return {'status': 200, 'message': f'Branch changed to {name}.'}
+        except Exception as e:
+            print(e.__str__)
+            return {'status': 500, 'message': e}
+    
+    def apply(self, branch_name_to_apply: str) -> Dict:
+        try:
+            if branch_name_to_apply not in self._get_branch_names():
+                return {'status': 404, 'message': f'Branch \'{branch_name_to_apply}\' does not exist.'}
+            
+            current_branch = self._client.branch
+            return self._client.apply(current_branch, branch_name_to_apply, branch=current_branch)
+        except Exception as e:
+            return {'status': 500, 'message': e.__dict__}
+    
+    def diff(self, branch_to_diff_on) -> Dict:
+        try:
+            diff = self._client.diff_version(branch_to_diff_on, self.current_branch)
+            return {'status': 200, 'diff': diff}
+        except Exception as e:
+            return {'status': 500, 'message': e.__dict__}
 
 db = NotesDatabase()
 app = FastAPI()
 
-@app.get('/')
-def read_root():
+@app.get('/all-notes')
+def get_all_notes():
     return db.get_all()
 
 # note that the IDs given from TerminusDB have a "Note/" prefix, which must be removed for the `note_id` value
@@ -166,3 +254,31 @@ def delete_note_by_id(note_id: str):
 @app.put('/update-note/')
 def update_note(note_obj: Note):
     return db.update(note_obj.dict())
+
+@app.get('/branches')
+def get_branches():
+    return db.get_branches()
+
+@app.get('/current-branch')
+def get_current_branch_name():
+    return db.current_branch
+
+@app.put('/create-branch')
+def create_branch(name: str):
+    return db.create_branch(name)
+
+@app.delete('/delete-branch')
+def delete_branch(branch_name: str):
+    return db.delete_branch(branch_name)
+
+@app.put('/change-branch')
+def change_branch(name: str):
+    return db.change_branch(name)
+
+@app.put('/apply-branch')
+def apply_branch(branch_name: str):
+    return db.apply(branch_name)
+
+@app.get('/diff')
+def diff_branch(branch_name_to_diff_on: str):
+    return db.diff(branch_name_to_diff_on)
