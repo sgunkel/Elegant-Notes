@@ -6,6 +6,13 @@ const NOTE_BY_ID_ROUTE = `${SERVER_URL}/notes/`
 const ADD_NOTE_ROUTE = `${SERVER_URL}/add-note?`
 const DELETE_NOTE_ROUTE = `${SERVER_URL}/delete-note/`
 const UPDATE_NOTE_ROUTE = `${SERVER_URL}/update-note/`
+const GET_ALL_BRANCHES_ROUTE = `${SERVER_URL}/branches`
+const GET_CURRENT_BRANCH_ROUTE = `${SERVER_URL}/current-branch`
+const CREATE_BRANCH_ROUTE = `${SERVER_URL}/create-branch/`
+const CHANGE_BRANCH_ROUTE = `${SERVER_URL}/change-branch/`
+const DELETE_BRANCH_ROUTE = `${SERVER_URL}/delete-branch/`
+const GET_DIFF_ON_BRANCH_ROUTE = `${SERVER_URL}/diff/`
+const APPLY_CHANGES_TO_BRANCH_ROUTE = `${SERVER_URL}/apply-branch/`
 
 export default {
   data() {
@@ -23,7 +30,14 @@ export default {
           author: '',
           text: '',
         },
-      }
+      },
+      branchMeta: {
+        newBranchName: '',
+        branchToChangeTo: '',
+        branchToDelete: '',
+        branchToGetDiffOn: '',
+        branchToApplyChangesOn: '',
+      },
     }
   },
   methods: {
@@ -58,6 +72,9 @@ export default {
       this.fetchResponse(route, 'DELETE')
     },
     updateNote() {
+      // with the way we use a Pydantic BaseModel in the route in Python, we send
+      //   out data in the body with header information on the payload
+      // this is what we'll probably do for all communication
       const objectToUpdate = {
         ID: this.noteMeta.noteToUpdate.id,
         text: this.noteMeta.noteToUpdate.text,
@@ -68,6 +85,32 @@ export default {
       }
       this.fetchResponse(UPDATE_NOTE_ROUTE, 'PUT', header_obj, objectToUpdate)
     },
+    getAllBranches() {
+      this.fetchResponse(GET_ALL_BRANCHES_ROUTE)
+    },
+    getCurrentBranch() {
+      this.fetchResponse(GET_CURRENT_BRANCH_ROUTE)
+    },
+    createBranch() {
+      const route = `${CREATE_BRANCH_ROUTE}${this.branchMeta.newBranchName}`
+      this.fetchResponse(route, 'PUT')
+    },
+    changeBranch() {
+      const route = `${CHANGE_BRANCH_ROUTE}${this.branchMeta.branchToChangeTo}`
+      this.fetchResponse(route, 'PUT')
+    },
+    deleteBranch() {
+      const route = `${DELETE_BRANCH_ROUTE}${this.branchMeta.branchToDelete}`
+      this.fetchResponse(route, 'DELETE')
+    },
+    getDiffOnBranch() {
+      const route = `${GET_DIFF_ON_BRANCH_ROUTE}${this.branchMeta.branchToGetDiffOn}`
+      this.fetchResponse(route)
+    },
+    applyChangesToBranch() {
+      const route = `${APPLY_CHANGES_TO_BRANCH_ROUTE}${this.branchMeta.branchToApplyChangesOn}`
+      this.fetchResponse(route, 'PUT')
+    },
   }
 }
 </script>
@@ -75,6 +118,7 @@ export default {
 <template>
   <div class="app-background">
     <div class="app-controls">
+      <h3>Note controls</h3>
       <div class="app-controls-row">
         <div class="app-control-btn" @click="getAllNotes">Get all notes</div>
       </div>
@@ -96,6 +140,34 @@ export default {
         <input v-model="noteMeta.noteToUpdate.id" placeholder="Note ID">
         <input v-model="noteMeta.noteToUpdate.author" placeholder="Author name">
         <input v-model="noteMeta.noteToUpdate.text" placeholder="Note text">
+      </div>
+
+      <h3>Version control</h3>
+      <div class="app-controls-row">
+        <div class="app-control-btn" @click="getAllBranches">Get all branches</div>
+      </div>
+      <div class="app-controls-row">
+        <div class="app-control-btn" @click="getCurrentBranch">Get current branch</div>
+      </div>
+      <div class="app-controls-row">
+        <div class="app-control-btn" @click="createBranch">Create branch</div>
+        <input v-model="branchMeta.newBranchName" placeholder="Branch name">
+      </div>
+      <div class="app-controls-row">
+        <div class="app-control-btn" @click="changeBranch">Change branch</div>
+        <input v-model="branchMeta.branchToChangeTo" placeholder="Branch name">
+      </div>
+      <div class="app-controls-row">
+        <div class="app-control-btn" @click="deleteBranch">Delete branch</div>
+        <input v-model="branchMeta.branchToDelete" placeholder="Branch name">
+      </div>
+      <div class="app-controls-row">
+        <div class="app-control-btn" @click="getDiffOnBranch">Get diff on branch</div>
+        <input v-model="branchMeta.branchToGetDiffOn" placeholder="Branch name">
+      </div>
+      <div class="app-controls-row">
+        <div class="app-control-btn" @click="applyChangesToBranch">Apply changes to branch</div>
+        <input v-model="branchMeta.branchToApplyChangesOn" placeholder="Branch name">
       </div>
     </div> <!-- app-controls -->
     <div class="response">
