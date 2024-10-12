@@ -4,6 +4,7 @@ from random import random
 
 from terminusdb_client import Client
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
@@ -282,3 +283,7 @@ def apply_branch(branch_name: str):
 @app.get('/diff')
 def diff_branch(branch_name_to_diff_on: str):
     return db.diff(branch_name_to_diff_on)
+
+
+# this needs to be the last item after all routes
+app.mount('/', StaticFiles(directory='elegant-notes-ui/dist', html=True))

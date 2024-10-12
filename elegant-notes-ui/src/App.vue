@@ -1,47 +1,79 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+<script>
+
+const SERVER_URL = 'http://127.0.0.1:8000'
+const ALL_NOTES_URL = `${SERVER_URL}/all-notes`
+
+export default {
+  data() {
+    return {
+      response: {},
+    }
+  },
+  methods: {
+    fetchResponse(url) {
+      // https://www.koderhq.com/tutorial/vue/http-fetch/
+      fetch(url)
+      .then(fetched => fetched.json())
+      .then(data => this.response = JSON.stringify(data, null))
+      .catch(reason => this.response = reason)
+    },
+    getAllNotes() {
+      this.fetchResponse(ALL_NOTES_URL)
+    }
+  }
+}
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+  <div class="app-background">
+    <div class="app-controls">
+      <div class="app-controls-row">
+        <div class="app-control-btn" @click="getAllNotes">Get all notes</div>
+      </div>
     </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+    <div class="response">
+      {{ response }}
+    </div>
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
+
+.app-background {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+.app-controls {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
 }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
+.app-controls-row {
+  display: flex;
+  flex-direction: row;
+}
 
-  .logo {
-    margin: 0 2rem 0 0;
-  }
+.app-control-btn {
+  background-color: rebeccapurple;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+}
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+.response {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
 }
 </style>

@@ -1,4 +1,4 @@
-@import './base.css';
+/* @import './base.css';
 
 #app {
   max-width: 1280px;
@@ -32,4 +32,23 @@ a,
     grid-template-columns: 1fr 1fr;
     padding: 0 2rem;
   }
+} */
+
+body {
+  font-size: 1.5rem;
+  touch-action: manipulation; /* Disables double tap to zoom on mobile */
+}
+
+html, body {
+  background-color: var(--background-color);
+  margin: 0;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+    height: inherit;
+    width: inherit;
 }
