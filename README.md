@@ -1,4 +1,8 @@
 ## Elegant Notes
+This system is still in development and in its prototyping stage. A basic frontend is in the works to show all functionalities and responses
+![Engineering screen with basic controls and text area to show responses from the backend](./basic-frontend.drawio.png)
+
+## Resources
 Experimental throwaway branch that may or may not live for a while as a reference if we choose to use this framework.
 - [Client installation](https://terminusdb.com/docs/install-the-python-client/)
 - [Getting started with TerminusDB with videos](https://ai-infrastructure.org/getting-started-with-terminusdb-using-the-python-client/)

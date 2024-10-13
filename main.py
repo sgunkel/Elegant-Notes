@@ -4,6 +4,7 @@ from random import random
 
 from terminusdb_client import Client
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
@@ -263,22 +264,26 @@ def get_branches():
 def get_current_branch_name():
     return db.current_branch
 
-@app.put('/create-branch')
+@app.put('/create-branch/{name}')
 def create_branch(name: str):
     return db.create_branch(name)
 
-@app.delete('/delete-branch')
+@app.delete('/delete-branch/{branch_name}')
 def delete_branch(branch_name: str):
     return db.delete_branch(branch_name)
 
-@app.put('/change-branch')
+@app.put('/change-branch/{name}')
 def change_branch(name: str):
     return db.change_branch(name)
 
-@app.put('/apply-branch')
+@app.put('/apply-branch/{branch_name}')
 def apply_branch(branch_name: str):
     return db.apply(branch_name)
 
-@app.get('/diff')
+@app.get('/diff/{branch_name_to_diff_on}')
 def diff_branch(branch_name_to_diff_on: str):
     return db.diff(branch_name_to_diff_on)
+
+
+# this needs to be the last item after all routes
+app.mount('/', StaticFiles(directory='elegant-notes-ui/dist', html=True))
