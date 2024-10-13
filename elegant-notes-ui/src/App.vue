@@ -49,7 +49,7 @@ export default {
         body: (body_obj) ? JSON.stringify(body_obj) : undefined
       })
       .then(fetched => fetched.json())
-      .then(data => this.response = JSON.stringify(data))
+      .then(data => this.response = JSON.stringify(data, null, 2))
       .catch(reason => this.response = reason)
     },
     getAllNotes() {
@@ -170,9 +170,9 @@ export default {
         <input v-model="branchMeta.branchToApplyChangesOn" placeholder="Branch name">
       </div>
     </div> <!-- app-controls -->
-    <div class="response">
+    <code class="response">
       {{ response }}
-    </div>
+    </code>
   </div>
 </template>
 
@@ -190,7 +190,7 @@ export default {
 .app-controls {
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: 0 0.25em;
   margin: 0;
   height: 100%;
   width: 100%;
@@ -210,10 +210,12 @@ export default {
 }
 
 .response {
-  padding: 0;
+  background-color: #b0afaf;
+  padding: 0 0.25em;
   margin: 0;
   height: 100%;
   width: 100%;
   overflow: auto;
+  white-space: pre-wrap;
 }
 </style>
