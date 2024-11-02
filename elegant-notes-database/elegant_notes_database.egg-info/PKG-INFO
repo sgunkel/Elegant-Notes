@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Name: elegant_notes_database
+Version: 0.0.1
+Summary: Database config and schema
+Author: Seth Gunkel
+Author-email: noreply@example.com
+Keywords: python,first package
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: Platform Independent
+
+Small package with database configurations and schema

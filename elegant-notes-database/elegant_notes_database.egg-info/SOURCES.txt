@@ -1,0 +1,7 @@
+setup.py
+elegant_notes_database/__init__.py
+elegant_notes_database/schema.py
+elegant_notes_database.egg-info/PKG-INFO
+elegant_notes_database.egg-info/SOURCES.txt
+elegant_notes_database.egg-info/dependency_links.txt
+elegant_notes_database.egg-info/top_level.txt
