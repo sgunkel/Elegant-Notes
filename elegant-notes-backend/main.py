@@ -17,9 +17,25 @@ class PageModel(BaseModel):
     name: str
     children: List[BlockModel]
 
+def get_children(raw_obj):
+    children = []
+    for child_id in raw_obj['children']:
+        if child_id.startswith('Page'):
+            child = db.page_api.retrieve_by_id(child_id)
+        else:
+            child = db.block_api.retrieve_by_id(child_id)
+        
+        child['children'] = get_children(child)
+        children.append(child)
+    return children
+
 @app.get('/pages')
 def get_all_pages():
-    return db.page_api.retrieve_all()
+    bulk = []
+    for raw_page in db.page_api.retrieve_all():
+        raw_page['children'] = get_children(raw_page)
+        bulk.append(raw_page)
+    return bulk
 
 @app.post('/pages/add')
 def add_page(new_page: PageModel):
@@ -27,7 +43,11 @@ def add_page(new_page: PageModel):
 
 @app.get('/blocks')
 def get_all_blocks():
-    return db.block_api.retrieve_all()
+    bulk = []
+    for raw_block in db.block_api.retrieve_all():
+        raw_block['children'] = get_children(raw_block)
+        bulk.append(raw_block)
+    return bulk
 
 @app.post('/blocks/add')
 def add_block(new_block: BlockModel):
