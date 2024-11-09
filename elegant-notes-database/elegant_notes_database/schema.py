@@ -31,6 +31,7 @@ class Block(DocumentTemplate):
     """
 
     _schema = _custom_schema
+    parent_id: str
     children: List["Block"]
     text: str
 

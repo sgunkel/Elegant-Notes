@@ -6,3 +6,6 @@ class BlockModel(BaseModel):
     text: str
     parent_id: str
     children: List["BlockModel"]
+
+class BlockModelWithID(BlockModel):
+    ID: str

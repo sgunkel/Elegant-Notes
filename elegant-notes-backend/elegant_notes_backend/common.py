@@ -18,3 +18,28 @@ def get_children(raw_obj: Dict) -> List[Dict]:
         child['children'] = get_children(child)
         children.append(child)
     return children
+
+def nuke_all_blocks_from_page(children):
+    '''## Remove children from page
+    *Removes only the Block children from a page and not the actual page itself*
+    - children The Page's direct children
+    '''
+    db = get_db()
+    block_count = 0
+    def remove_block_from_db(child):
+        nonlocal db, block_count
+
+        # Remove child references or the database will complain
+        grandchildren = child['children']
+        child['children'] = []
+        db.block_api.update(child)
+        block_count += len(grandchildren) + 1 # +1 for the current block
+
+        # Remove the lasted generation (most nested blocks)
+        for grandchild in grandchildren:
+            remove_block_from_db(grandchild)
+        db.block_api.delete(child['@id'])
+    page_raw = {'children': children} # only thing needed by `get_children()`
+    for child in get_children(page_raw):
+        remove_block_from_db(child)
+    return block_count
