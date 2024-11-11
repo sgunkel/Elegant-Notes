@@ -33,3 +33,5 @@ coverage
 
 *.tsbuildinfo
 *.egg-info
+
+secret-key.txt
