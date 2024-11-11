@@ -73,6 +73,7 @@ class TerminusDBAPI(DatabaseAPI):
         self._db_name = db_name
         self._page_api = CRUDTerminusDB(db_client, 'Page')
         self._block_api = CRUDTerminusDB(db_client, 'Block')
+        self._user_api = CRUDTerminusDB(db_client, 'User')
         self._version_control_api = VersionControlTerminusDB(db_client)
 
     @property
@@ -82,6 +83,10 @@ class TerminusDBAPI(DatabaseAPI):
     @property
     def block_api(self) -> CRUDDatabaseAPI:
         return self._block_api
+    
+    @property
+    def user_api(self) -> CRUDDatabaseAPI:
+        return self._user_api
 
     @property
     def version_control_api(self) -> DatabaseVersionControlAPI:

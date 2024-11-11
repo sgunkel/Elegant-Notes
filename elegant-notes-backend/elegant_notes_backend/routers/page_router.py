@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, Depends
 
 from ..models.page_model import PageModel, PageModelWithID
 from ..database_api import get_db
 from ..common import get_children, nuke_all_blocks_from_page
+from ..security.scheme import oauth2_scheme
 
 router = APIRouter(
     prefix='/page',
@@ -11,6 +14,7 @@ router = APIRouter(
 )
 
 @router.get('/all')
+# def get_all_pages(token: Annotated[str, Depends(oauth2_scheme)]):
 def get_all_pages():
     bulk = []
     for raw_page in get_db().page_api.retrieve_all():

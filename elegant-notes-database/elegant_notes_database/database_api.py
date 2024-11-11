@@ -26,6 +26,9 @@ class DatabaseAPI:
     def block_api(self) -> CRUDDatabaseAPI: raise NotImplementedError
 
     @property
+    def user_api(self) -> CRUDDatabaseAPI: raise NotImplementedError
+
+    @property
     def version_control_api(self) -> DatabaseVersionControlAPI: raise NotImplementedError
 
     def init_db(self) -> None: raise NotImplementedError
