@@ -12,12 +12,32 @@ Authors: Seth Gunkel
 """
 from typing import List
 
-from terminusdb_client.woqlschema import DocumentTemplate, Schema
+from terminusdb_client.woqlschema import DocumentTemplate, Schema, LexicalKey
 
 _custom_schema = Schema()
 def get_schema():
     global _custom_schema
     return _custom_schema
+
+class User(DocumentTemplate):
+    """User account information for authentication
+
+    Attributes
+    ----------
+    full_name : str
+        The full name of the user
+    username : str
+        The username created by the user
+    password : str
+        The encrypted password for the user
+    """
+    
+    _schema = _custom_schema
+    _key = LexicalKey(keys='username')
+    full_name: str
+    username: str
+    password: str
+    disabled: bool
 
 class Block(DocumentTemplate):
     """The base object that holds all user-entered information in the application
