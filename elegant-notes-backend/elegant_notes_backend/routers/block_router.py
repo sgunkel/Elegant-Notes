@@ -1,8 +1,12 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, status, Depends
 
 from ..models.block_model import BlockModel, BlockModelWithID
+from ..models.user_model import UserModel
 from ..database_api import get_db
 from ..common import get_children
+from ..security.authentication import get_current_active_user
 
 router = APIRouter(
     prefix='/block',
@@ -12,11 +16,11 @@ router = APIRouter(
 
 # this should definitely be removed and not added for production...
 @router.get('/all')
-def get_all_blocks():
+def get_all_blocks(_: Annotated[UserModel, Depends(get_current_active_user)]):
     return get_db().block_api.retrieve_all()
 
 @router.get('/{block_id}')
-def get_block_by_id(block_id: str):
+def get_block_by_id(_: Annotated[UserModel, Depends(get_current_active_user)], block_id: str):
     try:
         root_obj = get_db().block_api.retrieve_by_id(f'Block/{block_id}')
         root_obj['children'] = get_children(root_obj)
@@ -25,7 +29,7 @@ def get_block_by_id(block_id: str):
         raise HTTPException(status_code=404, detail='Block not found')
 
 @router.post('/add')
-def add_block(new_block: BlockModel):
+def add_block(_: Annotated[UserModel, Depends(get_current_active_user)], new_block: BlockModel):
     db = get_db()
     raw_block = new_block.model_dump()
     parent_id = raw_block['parent_id']
@@ -43,7 +47,7 @@ def add_block(new_block: BlockModel):
     return {'created': created, 'edited': edited}
 
 @router.put('/update')
-def update_block(new_version: BlockModelWithID):
+def update_block(_: Annotated[UserModel, Depends(get_current_active_user)], new_version: BlockModelWithID):
     db = get_db()
     raw_block = new_version.model_dump()
     raw_block['@id'] = raw_block.pop('ID')
@@ -51,7 +55,7 @@ def update_block(new_version: BlockModelWithID):
     return db.block_api.update(raw_block)
 
 @router.delete('/delete')
-def delete_block(block_id: str):
+def delete_block(_: Annotated[UserModel, Depends(get_current_active_user)], block_id: str):
     db = get_db()
     block_id = f'Block/{block_id}' # cannot send it like this via URL
     raw_block = db.block_api.retrieve_by_id(block_id)
