@@ -1,12 +1,11 @@
 from typing import Annotated
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Body
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import RedirectResponse
 
 from ..database_api import get_db
-from ..models.user_model import UserModel, UserModelWithPassword
+from ..models.user_model import UserModel
 from ..models.token_model import TokenModel
 from ..security.authentication import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -41,11 +40,11 @@ async def get_active_user(current_user: Annotated[UserModel, Depends(get_current
     return current_user
 
 @router.post('/add')
-def add_user(new_user: OAuth2PasswordRequestForm = Depends()):
+def add_user(new_user: OAuth2PasswordRequestForm = Depends(), full_name = Body()):
     raw_user = {
         'username': new_user.username,
         'password': get_password_hash(new_user.password),
-        'full_name': '',
+        'full_name': full_name,
         'disabled': False,
     }
     try:

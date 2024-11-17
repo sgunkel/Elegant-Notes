@@ -7,6 +7,7 @@ export default {
         return {
             username: '',
             password: '',
+            fullName: '',
             errorMessage: '',
         }
     },
@@ -15,6 +16,7 @@ export default {
             const formData = new FormData()
             formData.append('username', this.username)
             formData.append('password', this.password)
+            formData.append('full_name', this.fullName)
             return {
                 body: formData,
                 method: 'POST'
@@ -66,14 +68,13 @@ export default {
 <template>
     <h2>Create Account</h2>
     <h3 v-if="errorMessage !== ''">{{ errorMessage }}</h3>
-    <!-- <form action="/user/add" method="POST"> -->
     <form @submit.prevent="sendFormRequest" method="POST">
         <label for="username">Username</label>
         <input type="text" id="username" name="username" v-model="username">
         <label for="password">Password</label>
         <input type="password" id="password" name="password" v-model="password">
         <label for="full_name">Full Name</label>
-        <input type="text" id="full_name" name="full_name">
+        <input type="text" id="full_name" name="full_name" v-model="fullName">
         <input type="submit" value="Submit">
     </form>
 </template>
