@@ -1,7 +1,8 @@
 <script>
 export default {
     emits: [
-        'gotToken'
+        'gotToken',
+        'switchToLoginPage'
     ],
     data() {
         return {
@@ -12,6 +13,9 @@ export default {
         }
     },
     methods: {
+        switchToLoginView() {
+            this.$emit('switchToLoginPage')
+        },
         createFormRequest() {
             const formData = new FormData()
             formData.append('username', this.username)
@@ -60,7 +64,7 @@ export default {
               .catch(error => {
                 this.errorMessage = `Unexpected error: ${error}`
               })
-        }
+        },
     }
 }
 </script>
@@ -77,6 +81,7 @@ export default {
         <input type="text" id="full_name" name="full_name" v-model="fullName">
         <input type="submit" value="Submit">
     </form>
+    <p @click="switchToLoginView">Log in instead</p>
 </template>
 
 <style>

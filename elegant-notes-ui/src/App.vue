@@ -1,9 +1,9 @@
 <script>
-import CreateAccount from '@/components/authentication/CreateAccount.vue';
+import PageAuthentication from './components/authentication/PageAuthentication.vue';
 
 export default {
     components: {
-        CreateAccount
+        PageAuthentication,
     },
     data() {
         return {
@@ -24,8 +24,10 @@ export default {
         <h1>Signed in</h1>
         <h3>{{ this.token }}</h3>
     </div>
-    <CreateAccount v-else
-      v-on:got-token="gotToken"></CreateAccount>
+    <PageAuthentication
+      v-else
+      v-on:got-token="gotToken">
+    </PageAuthentication>
 </template>
 
 <style>
