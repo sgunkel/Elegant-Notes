@@ -1,4 +1,6 @@
 <script>
+import { createFormRequest, handleLogin } from './shared';
+
 export default {
     emits: [
         'gotToken',
@@ -16,55 +18,39 @@ export default {
         switchToLoginView() {
             this.$emit('switchToLoginPage')
         },
-        createFormRequest() {
-            const formData = new FormData()
-            formData.append('username', this.username)
-            formData.append('password', this.password)
-            formData.append('full_name', this.fullName)
-            return {
-                body: formData,
-                method: 'POST'
-            }
-        },
         async sendFormRequest() {
             let signInWithAccount = false
-            const payload = this.createFormRequest()
+            const payload = createFormRequest(this.username, this.password, this.fullName)
             await fetch('/user/add', payload)
               .then(response => response.json())
               .then(data => {
                 if (data.detail) {
-                    this.errorMessage = data.detail
-                }
-                else if (data.status) {
-                    signInWithAccount = true
-                    console.log(data)
+                    this.unsuccessCallback(data.detail)
                 }
                 else {
-                    this.errorMessage = `Unknown response from server: ${data}`
+                    signInWithAccount = true
                 }
-                console.log('done!')
               })
-              .catch(error => {
-                this.errorMessage = error
-              })
-            console.log('now try it')
-            console.log(signInWithAccount)
+              .catch(error => this.errorCallback(error))
             if (signInWithAccount) {
                 this.signInAndEmit()
             }
         },
         signInAndEmit() {
-            const formRequest = this.createFormRequest()
-            fetch('/user/token', formRequest)
-              .then(response => response.json())
-              .then(data => {
-                console.log(data)
-                this.$emit('gotToken', data)
-              })
-              .catch(error => {
-                this.errorMessage = `Unexpected error: ${error}`
-              })
+            handleLogin(this.username, this.password,
+                this.successCallback,
+                this.unsuccessCallback,
+                this.errorCallback)
         },
+        successCallback(token) {
+            this.$emit('gotToken', token)
+        },
+        unsuccessCallback(message) {
+            this.errorMessage = message
+        },
+        errorCallback(error) {
+            this.errorMessage = `Unexpected error: ${error}`
+        }
     }
 }
 </script>
@@ -74,11 +60,11 @@ export default {
     <h3 v-if="errorMessage !== ''">{{ errorMessage }}</h3>
     <form @submit.prevent="sendFormRequest" method="POST">
         <label for="username">Username</label>
-        <input type="text" id="username" name="username" v-model="username">
+        <input type="text" id="username" name="username" v-model="username" required>
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" v-model="password">
+        <input type="password" id="password" name="password" v-model="password" required>
         <label for="full_name">Full Name</label>
-        <input type="text" id="full_name" name="full_name" v-model="fullName">
+        <input type="text" id="full_name" name="full_name" v-model="fullName" required>
         <input type="submit" value="Submit">
     </form>
     <p @click="switchToLoginView">Log in instead</p>
