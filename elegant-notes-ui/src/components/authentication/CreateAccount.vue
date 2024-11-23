@@ -1,5 +1,5 @@
 <script>
-import { createFormRequest, handleLogin } from './shared';
+import { createFormRequest, handleLogin } from './shared.js';
 
 export default {
     emits: [
