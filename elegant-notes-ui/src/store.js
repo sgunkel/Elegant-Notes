@@ -33,10 +33,7 @@ export const store = reactive({
     isAuthenticated() {
         return this.token !== undefined
     },
-    async fetchFromServer(url, data) {
-        const received = await fetchWithToken(url, data, this.token)
-        if (received.detail) {
-            this.setAccessToken(undefined)
-        }
+    async fetchFromServer(url, data, protocol) {
+        return await fetchWithToken(url, data, protocol, this.token)
     }
 })

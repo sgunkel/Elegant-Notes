@@ -16,11 +16,7 @@ router = APIRouter(
 
 @router.get('/all')
 def get_all_pages(_: Annotated[UserModel, Depends(get_current_active_user)]):
-    bulk = []
-    for raw_page in get_db().page_api.retrieve_all():
-        raw_page['children'] = get_children(raw_page)
-        bulk.append(raw_page)
-    return bulk
+    return get_db().page_api.retrieve_all()
 
 @router.get('/{page_id}')
 def get_by_id(_: Annotated[UserModel, Depends(get_current_active_user)], page_id: str):

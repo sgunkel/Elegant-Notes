@@ -1,7 +1,7 @@
 <script>
 import PageAuthentication from './components/authentication/PageAuthentication.vue';
 import HomePage from './components/home/HomePage.vue';
-import { store } from './store';
+import { store } from './store.js';
 
 store.init()
 
