@@ -1,10 +1,14 @@
 <script>
 import { store } from '@/store.js';
 import { constants } from '@/constants.js';
+import BlockContentView from './BlockContentView.vue';
 
 export default {
     props: {
         page: Object
+    },
+    components: {
+        BlockContentView,
     },
     data() {
         return {
@@ -22,10 +26,11 @@ export default {
 
 <template>
     <h1>page content</h1>
-    <h3>{{ page }}</h3>
-    <ul>
-        <li v-for="child in content.children || []">{{ child }}</li>
-    </ul>
+    <h3>{{ page.name }}</h3>
+    <BlockContentView
+      v-for="child in content.children || []"
+      :block="child">
+    </BlockContentView>
 </template>
 
 <style>
