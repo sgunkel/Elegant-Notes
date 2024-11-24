@@ -10,6 +10,7 @@ const PAGE_PREFIX = `${ADDRESS}/page`
 export const constants = {
     URLs: {
         // Note: all routes should *not* end with a slash
+        PAGE_BY_ID: `${PAGE_PREFIX}`,
         ALL_PAGES: `${PAGE_PREFIX}/all`,
     },
 }
