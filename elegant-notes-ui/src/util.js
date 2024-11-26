@@ -15,6 +15,7 @@ function createRequest(dataToSend, protocol, token) {
     const headerData = {
         'Authorization': 'Bearer ' + token.access_token,
         'accept': 'application/json',
+        'Content-Type': 'application/json',
     }
     const request = {
         method: protocol,
@@ -23,13 +24,13 @@ function createRequest(dataToSend, protocol, token) {
         headers: headerData,
     }
     if (protocol !== 'GET') {
-        request.body = dataToSend
+        request.body = JSON.stringify(dataToSend)
     }
     return request
 }
 
 /**
- * 
+ * General setup for talking to the server with. This handles authentication as well
  * @param {string} url The URL to send/receive data
  * @param {object} dataToSend  The data to send to the server
  * @param {string} protocol The protocol for the request - GET, POST, PUT, DELETE
@@ -48,7 +49,7 @@ export const fetchWithToken = async (url, dataToSend, protocol, token) => {
             store.setAccessToken(undefined)
             return {}
         }
-        throw new Error(response.text())
+        return {msg: response.text()}
     })
     .then(data => result = data)
     .catch(errorStr => result = errorStr)

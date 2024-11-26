@@ -13,7 +13,7 @@ export default {
         }
     },
     methods: {
-        pageClick(pageObj) {
+        pageClicked(pageObj) {
             this.$emit('pageSelected', pageObj)
         }
     }
@@ -23,7 +23,7 @@ export default {
 <template>
     <h1>page list</h1>
     <div v-for="page in pages">
-        <h3 @click="pageClick(page)">{{ page }}</h3>
+        <h3 @click="pageClicked(page)">{{ page }}</h3>
     </div>
 </template>
 

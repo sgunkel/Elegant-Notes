@@ -1,10 +1,12 @@
 <script>
+import { constants } from '@/constants.js';
+import { store } from '@/store.js';
 import { nextTick, ref } from 'vue';
-
 
 export default {
     props: {
         block: Object,
+        parent: Object,
     },
     data() {
         return {
@@ -36,9 +38,23 @@ export default {
             this.focused = true
             this.setFocus()
         },
-        EnterPresentationMode() {
+        enterPresentationMode() {
             this.focused = false
-            // TODO: save changes!
+            this.saveChanges()
+        },
+        saveChanges() {
+            const convertObjToFormat = (obj) => {
+                return {
+                    ID: obj['@id'],
+                    parent_id: obj.parent_id,
+                    text: obj.text,
+                    children: obj.children.map(child => convertObjToFormat(child))
+                }
+            }
+            const objWithChildIDs = convertObjToFormat(this.block)
+            store.fetchFromServer(constants.URLs.UPDATE_BLOCK, objWithChildIDs, 'PUT')
+            .then(msg => console.log(msg)) // TODO: How do we want to display success to the user, or do we?
+            .catch(error => console.log(error)) // TODO: How do we display an error message about changes not going through?
         }
     }
 }
@@ -52,7 +68,7 @@ export default {
               type="text"
               ref="textInput"
               v-model="block.text"
-              @blur="EnterPresentationMode">
+              @blur="enterPresentationMode">
             <span
               v-else
               @click="enterEditMode">
@@ -61,7 +77,8 @@ export default {
         </li>
         <BlockContentView
           v-for="child in block.children"
-          :block="child">
+          :block="child"
+          :parent="block">
         </BlockContentView>
     </ul>
 </template>
