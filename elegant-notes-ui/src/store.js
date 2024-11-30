@@ -1,5 +1,5 @@
 import { reactive } from "vue";
-import { fetchWithToken } from "./util";
+import { fetchWithToken } from "./util.js";
 
 const TOKEN_KEY = 'access_token'
 
@@ -21,6 +21,8 @@ export const store = reactive({
             this.token = tokenData
         }
     },
+
+    // Authentication
     setAccessToken(tokenData) {
         this.token = tokenData
         if (tokenData) {
@@ -35,5 +37,5 @@ export const store = reactive({
     },
     async fetchFromServer(url, data, protocol) {
         return await fetchWithToken(url, data, protocol, this.token)
-    }
+    },
 })

@@ -7,10 +7,17 @@ export default {
     props: {
         block: Object,
         parent: Object,
+        atRoot: Boolean,
     },
+    emits: [
+        'removeChild',
+        'addChild',
+    ],
     data() {
         return {
             // state is created and given to us from setup()
+            previousText: this.block.text,
+            children: [],
         }
     },
     setup() {
@@ -32,6 +39,9 @@ export default {
             textInput,
             setFocus
         }
+    },
+    mounted() {
+        this.children = this.block.children
     },
     methods: {
         enterEditMode() {
@@ -55,7 +65,51 @@ export default {
             store.fetchFromServer(constants.URLs.UPDATE_BLOCK, objWithChildIDs, 'PUT')
             .then(msg => console.log(msg)) // TODO: How do we want to display success to the user, or do we?
             .catch(error => console.log(error)) // TODO: How do we display an error message about changes not going through?
-        }
+        },
+        handleTab(e) {
+            if (e.shiftKey) {
+                this.dedentBlock()
+            }
+            else {
+                this.indentBlock()
+            }
+        },
+        addChild(child) {
+            this.children.push(child)
+        },
+        removeChild(child, addToParent=false) {
+            const childIndex = this.block.children.indexOf(child)
+            if (childIndex === -1) {
+                console.log(`removeChild(): child not found (given "${child['@id']}" from options "${this.children.map(x => x['@id']).join('", "')}")`)
+                return
+            }
+            this.block.children.splice(childIndex, 1)
+
+            if (addToParent) {
+                this.$emit('addChild', child)
+            }
+        },
+        indentBlock() {
+            const siblings = this.parent.children
+            const siblingIndex = siblings.indexOf(this.block)
+            if (siblingIndex === -1) {
+                console.log('Could not figure out Block sibling index.')
+                return
+            }
+            if (siblingIndex === 0) {
+                // dedent..?
+                return
+            }
+            const newParent = siblings[siblingIndex - 1]
+            newParent.children.push(this.block)
+            this.parent.children.splice(siblingIndex, 1)
+            this.block.parent_id = newParent['@id']
+        },
+        dedentBlock() {
+            if (!this.atRoot) {
+                this.$emit('removeChild', this.block, true)
+            }
+        },
     }
 }
 </script>
@@ -68,7 +122,8 @@ export default {
               type="text"
               ref="textInput"
               v-model="block.text"
-              @blur="enterPresentationMode">
+              @blur="enterPresentationMode"
+              @keydown.tab="handleTab">
             <span
               v-else
               @click="enterEditMode">
@@ -76,9 +131,12 @@ export default {
             </span>
         </li>
         <BlockContentView
-          v-for="child in block.children"
+          v-for="child in children"
           :block="child"
-          :parent="block">
+          :parent="block"
+          :at-root="false"
+          @add-child="addChild"
+          @remove-child="removeChild">
         </BlockContentView>
     </ul>
 </template>

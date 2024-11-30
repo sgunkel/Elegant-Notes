@@ -21,6 +21,20 @@ export default {
         store.fetchFromServer(url, {}, 'GET')
           .then(data => this.content = data)
     },
+    methods: {
+        addChild(child) {
+            child.parent_id = this.page['@id']
+            this.content.children.push(child)
+        },
+        removeChild(child) {
+            const siblingIndex = this.content.children.indexOf(child)
+            if (siblingIndex === -1) {
+                console.log('Could not find child at root level')
+                return
+            }
+            this.content.children.splice(siblingIndex, 1)
+        },
+    }
 }
 </script>
 
@@ -30,7 +44,10 @@ export default {
     <BlockContentView
       v-for="child in content.children || []"
       :block="child"
-      :parent="page">
+      :parent="content"
+      :at-root="true"
+      @add-child="addChild"
+      @remove-child="removeChild">
     </BlockContentView>
 </template>
 
