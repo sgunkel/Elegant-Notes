@@ -5,6 +5,7 @@ import { nextTick, ref } from 'vue';
 
 export default {
     props: {
+        index: Number,
         block: Object,
         parent: Object,
         atRoot: Boolean,
@@ -17,7 +18,6 @@ export default {
         return {
             // state is created and given to us from setup()
             previousText: this.block.text,
-            children: [],
         }
     },
     setup() {
@@ -39,9 +39,6 @@ export default {
             textInput,
             setFocus
         }
-    },
-    mounted() {
-        this.children = this.block.children
     },
     methods: {
         enterEditMode() {
@@ -74,40 +71,45 @@ export default {
                 this.indentBlock()
             }
         },
-        addChild(child) {
-            this.children.push(child)
+        addChild(child, parentIndex) {
+            this.block.children.splice(parentIndex, 0, child)
         },
-        removeChild(child, addToParent=false) {
-            const childIndex = this.block.children.indexOf(child)
-            if (childIndex === -1) {
-                console.log(`removeChild(): child not found (given "${child['@id']}" from options "${this.children.map(x => x['@id']).join('", "')}")`)
-                return
-            }
-            this.block.children.splice(childIndex, 1)
+        removeChild(child, childIndex, addToParent=false) {
 
             if (addToParent) {
-                this.$emit('addChild', child)
+                // Move siblings after this Block object to be its children. This is dedenting this Block
+                //   but keeping the remaining siblings at the same indention level they were before
+                const siblingLength = this.block.children.length
+                const nextSiblingIndex = childIndex + 1
+                if (nextSiblingIndex < siblingLength) {
+                    const count = siblingLength - nextSiblingIndex
+                    const newChildren = this.block.children.splice(nextSiblingIndex, count)
+                    child.children = child.children.concat(newChildren)
+                }
+                this.$emit('addChild', child, this.index)
             }
+            this.block.children.splice(childIndex, 1)
         },
         indentBlock() {
             const siblings = this.parent.children
-            const siblingIndex = siblings.indexOf(this.block)
+            const siblingIndex = this.index
             if (siblingIndex === -1) {
                 console.log('Could not figure out Block sibling index.')
                 return
             }
             if (siblingIndex === 0) {
                 // dedent..?
+                console.log('first child indented - doing nothing')
                 return
             }
             const newParent = siblings[siblingIndex - 1]
+            this.block.parent_id = newParent['@id']
             newParent.children.push(this.block)
             this.parent.children.splice(siblingIndex, 1)
-            this.block.parent_id = newParent['@id']
         },
         dedentBlock() {
             if (!this.atRoot) {
-                this.$emit('removeChild', this.block, true)
+                this.$emit('removeChild', this.block, this.index, true)
             }
         },
     }
@@ -131,7 +133,8 @@ export default {
             </span>
         </li>
         <BlockContentView
-          v-for="child in children"
+          v-for="(child, index) in block.children" :key="child['@id']"
+          :index="index"
           :block="child"
           :parent="block"
           :at-root="false"

@@ -42,7 +42,8 @@ export default {
     <h1>page content</h1>
     <h3>{{ page.name }}</h3>
     <BlockContentView
-      v-for="child in content.children || []"
+      v-for="(child, index) in content.children || []"
+      :index="index"
       :block="child"
       :parent="content"
       :at-root="true"
