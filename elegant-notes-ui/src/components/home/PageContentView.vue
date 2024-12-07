@@ -19,20 +19,43 @@ export default {
         const pageID = this.page['@id'].replace('Page/', '')
         const url = `${constants.URLs.PAGE_BY_ID}/${pageID}`
         store.fetchFromServer(url, {}, 'GET')
-          .then(data => this.content = data)
+          .then(data => {
+            this.content = data
+            this.page.children = this.content.children
+        })
     },
     methods: {
-        addChild(child) {
+        addChild(child, parent) {
             child.parent_id = this.page['@id']
-            this.content.children.push(child)
-        },
-        removeChild(child) {
-            const siblingIndex = this.content.children.indexOf(child)
-            if (siblingIndex === -1) {
-                console.log('Could not find child at root level')
+            child.atRoot = true
+            if (!parent) {
+                this.page.children.push(child)
                 return
             }
-            this.content.children.splice(siblingIndex, 1)
+
+            let siblingIndex = this.page.children.indexOf(parent)
+            if (siblingIndex === -1) {
+                if (child.parent_id === this.page['@id']) {
+                    console.log('trying to add item already at root')
+                    siblingIndex = this.page.children.indexOf(child)
+                    if (siblingIndex === -1) {
+                        console.log('child has page id but is not in children')
+                    }
+                }
+                else {
+                    console.log('could not find sibling index via parent object')
+                    return
+                }
+            }
+            console.log('adding child at root')
+            this.page.children.splice(siblingIndex + 1, 0, child)
+        },
+        removeChild(child, childIndex, addToParent=false) {
+            if (addToParent) {
+                console.log('de-dent caught at root level')
+                return
+            }
+            this.page.children.splice(childIndex, 1)
         },
     }
 }
@@ -42,7 +65,7 @@ export default {
     <h1>page content</h1>
     <h3>{{ page.name }}</h3>
     <BlockContentView
-      v-for="(child, index) in content.children || []"
+      v-for="(child, index) in page.children || []"
       :index="index"
       :block="child"
       :parent="content"

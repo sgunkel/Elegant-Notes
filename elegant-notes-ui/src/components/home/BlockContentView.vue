@@ -27,6 +27,7 @@ export default {
          *   instances, it's slightly trickier to grab the correct <input> node.
          * https://laracasts.com/discuss/channels/vue/how-to-set-focus-on-a-newly-shown-input-element
         */
+       console.log('creating component')
         const focused = ref(false)
         const textInput = ref(null) // some dark magic will assign this to the <input> component with ref="textInput"...
         const setFocus = () => {
@@ -60,8 +61,8 @@ export default {
             }
             const objWithChildIDs = convertObjToFormat(this.block)
             store.fetchFromServer(constants.URLs.UPDATE_BLOCK, objWithChildIDs, 'PUT')
-            .then(msg => console.log(msg)) // TODO: How do we want to display success to the user, or do we?
-            .catch(error => console.log(error)) // TODO: How do we display an error message about changes not going through?
+              .then(msg => console.log(msg)) // TODO: How do we want to display success to the user, or do we?
+              .catch(error => console.log(error)) // TODO: How do we display an error message about changes not going through?
         },
         handleTab(e) {
             if (e.shiftKey) {
@@ -71,11 +72,21 @@ export default {
                 this.indentBlock()
             }
         },
-        addChild(child, parentIndex) {
-            this.block.children.splice(parentIndex, 0, child)
+        addChild(child, parent) {
+            child.parent_id = this.block['@id']
+            if (!parent) {
+                this.block.children.push(child)
+                return
+            }
+
+            const siblingIndex = this.block.children.indexOf(parent)
+            if (siblingIndex === -1) {
+                console.log('could not find sibling index via parent object')
+                return
+            }
+            this.block.children.splice(siblingIndex + 1, 0, child)
         },
         removeChild(child, childIndex, addToParent=false) {
-
             if (addToParent) {
                 // Move siblings after this Block object to be its children. This is dedenting this Block
                 //   but keeping the remaining siblings at the same indention level they were before
@@ -86,13 +97,21 @@ export default {
                     const newChildren = this.block.children.splice(nextSiblingIndex, count)
                     child.children = child.children.concat(newChildren)
                 }
-                this.$emit('addChild', child, this.index)
+                else {
+                    console.log(`next sibling's index (${nextSiblingIndex}) exceeds sibling size (${siblingLength}) - copying 0 children`)
+                }
+                this.$emit('addChild', child, this.block)
             }
             this.block.children.splice(childIndex, 1)
+            this.saveChanges()
+        },
+        isParentPageObject() {
+            return this.parent['@id'].startsWith('Page/')
         },
         indentBlock() {
             const siblings = this.parent.children
             const siblingIndex = this.index
+            const nextSiblingIndex = siblingIndex + 1
             if (siblingIndex === -1) {
                 console.log('Could not figure out Block sibling index.')
                 return
@@ -104,11 +123,11 @@ export default {
             }
             const newParent = siblings[siblingIndex - 1]
             this.block.parent_id = newParent['@id']
-            newParent.children.push(this.block)
+            newParent.children.splice(nextSiblingIndex, 0, this.block)
             this.parent.children.splice(siblingIndex, 1)
         },
         dedentBlock() {
-            if (!this.atRoot) {
+            if (!this.isParentPageObject()) {
                 this.$emit('removeChild', this.block, this.index, true)
             }
         },
