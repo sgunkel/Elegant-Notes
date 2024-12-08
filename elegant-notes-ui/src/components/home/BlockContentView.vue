@@ -18,6 +18,7 @@ export default {
         return {
             // state is created and given to us from setup()
             previousText: this.block.text,
+            focusedOnCreation: this.block.startWithFocus || false
         }
     },
     setup() {
@@ -27,7 +28,6 @@ export default {
          *   instances, it's slightly trickier to grab the correct <input> node.
          * https://laracasts.com/discuss/channels/vue/how-to-set-focus-on-a-newly-shown-input-element
         */
-       console.log('creating component')
         const focused = ref(false)
         const textInput = ref(null) // some dark magic will assign this to the <input> component with ref="textInput"...
         const setFocus = () => {
@@ -39,6 +39,11 @@ export default {
             focused,
             textInput,
             setFocus
+        }
+    },
+    mounted() {
+        if (this.focusedOnCreation) {
+            this.enterEditMode()
         }
     },
     methods: {
@@ -72,8 +77,17 @@ export default {
                 this.indentBlock()
             }
         },
-        addChild(child, parent) {
+        addChild(child, parent, startsWithFocus=false) {
+            // TODO this needs to be cleaned up soon but deadlines are approaching
             child.parent_id = this.block['@id']
+            if (child['@id'] === undefined) {
+                store.fetchFromServer(constants.URLs.ADD_BLOCK, child, 'POST')
+                  .then(result => {
+                    child['@id'] = result.created['@id']
+                    console.log(`Updated child ID to ${child['@id']}`)
+                  })
+            }
+
             if (!parent) {
                 this.block.children.push(child)
                 return
@@ -84,9 +98,11 @@ export default {
                 console.log('could not find sibling index via parent object')
                 return
             }
+            child.startWithFocus = startsWithFocus
             this.block.children.splice(siblingIndex + 1, 0, child)
         },
         removeChild(child, childIndex, addToParent=false) {
+            // TODO this needs to be cleaned up soon but deadlines are approaching
             if (addToParent) {
                 // Move siblings after this Block object to be its children. This is dedenting this Block
                 //   but keeping the remaining siblings at the same indention level they were before
@@ -131,12 +147,24 @@ export default {
                 this.$emit('removeChild', this.block, this.index, true)
             }
         },
+        enterKeyDetected() {
+            console.log('enter key detected')
+            this.focused = false
+            const newChild = {
+                // backend to take care of the id
+                parent_id: '',
+                text: '',
+                children: [],
+            }
+            this.$emit('addChild', newChild, this.block, true)
+        },
     }
 }
 </script>
 
 <template>
     <ul class="bcv-wrapper">
+        <!-- This whole list item should be its own component -->
         <li>
             <input
               v-if="focused"
@@ -144,6 +172,7 @@ export default {
               ref="textInput"
               v-model="block.text"
               @blur="enterPresentationMode"
+              @keydown.enter="enterKeyDetected"
               @keydown.tab="handleTab">
             <span
               v-else

@@ -15,6 +15,7 @@ export const constants = {
         ALL_PAGES: `${PAGE_PREFIX}/all`,
         UPDATE_PAGE: `${PAGE_PREFIX}/update`,
 
+        ADD_BLOCK: `${BLOCK_PREFIX}/add`,
         UPDATE_BLOCK: `${BLOCK_PREFIX}/update`,
     },
 }

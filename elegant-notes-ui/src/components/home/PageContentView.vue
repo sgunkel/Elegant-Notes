@@ -26,6 +26,7 @@ export default {
     },
     methods: {
         addChild(child, parent) {
+            // TODO this needs to be cleaned up soon but deadlines are approaching
             child.parent_id = this.page['@id']
             child.atRoot = true
             if (!parent) {
