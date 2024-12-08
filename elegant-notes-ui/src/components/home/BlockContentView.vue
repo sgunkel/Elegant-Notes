@@ -85,6 +85,7 @@ export default {
                   .then(result => {
                     child['@id'] = result.created['@id']
                     console.log(`Updated child ID to ${child['@id']}`)
+                    this.saveChanges()
                   })
             }
 
@@ -149,12 +150,13 @@ export default {
         },
         enterKeyDetected() {
             console.log('enter key detected')
-            this.focused = false
+            this.enterPresentationMode()
             const newChild = {
                 // backend to take care of the id
                 parent_id: '',
                 text: '',
                 children: [],
+                startWithFocus: true,
             }
             this.$emit('addChild', newChild, this.block, true)
         },
@@ -177,7 +179,7 @@ export default {
             <span
               v-else
               @click="enterEditMode">
-                {{ block.text }}
+                {{ block.text || '&nbsp;' }}
             </span>
         </li>
         <BlockContentView
@@ -195,5 +197,11 @@ export default {
 <style>
 .bcv-wrapper {
     margin: 0;
+}
+
+.bcv-wrapper > li > span {
+    width: 100%;
+    display: block;
+    margin-right: 0;
 }
 </style>
