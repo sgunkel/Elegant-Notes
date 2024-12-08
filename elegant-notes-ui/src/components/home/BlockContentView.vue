@@ -148,7 +148,7 @@ export default {
                 this.$emit('removeChild', this.block, this.index, true)
             }
         },
-        enterKeyDetected() {
+        handleEnter() {
             console.log('enter key detected')
             this.enterPresentationMode()
             const newChild = {
@@ -159,6 +159,13 @@ export default {
                 startWithFocus: true,
             }
             this.$emit('addChild', newChild, this.block, true)
+        },
+        handleDelete() {
+            if (this.block.text) {
+                return
+            }
+            console.log(`Removing block with ID "${this.block['@id']}"`)
+            this.$emit('removeChild', this.block, this.index)
         },
     }
 }
@@ -174,7 +181,8 @@ export default {
               ref="textInput"
               v-model="block.text"
               @blur="enterPresentationMode"
-              @keydown.enter="enterKeyDetected"
+              @keydown.enter="handleEnter"
+              @keydown.delete="handleDelete"
               @keydown.tab="handleTab">
             <span
               v-else
