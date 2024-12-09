@@ -13,6 +13,8 @@ export default {
     emits: [
         'removeChild',
         'addChild',
+        'focusNext',
+        'focusPrevious',
     ],
     data() {
         return {
@@ -42,16 +44,30 @@ export default {
         }
     },
     mounted() {
+        console.log(this.block)
+        console.log(typeof this.block)
+        if (typeof this.block === 'string' || this.block instanceof String) {
+            // Initial Page object has IDs for the children and gets updated when the
+            //   full Page object is loaded; if our Block object is just a string (the
+            //   ID), just ignore it
+            console.log('string detected')
+            console.log(this.parent)
+        }
+        else {
+            this.block.editModeFn = this.enterEditMode
+        }
         if (this.focusedOnCreation) {
             this.enterEditMode()
         }
     },
     methods: {
         enterEditMode() {
+            console.log('entering edit mode')
             this.focused = true
             this.setFocus()
         },
         enterPresentationMode() {
+            console.log('exiting edit mode')
             this.focused = false
             this.saveChanges()
         },
@@ -91,6 +107,7 @@ export default {
 
             if (!parent) {
                 this.block.children.push(child)
+                this.saveChanges()
                 return
             }
 
@@ -101,6 +118,7 @@ export default {
             }
             child.startWithFocus = startsWithFocus
             this.block.children.splice(siblingIndex + 1, 0, child)
+            this.saveChanges()
         },
         removeChild(child, childIndex, addToParent=false) {
             // TODO this needs to be cleaned up soon but deadlines are approaching
@@ -148,6 +166,38 @@ export default {
                 this.$emit('removeChild', this.block, this.index, true)
             }
         },
+        focusNextItem(currentIndex) {
+            const newIndex = currentIndex - 1
+            const siblings = this.block.children
+            if (newIndex > 0) {
+                if (newIndex < siblings.length) {
+                    siblings[newIndex].editModeFn()
+                }
+                else {
+                    console.log('set item to focus on is outside of range!')
+                }
+            }
+            else {
+                this.focused = true
+                this.setFocus()
+            }
+        },
+        focusPreviousItem(currentIndex) {
+            const newIndex = currentIndex + 1
+            const siblings = this.block.children
+            if (newIndex > 0) {
+                if (newIndex < siblings.length) {
+                    siblings[newIndex].editModeFn()
+                }
+                else {
+                    console.log('set item to focus on is outside of range!')
+                }
+            }
+            else {
+                this.focused = true
+                this.setFocus()
+            }
+        },
         handleEnter() {
             console.log('enter key detected')
             this.enterPresentationMode()
@@ -167,6 +217,14 @@ export default {
             console.log(`Removing block with ID "${this.block['@id']}"`)
             this.$emit('removeChild', this.block, this.index)
         },
+        handleArrowUp() {
+            console.log('arrow up')
+            this.$emit('focusNext', this.index)
+        },
+        handleArrowDown() {
+            console.log('arrow down')
+            this.$emit('focusPrevious', this.index)
+        },
     }
 }
 </script>
@@ -183,7 +241,9 @@ export default {
               @blur="enterPresentationMode"
               @keydown.enter="handleEnter"
               @keydown.delete="handleDelete"
-              @keydown.tab="handleTab">
+              @keydown.tab="handleTab"
+              @keydown.up="handleArrowUp"
+              @keydown.down="handleArrowDown">
             <span
               v-else
               @click="enterEditMode">
@@ -197,7 +257,9 @@ export default {
           :parent="block"
           :at-root="false"
           @add-child="addChild"
-          @remove-child="removeChild">
+          @remove-child="removeChild"
+          @focusNext="focusNextItem"
+          @focusPrevious="focusPreviousItem">
         </BlockContentView>
     </ul>
 </template>

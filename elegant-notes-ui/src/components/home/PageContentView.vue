@@ -22,6 +22,7 @@ export default {
           .then(data => {
             this.content = data
             this.page.children = this.content.children
+            console.log(JSON.parse(JSON.stringify(this.page.children)))
         })
     },
     methods: {
@@ -69,7 +70,7 @@ export default {
       v-for="(child, index) in page.children || []"
       :index="index"
       :block="child"
-      :parent="content"
+      :parent="page"
       :at-root="true"
       @add-child="addChild"
       @remove-child="removeChild">
