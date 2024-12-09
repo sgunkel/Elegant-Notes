@@ -167,30 +167,33 @@ export default {
             }
         },
         focusNextItem(currentIndex) {
-            const newIndex = currentIndex - 1
-            const siblings = this.block.children
-            if (newIndex > 0) {
-                if (newIndex < siblings.length) {
-                    siblings[newIndex].editModeFn()
-                }
-                else {
-                    console.log('set item to focus on is outside of range!')
-                }
-            }
-            else {
-                this.focused = true
-                this.setFocus()
-            }
+            this.keyboardNavigation(currentIndex, true)
         },
         focusPreviousItem(currentIndex) {
-            const newIndex = currentIndex + 1
+            this.keyboardNavigation(currentIndex, false)
+        },
+        keyboardNavigation(currentIndex, isGoingUp) {
+            const directionValue = (isGoingUp) ? -1 : 1
+            const newIndex = currentIndex + directionValue
             const siblings = this.block.children
             if (newIndex > 0) {
                 if (newIndex < siblings.length) {
+                    // TODO go to last child/grandchild when going up to a
+                    //   Block with children:
+                    //
+                    // - you will be here after using the up arrow
+                    //   - the Block you want to be
+                    // - *you are here*
                     siblings[newIndex].editModeFn()
                 }
                 else {
                     console.log('set item to focus on is outside of range!')
+                    if (isGoingUp) {
+                        this.$emit('focusNext', this.index)
+                    }
+                    else {
+                        this.$emit('focusPrevious', this.index)
+                    }
                 }
             }
             else {
@@ -223,7 +226,12 @@ export default {
         },
         handleArrowDown() {
             console.log('arrow down')
-            this.$emit('focusPrevious', this.index)
+            if (this.block.children.length === 0) {
+                this.$emit('focusPrevious', this.index)
+            }
+            else {
+                this.block.children[0].editModeFn()
+            }
         },
     }
 }
