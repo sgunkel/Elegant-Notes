@@ -71,13 +71,20 @@ export default {
             const newIndex = currentIndex + directionValue
             if (newIndex >= 0) {
                 if (newIndex < siblings.length) {
-                    // TODO go to last child/grandchild when going up to a
-                    //   Block with children:
-                    //
-                    // - you will be here after using the up arrow
-                    //   - the Block you want to be
-                    // - *you are here*
-                    siblings[newIndex].editModeFn()
+                    const sibling = siblings[newIndex]
+                    if (isGoingUp) {
+                        // go to the child directly above this Block at the deepest generation level
+                        const getLast = (obj) => {
+                            if (obj.children.length !== 0) {
+                                return getLast(obj.children[obj.children.length - 1])
+                            }
+                            return obj
+                        }
+                        getLast(sibling).editModeFn()
+                    }
+                    else {
+                        sibling.editModeFn()
+                    }
                 }
             }
         },
