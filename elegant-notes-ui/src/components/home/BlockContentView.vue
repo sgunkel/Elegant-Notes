@@ -20,7 +20,7 @@ export default {
         return {
             // state is created and given to us from setup()
             previousText: this.block.text,
-            focusedOnCreation: this.block.startWithFocus || false
+            focusedOnCreation: this.block.startWithFocus || false,
         }
     },
     setup() {
@@ -42,6 +42,13 @@ export default {
             textInput,
             setFocus
         }
+    },
+    watch: {
+        block() {
+            if (!this.block.editModeFn) {
+                this.block.editModeFn = this.enterEditMode
+            }
+        },
     },
     mounted() {
         console.log(this.block)

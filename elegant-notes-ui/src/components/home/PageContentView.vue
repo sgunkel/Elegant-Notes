@@ -59,6 +59,28 @@ export default {
             }
             this.page.children.splice(childIndex, 1)
         },
+        focusNextItem(currentIndex) {
+            this.keyboardNavigation(currentIndex, true)
+        },
+        focusPreviousItem(currentIndex) {
+            this.keyboardNavigation(currentIndex, false)
+        },
+        keyboardNavigation(currentIndex, isGoingUp) {
+            const siblings = this.page.children
+            const directionValue = (isGoingUp) ? -1 : 1
+            const newIndex = currentIndex + directionValue
+            if (newIndex >= 0) {
+                if (newIndex < siblings.length) {
+                    // TODO go to last child/grandchild when going up to a
+                    //   Block with children:
+                    //
+                    // - you will be here after using the up arrow
+                    //   - the Block you want to be
+                    // - *you are here*
+                    siblings[newIndex].editModeFn()
+                }
+            }
+        },
     }
 }
 </script>
@@ -73,7 +95,9 @@ export default {
       :parent="page"
       :at-root="true"
       @add-child="addChild"
-      @remove-child="removeChild">
+      @remove-child="removeChild"
+      @focus-next="focusNextItem"
+      @focus-previous="focusPreviousItem">
     </BlockContentView>
 </template>
 
