@@ -1,6 +1,7 @@
 <script>
 import { store } from '@/store.js';
 import { constants } from '@/constants.js';
+import { convertPageObjToFormat } from './shared.js';
 import BlockContentView from './BlockContentView.vue';
 
 export default {
@@ -22,23 +23,34 @@ export default {
           .then(data => {
             this.content = data
             this.page.children = this.content.children
-            console.log(JSON.parse(JSON.stringify(this.page.children)))
         })
     },
     methods: {
+        saveChanges() {
+            const obj = convertPageObjToFormat(this.page)
+            store.fetchFromServer(constants.URLs.UPDATE_PAGE, obj, 'PUT')
+              .then(msg => {
+                console.log('Updated page:')
+                console.log(msg)
+              })
+              .catch(error => {
+                console.log('failed to update page:')
+                console.log(error)
+              })
+        },
         addChild(child, parent) {
             // TODO this needs to be cleaned up soon but deadlines are approaching
             child.parent_id = this.page['@id']
             child.atRoot = true
             if (!parent) {
                 this.page.children.push(child)
+                this.saveChanges()
                 return
             }
 
             let siblingIndex = this.page.children.indexOf(parent)
             if (siblingIndex === -1) {
                 if (child.parent_id === this.page['@id']) {
-                    console.log('trying to add item already at root')
                     siblingIndex = this.page.children.indexOf(child)
                     if (siblingIndex === -1) {
                         console.log('child has page id but is not in children')
@@ -49,8 +61,8 @@ export default {
                     return
                 }
             }
-            console.log('adding child at root')
             this.page.children.splice(siblingIndex + 1, 0, child)
+            this.saveChanges()
         },
         removeChild(child, childIndex, addToParent=false) {
             if (addToParent) {
@@ -58,6 +70,7 @@ export default {
                 return
             }
             this.page.children.splice(childIndex, 1)
+            this.saveChanges()
         },
         focusNextItem(currentIndex) {
             this.keyboardNavigation(currentIndex, true)

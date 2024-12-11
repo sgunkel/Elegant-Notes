@@ -1,6 +1,7 @@
 <script>
 import { constants } from '@/constants.js';
 import { store } from '@/store.js';
+import { convertBlockObjToFormat } from './shared.js';
 import { nextTick, ref } from 'vue';
 
 export default {
@@ -51,14 +52,10 @@ export default {
         },
     },
     mounted() {
-        console.log(this.block)
-        console.log(typeof this.block)
         if (typeof this.block === 'string' || this.block instanceof String) {
             // Initial Page object has IDs for the children and gets updated when the
             //   full Page object is loaded; if our Block object is just a string (the
             //   ID), just ignore it
-            console.log('string detected')
-            console.log(this.parent)
         }
         else {
             this.block.editModeFn = this.enterEditMode
@@ -69,25 +66,15 @@ export default {
     },
     methods: {
         enterEditMode() {
-            console.log('entering edit mode')
             this.focused = true
             this.setFocus()
         },
         enterPresentationMode() {
-            console.log('exiting edit mode')
             this.focused = false
             this.saveChanges()
         },
         saveChanges() {
-            const convertObjToFormat = (obj) => {
-                return {
-                    ID: obj['@id'],
-                    parent_id: obj.parent_id,
-                    text: obj.text,
-                    children: obj.children.map(child => convertObjToFormat(child))
-                }
-            }
-            const objWithChildIDs = convertObjToFormat(this.block)
+            const objWithChildIDs = convertBlockObjToFormat(this.block)
             store.fetchFromServer(constants.URLs.UPDATE_BLOCK, objWithChildIDs, 'PUT')
               .then(msg => console.log(msg)) // TODO: How do we want to display success to the user, or do we?
               .catch(error => console.log(error)) // TODO: How do we display an error message about changes not going through?
@@ -107,7 +94,6 @@ export default {
                 store.fetchFromServer(constants.URLs.ADD_BLOCK, child, 'POST')
                   .then(result => {
                     child['@id'] = result.created['@id']
-                    console.log(`Updated child ID to ${child['@id']}`)
                     this.saveChanges()
                   })
             }
@@ -201,7 +187,6 @@ export default {
                     }
                 }
                 else {
-                    console.log('set item to focus on is outside of range!')
                     if (isGoingUp) {
                         this.$emit('focusNext', this.index)
                     }
@@ -216,7 +201,6 @@ export default {
             }
         },
         handleEnter() {
-            console.log('enter key detected')
             this.enterPresentationMode()
             const newChild = {
                 // backend to take care of the id
@@ -231,15 +215,12 @@ export default {
             if (this.block.text) {
                 return
             }
-            console.log(`Removing block with ID "${this.block['@id']}"`)
             this.$emit('removeChild', this.block, this.index)
         },
         handleArrowUp() {
-            console.log('arrow up')
             this.$emit('focusNext', this.index)
         },
         handleArrowDown() {
-            console.log('arrow down')
             if (this.block.children.length === 0) {
                 this.$emit('focusPrevious', this.index)
             }
