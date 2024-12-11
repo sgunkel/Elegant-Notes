@@ -1,18 +1,23 @@
 <script>
 import PageAuthentication from './components/authentication/PageAuthentication.vue';
+import HomePage from './components/home/HomePage.vue';
+import { store } from './store.js';
+
+store.init()
 
 export default {
     components: {
+        HomePage,
         PageAuthentication,
     },
     data() {
         return {
-            token: undefined
+            store,
         }
     },
     methods: {
         gotToken(data) {
-            this.token = data
+            store.setAccessToken(data)
         }
     }
 }
@@ -20,10 +25,9 @@ export default {
 </script>
 
 <template>
-    <div v-if="this.token !== undefined">
-        <h1>Signed in</h1>
-        <h3>{{ this.token }}</h3>
-    </div>
+    <HomePage
+      v-if="this.store.isAuthenticated()">
+    </HomePage>
     <PageAuthentication
       v-else
       v-on:got-token="gotToken">
