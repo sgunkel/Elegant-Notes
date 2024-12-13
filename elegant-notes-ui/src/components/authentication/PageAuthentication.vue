@@ -12,7 +12,7 @@ export default {
     },
     data() {
         return {
-            showCreateAccountView: true,
+            showCreateAccountView: false,
         }
     },
     methods: {
