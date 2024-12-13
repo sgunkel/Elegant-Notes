@@ -25,9 +25,7 @@ export default {
 </script>
 
 <template>
-    <HomePage
-      v-if="this.store.isAuthenticated()">
-    </HomePage>
+    <router-view v-if="this.store.isAuthenticated()"/>
     <PageAuthentication
       v-else
       v-on:got-token="gotToken">
