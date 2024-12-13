@@ -57,7 +57,7 @@ export default {
 
 <template>
     <h2>Create Account</h2>
-    <h3 v-if="errorMessage !== ''">{{ errorMessage }}</h3>
+    <h3 v-if="errorMessage !== ''" class="ca-error-msg">{{ errorMessage }}</h3>
     <form @submit.prevent="sendFormRequest" method="POST">
         <label for="username">Username</label>
         <input type="text" id="username" name="username" v-model="username" required>
@@ -65,10 +65,22 @@ export default {
         <input type="password" id="password" name="password" v-model="password" required>
         <label for="full_name">Full Name</label>
         <input type="text" id="full_name" name="full_name" v-model="fullName" required>
-        <input type="submit" value="Submit">
+        <input type="submit" value="Create" class="ca-switch-to-login-view">
     </form>
-    <p @click="switchToLoginView">Log in instead</p>
+    <p @click="switchToLoginView" class="ca-switch-to-login-view">Log in instead</p>
 </template>
 
 <style>
+.ca-switch-to-login-view {
+    margin: 0.25em;
+    padding: 0.25em;
+    border: 0.15em solid #000;
+    background-color: #fff;
+    border-radius: 0.25em;
+    text-align: center;
+}
+
+.ca-error-msg {
+    color: red;
+}
 </style>
