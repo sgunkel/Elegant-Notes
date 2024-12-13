@@ -15,6 +15,7 @@ function tryGetAccessToken() {
 
 export const store = reactive({
     token: undefined,
+    pageObj: undefined,
     init() {
         const tokenData = tryGetAccessToken()
         if (tokenData) {
@@ -37,5 +38,13 @@ export const store = reactive({
     },
     async fetchFromServer(url, data, protocol) {
         return await fetchWithToken(url, data, protocol, this.token)
+    },
+
+    // Content control
+    setPage(obj) {
+        this.pageObj = obj
+    },
+    getPage() {
+        return this.pageObj
     },
 })

@@ -1,12 +1,11 @@
 <script>
+import { constants } from '@/constants.js';
+import { store } from '@/store.js';
 
 export default {
     props: {
         pages: []
     },
-    emits: [
-        'pageSelected',
-    ],
     data() {
         return {
             //
@@ -14,7 +13,8 @@ export default {
     },
     methods: {
         pageClicked(pageObj) {
-            this.$emit('pageSelected', pageObj)
+            store.setPage(pageObj)
+            this.$router.push(constants.PAGES.PAGE)
         }
     }
 }

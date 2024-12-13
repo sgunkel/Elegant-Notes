@@ -18,4 +18,8 @@ export const constants = {
         ADD_BLOCK: `${BLOCK_PREFIX}/add`,
         UPDATE_BLOCK: `${BLOCK_PREFIX}/update`,
     },
+    PAGES: {
+        HOME: '/',
+        PAGE: '/page',
+    }
 }

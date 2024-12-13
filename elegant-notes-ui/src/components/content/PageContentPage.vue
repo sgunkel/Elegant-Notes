@@ -1,19 +1,19 @@
 <script>
+// TODO figure out a better name for this file
+
 import { store } from '@/store.js';
 import { constants } from '@/constants.js';
 import { convertPageObjToFormat } from './shared.js';
 import BlockContentView from './BlockContentView.vue';
 
 export default {
-    props: {
-        page: Object
-    },
     components: {
         BlockContentView,
     },
     data() {
         return {
-            content: []
+            content: [], // TODO remove all references to this
+            page: store.getPage(),
         }
     },
     mounted() {
