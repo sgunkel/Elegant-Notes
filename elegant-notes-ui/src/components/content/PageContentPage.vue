@@ -23,6 +23,7 @@ export default {
           .then(data => {
             this.content = data
             this.page.children = this.content.children
+            this.checkChildren()
         })
     },
     methods: {
@@ -30,6 +31,7 @@ export default {
             this.$router.push(constants.PAGES.HOME)
         },
         saveChanges() {
+            this.checkChildren(false)
             const obj = convertPageObjToFormat(this.page)
             store.fetchFromServer(constants.URLs.UPDATE_PAGE, obj, 'PUT')
               .then(msg => {
@@ -41,8 +43,29 @@ export default {
                 console.log(error)
               })
         },
+        checkChildren(saveNewChanges=true) {
+            if (this.page.children.length !== 0) {
+                return
+            }
+
+            // Object copied from BlockContentView when creating a new child
+            console.log('Empty page detected - adding single child')
+            const newChild = {
+                // backend to take care of the id
+                parent_id: '',
+                text: '',
+                children: [],
+                parent_id: this.page['@id'],
+                atRoot: true,
+                startWithFocus: true,
+            }
+            this.page.children.push(newChild)
+            if (saveNewChanges) {
+                this.saveChanges()
+            }
+        },
         addChild(child, parent) {
-            // TODO this needs to be cleaned up soon but deadlines are approaching
+            // TODO this needs to be cleaned up soon but school deadlines are approaching
             child.parent_id = this.page['@id']
             child.atRoot = true
             if (!parent) {
