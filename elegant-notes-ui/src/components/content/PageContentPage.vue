@@ -12,6 +12,7 @@ export default {
     },
     data() {
         return {
+            loadingContent: true,
             content: [], // TODO remove all references to this
             page: store.getPage(),
         }
@@ -24,6 +25,7 @@ export default {
             this.content = data
             this.page.children = this.content.children
             this.checkChildren()
+            this.loadingContent = false
         })
     },
     methods: {
@@ -144,7 +146,10 @@ export default {
             -->
             <h2>{{ page.name }}</h2>
         </div>
-        <div class="pcp-content-scroll">
+        <div class="pcp-loading" v-if="loadingContent">
+            <h3>Loading...</h3>
+        </div>
+        <div class="pcp-content-scroll" v-else>
             <BlockContentView
               v-for="(child, index) in page.children || []"
               :index="index"
