@@ -15,6 +15,8 @@ export default {
             loadingContent: true,
             content: [], // TODO remove all references to this
             page: store.getPage(),
+            focusedBlock: undefined, // used for coping Block IDs/display its info in the header
+            previousBlock: undefined,
         }
     },
     mounted() {
@@ -65,6 +67,26 @@ export default {
             if (saveNewChanges) {
                 this.saveChanges()
             }
+        },
+        handleChildFocused(child) {
+            console.log('child got focused: ' + child['@id'])
+            this.focusedBlock = child
+            this.previousBlock = undefined
+        },
+        handleChildLostFocus(child) {
+            console.log('child lost focused: ' + child['@id'])
+            this.focusedBlock = undefined
+            this.previousBlock = child
+            setTimeout(() => this.previousBlock = undefined, 500);
+        },
+        copyFocusedObjectIDToClipboard() {
+            // TODO cleanup the ID retrieval portion
+            const id = (this.previousBlock) ? this.previousBlock['@id'] :
+                       (this.focusedBlock)  ? this.focusedBlock['@id']  :
+                       this.page['@id']
+            navigator.clipboard.writeText(id)
+              .then(_ => console.log('copied text')) // TODO give some type of feedback this succeed
+              .catch(error => console.log(error)) // TODO better way to show this
         },
         addChild(child, parent) {
             // TODO this needs to be cleaned up soon but school deadlines are approaching
@@ -145,6 +167,9 @@ export default {
               for switching between editing text and displaying text
             -->
             <h2>{{ page.name }}</h2>
+            <div class="pcp-focused-object-info">
+                <h5 @click="copyFocusedObjectIDToClipboard">{{ (focusedBlock) ? focusedBlock['@id'] : page['@id'] }}</h5>
+            </div>
         </div>
         <div class="pcp-loading" v-if="loadingContent">
             <h3>Loading...</h3>
@@ -156,6 +181,8 @@ export default {
               :block="child"
               :parent="page"
               :at-root="true"
+              @childGotFocus="handleChildFocused"
+              @childLostFocus="handleChildLostFocus"
               @add-child="addChild"
               @remove-child="removeChild"
               @focus-next="focusNextItem"
@@ -193,6 +220,10 @@ export default {
     padding: 0.5em;
     border: 0.15em solid #000;
     border-radius: 0.25em;
+}
+
+.pcp-focused-object-info {
+    margin-left: auto;
 }
 
 .pcp-content-scroll {

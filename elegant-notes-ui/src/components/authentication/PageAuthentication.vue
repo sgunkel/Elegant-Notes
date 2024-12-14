@@ -24,7 +24,7 @@ export default {
         },
         receiveToken(token) {
             this.$emit('gotToken', token)
-        }
+        },
     }
 }
 </script>

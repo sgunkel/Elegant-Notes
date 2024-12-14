@@ -12,6 +12,8 @@ export default {
         atRoot: Boolean,
     },
     emits: [
+        'childGotFocus',
+        'childLostFocus',
         'removeChild',
         'addChild',
         'focusNext',
@@ -65,11 +67,25 @@ export default {
         }
     },
     methods: {
+        handleChildFocused(child=undefined) {
+            if (!child) {
+                child = this.block
+            }
+            this.$emit('childGotFocus', child)
+        },
+        handleChildLostFocus(child=undefined) {
+            if (!child) {
+                child = this.block
+            }
+            this.$emit('childLostFocus', child)
+        },
         enterEditMode() {
             this.focused = true
             this.setFocus()
+            this.handleChildFocused()
         },
         enterPresentationMode() {
+            this.handleChildLostFocus()
             this.focused = false
             this.saveChanges()
         },
@@ -196,8 +212,7 @@ export default {
                 }
             }
             else {
-                this.focused = true
-                this.setFocus()
+                this.enterEditMode()
             }
         },
         handleEnter() {
@@ -218,9 +233,11 @@ export default {
             this.$emit('removeChild', this.block, this.index)
         },
         handleArrowUp() {
+            this.enterPresentationMode()
             this.$emit('focusNext', this.index)
         },
         handleArrowDown() {
+            this.enterPresentationMode()
             if (this.block.children.length === 0) {
                 this.$emit('focusPrevious', this.index)
             }
@@ -259,6 +276,8 @@ export default {
           :block="child"
           :parent="block"
           :at-root="false"
+          @childGotFocus="handleChildFocused"
+          @childLostFocus="handleChildLostFocus"
           @add-child="addChild"
           @remove-child="removeChild"
           @focusNext="focusNextItem"
