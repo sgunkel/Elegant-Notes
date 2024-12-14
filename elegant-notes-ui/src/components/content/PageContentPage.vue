@@ -1,19 +1,20 @@
 <script>
+// TODO figure out a better name for this file
+
 import { store } from '@/store.js';
 import { constants } from '@/constants.js';
 import { convertPageObjToFormat } from './shared.js';
 import BlockContentView from './BlockContentView.vue';
 
 export default {
-    props: {
-        page: Object
-    },
     components: {
         BlockContentView,
     },
     data() {
         return {
-            content: []
+            loadingContent: true,
+            content: [], // TODO remove all references to this
+            page: store.getPage(),
         }
     },
     mounted() {
@@ -23,10 +24,16 @@ export default {
           .then(data => {
             this.content = data
             this.page.children = this.content.children
+            this.checkChildren()
+            this.loadingContent = false
         })
     },
     methods: {
+        backBtnClicked() {
+            this.$router.push(constants.PAGES.HOME)
+        },
         saveChanges() {
+            this.checkChildren(false)
             const obj = convertPageObjToFormat(this.page)
             store.fetchFromServer(constants.URLs.UPDATE_PAGE, obj, 'PUT')
               .then(msg => {
@@ -38,8 +45,29 @@ export default {
                 console.log(error)
               })
         },
+        checkChildren(saveNewChanges=true) {
+            if (this.page.children.length !== 0) {
+                return
+            }
+
+            // Object copied from BlockContentView when creating a new child
+            console.log('Empty page detected - adding single child')
+            const newChild = {
+                // backend to take care of the id
+                parent_id: '',
+                text: '',
+                children: [],
+                parent_id: this.page['@id'],
+                atRoot: true,
+                startWithFocus: true,
+            }
+            this.page.children.push(newChild)
+            if (saveNewChanges) {
+                this.saveChanges()
+            }
+        },
         addChild(child, parent) {
-            // TODO this needs to be cleaned up soon but deadlines are approaching
+            // TODO this needs to be cleaned up soon but school deadlines are approaching
             child.parent_id = this.page['@id']
             child.atRoot = true
             if (!parent) {
@@ -106,20 +134,70 @@ export default {
 </script>
 
 <template>
-    <h1>page content</h1>
-    <h3>{{ page.name }}</h3>
-    <BlockContentView
-      v-for="(child, index) in page.children || []"
-      :index="index"
-      :block="child"
-      :parent="page"
-      :at-root="true"
-      @add-child="addChild"
-      @remove-child="removeChild"
-      @focus-next="focusNextItem"
-      @focus-previous="focusPreviousItem">
-    </BlockContentView>
+    <div class="pcp-wrapper">
+        <div class="pcp-header">
+            <!-- TODO add some type of separation between these two items -->
+            <div class="pcp-btn" @click="backBtnClicked">
+                <span>Back</span> <!-- TODO convert this to a <router-link>? -->
+            </div>
+            <!--
+              TODO make this editable by using the component BlockContentView will use in the future
+              for switching between editing text and displaying text
+            -->
+            <h2>{{ page.name }}</h2>
+        </div>
+        <div class="pcp-loading" v-if="loadingContent">
+            <h3>Loading...</h3>
+        </div>
+        <div class="pcp-content-scroll" v-else>
+            <BlockContentView
+              v-for="(child, index) in page.children || []"
+              :index="index"
+              :block="child"
+              :parent="page"
+              :at-root="true"
+              @add-child="addChild"
+              @remove-child="removeChild"
+              @focus-next="focusNextItem"
+              @focus-previous="focusPreviousItem">
+            </BlockContentView>
+        </div>
+    </div>
 </template>
 
 <style>
+.pcp-wrapper {
+    margin: 0;
+    padding: 0 0.25em;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.pcp-header {
+    padding: 0.25em;
+    margin-bottom: 0.25em;
+    margin-top: 0.25em;
+    border: 0.25em solid #000;
+    border-radius: 0.15em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.pcp-header > h2 {
+    margin: 0;
+    padding: 0.15em;
+}
+
+.pcp-btn {
+    padding: 0.5em;
+    border: 0.15em solid #000;
+    border-radius: 0.25em;
+}
+
+.pcp-content-scroll {
+    flex: 1;
+    padding: 0 0.25em;
+    overflow: auto;
+}
 </style>

@@ -32,14 +32,14 @@ export default {
 <template>
     <div class="pa-wrapper">
         <CreateAccount
-        v-if="this.showCreateAccountView"
-        v-on:gotToken="receiveToken"
-        @switchToLoginPage="showLogin()">
+          v-if="this.showCreateAccountView"
+          v-on:gotToken="receiveToken"
+          @switchToLoginPage="showLogin()">
         </CreateAccount>
         <Login
         v-else
-        v-on:gotToken="receiveToken"
-        @switchToAccountCreation="showCreateAccount()">
+          v-on:gotToken="receiveToken"
+          @switchToAccountCreation="showCreateAccount()">
         </Login>
     </div>
 </template>

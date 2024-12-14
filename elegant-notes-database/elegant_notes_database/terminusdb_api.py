@@ -17,6 +17,7 @@ class CRUDTerminusDB(CRUDDatabaseAPI):
         pass
 
     def create(self, raw: Dict) -> Dict:
+        # TODO check on Page objects if there's an existing page with the same name
         return self._db_client.insert_document(raw)
 
     def retrieve_all(self) -> List[Dict]:

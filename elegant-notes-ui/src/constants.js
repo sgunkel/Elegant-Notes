@@ -11,6 +11,7 @@ const BLOCK_PREFIX = `${ADDRESS}/block`
 export const constants = {
     URLs: {
         // Note: all routes should *not* end with a slash
+        ADD_PAGE: `${PAGE_PREFIX}/add`,
         PAGE_BY_ID: `${PAGE_PREFIX}`,
         ALL_PAGES: `${PAGE_PREFIX}/all`,
         UPDATE_PAGE: `${PAGE_PREFIX}/update`,
@@ -18,4 +19,9 @@ export const constants = {
         ADD_BLOCK: `${BLOCK_PREFIX}/add`,
         UPDATE_BLOCK: `${BLOCK_PREFIX}/update`,
     },
+    PAGES: {
+        HOME: '/',
+        PAGE: '/page',
+        NEW_PAGE: '/new-page'
+    }
 }
