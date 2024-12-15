@@ -1,13 +1,8 @@
 ## Elegant Notes
-This system is still in development and in its prototyping stage. A basic frontend is in the works to show all functionalities and responses
-![Engineering screen with basic controls and text area to show responses from the backend](./basic-frontend.drawio.png)
+A simple, easy to use note-taking application. This system strives for organization with a parent/child relationship in the format of bullet-point lists.
 
-## Resources
-Experimental throwaway branch that may or may not live for a while as a reference if we choose to use this framework.
-- [Client installation](https://terminusdb.com/docs/install-the-python-client/)
-- [Getting started with TerminusDB with videos](https://ai-infrastructure.org/getting-started-with-terminusdb-using-the-python-client/)
-- [Docker download](https://docs.docker.com/desktop/release-notes/)
-- [Local service setup using Docker](https://terminusdb.com/docs/install-terminusdb-as-a-docker-container/)
-- [TODO app using TerminusDB (with an example in FastAPI)](https://www.youtube.com/watch?v=3qgDGeHDwIs&t=110s)
-- [UI Schema model controller](https://terminusdb.com/docs/use-the-model-builder-ui/)
-- Default username for TerminusDB is ***admin*** and default password is ***root***
+### WIP Status
+- This system is under heavy development and will have different aspects change quickly
+- Frontend is based on [Logseq](https://logseq.com/) but needs more work
+- Backend is sending text (JSON) that is not encrypted (yet)
+- Database needs to be changed to another client - [TerminusDB](https://github.com/terminusdb/terminusdb) lacks features on Python client and there does not seem to be a push to fix that
