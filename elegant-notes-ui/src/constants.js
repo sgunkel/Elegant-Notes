@@ -12,11 +12,12 @@ export const constants = {
     URLs: {
         // Note: all routes should *not* end with a slash
         ADD_PAGE: `${PAGE_PREFIX}/add`,
-        PAGE_BY_ID: `${PAGE_PREFIX}`,
+        PAGE_BY_ID: PAGE_PREFIX,
         ALL_PAGES: `${PAGE_PREFIX}/all`,
         UPDATE_PAGE: `${PAGE_PREFIX}/update`,
 
         ADD_BLOCK: `${BLOCK_PREFIX}/add`,
+        BLOCK_BY_ID: BLOCK_PREFIX,
         UPDATE_BLOCK: `${BLOCK_PREFIX}/update`,
     },
     PAGES: {

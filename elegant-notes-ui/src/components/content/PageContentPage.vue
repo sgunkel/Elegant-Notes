@@ -28,7 +28,11 @@ export default {
             this.page.children = this.content.children
             this.checkChildren()
             this.loadingContent = false
-        })
+          })
+          .catch(error => {
+            console.log(`Error when loading Page object: ${error}`) // TODO figure out way to show this to users
+            this.page.children = []
+          })
     },
     methods: {
         backBtnClicked() {

@@ -1,8 +1,8 @@
 <script>
+import { nextTick, ref } from 'vue';
 import { constants } from '@/constants.js';
 import { store } from '@/store.js';
 import { convertBlockObjToFormat } from './shared.js';
-import { nextTick, ref } from 'vue';
 
 export default {
     props: {
@@ -22,8 +22,9 @@ export default {
     data() {
         return {
             // state is created and given to us from setup()
-            previousText: this.block.text,
+            previousText: this.block.text, // TODO do we need this?
             focusedOnCreation: this.block.startWithFocus || false,
+            actualText: this.block.text,
         }
     },
     setup() {
@@ -65,6 +66,7 @@ export default {
         if (this.focusedOnCreation) {
             this.enterEditMode()
         }
+        this.handleActualTextUpdate()
     },
     methods: {
         handleChildFocused(child=undefined) {
@@ -88,6 +90,62 @@ export default {
             this.handleChildLostFocus()
             this.focused = false
             this.saveChanges()
+            this.handleActualTextUpdate()
+        },
+        async handleActualTextUpdate() {
+            /**
+             * Using the same format from Logseq for now
+             * Block format: ((<Block ID))
+             *   Where <Block ID> begins with Block/
+             * Page format: [[<Page ID>]]
+             *   Where <Page ID> begins with Page/
+             */
+            const blockRegEx = /\(\((.*?)\)\)/gm
+            const pageRegEx = /\[\[(.*?)\]\]/gm
+            const rawText = this.block.text
+            const withBlockLinks = await this.insertLinksFromRegEx(rawText, blockRegEx)
+            const withAllLinks = await this.insertLinksFromRegEx(withBlockLinks, pageRegEx)
+            this.actualText = withAllLinks
+        },
+        async insertLinksFromRegEx(text, regex) {
+            let result, changes = 0, previousIndex = 0, final = ''
+            while ((result = regex.exec(text))) {
+                const currentIndex = result.index
+
+                // Add previous text before link
+                const beforeLink = text.substring(previousIndex, currentIndex)
+                final += beforeLink
+
+                // Create and add link
+                const rawLinkURL = result[0]
+                const linkURL = result[1]
+                const fn = `console.log("${linkURL}")` // TODO add JS function to go to the object given its ID
+                const route = (linkURL.startsWith('Page/')) ? constants.URLs.PAGE_BY_ID : constants.URLs.BLOCK_BY_ID
+                const id = String(linkURL.replace(/Page\/|Block\//g, ''))
+                const fullRoute = `${route}/${id}`
+                const linkedObjectText = await store.fetchFromServer(fullRoute, {}, 'GET')
+                  .then(x => x.name || x.text)
+                  .catch(err => {
+                    console.log('Error when grabbing object text:', err)
+                    return null
+                  })
+                let link
+                if (linkedObjectText) {
+                    link = `[${linkedObjectText}](${fn})`
+                }
+                else {
+                    link = `~~${rawLinkURL}~~` // TODO figure out better way to show invalid links
+                }
+                final += link
+
+                previousIndex = currentIndex + rawLinkURL.length
+                changes++
+            }
+
+            if (changes === 0) {
+                final = text
+            }
+            return final
         },
         saveChanges() {
             const objWithChildIDs = convertBlockObjToFormat(this.block)
@@ -267,7 +325,7 @@ export default {
             <span
               v-else
               @click="enterEditMode">
-                {{ block.text || '&nbsp;' }}
+                {{ actualText || '&nbsp;' }}
             </span>
         </li>
         <BlockContentView
