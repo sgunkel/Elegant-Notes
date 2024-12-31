@@ -1,4 +1,6 @@
 <script>
+import { marked } from 'marked';
+
 import { nextTick, ref } from 'vue';
 import { constants } from '@/constants.js';
 import { store } from '@/store.js';
@@ -68,6 +70,11 @@ export default {
         }
         this.handleActualTextUpdate()
     },
+    computed: {
+        MarkdownAsHTML() {
+            return marked(this.actualText)
+        }
+    },
     methods: {
         handleChildFocused(child=undefined) {
             if (!child) {
@@ -119,7 +126,7 @@ export default {
                 // Create and add link
                 const rawLinkURL = result[0]
                 const linkURL = result[1]
-                const fn = `console.log("${linkURL}")` // TODO add JS function to go to the object given its ID
+                const fn = `javascript:console.log("go-to:${linkURL}")` // TODO add JS function to go to the object given its ID
                 const route = (linkURL.startsWith('Page/')) ? constants.URLs.PAGE_BY_ID : constants.URLs.BLOCK_BY_ID
                 const id = String(linkURL.replace(/Page\/|Block\//g, ''))
                 const fullRoute = `${route}/${id}`
@@ -322,11 +329,11 @@ export default {
               @keydown.tab="handleTab"
               @keydown.up="handleArrowUp"
               @keydown.down="handleArrowDown">
-            <span
+            <div
               v-else
-              @click="enterEditMode">
-                {{ actualText || '&nbsp;' }}
-            </span>
+              @click="enterEditMode"
+              v-html="MarkdownAsHTML">
+            </div>
         </li>
         <BlockContentView
           v-for="(child, index) in block.children" :key="child['@id']"
