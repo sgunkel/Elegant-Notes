@@ -1,8 +1,6 @@
 #!/bin/bash
 
-npm run watch --prefix elegant-notes-ui & # watch for all file changes to compile on the frontend
-FRONTEND_PID=$!
-pushd . && cd ./elegant-notes-backend
+npm run watch --prefix Frontend/Elegant-Notes & # watch for all file changes to compile on the frontend
+pushd . && cd Backend/
 fastapi dev # run the backend
 popd
-kill $FRONTEND_PID
