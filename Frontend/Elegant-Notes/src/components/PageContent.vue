@@ -1,18 +1,22 @@
 <script>
 import { store } from '@/store.js'
 import { fetchWithToken } from '@/utils.js'
+
 import Block from './Block.vue'
+import BacklinkReference from './BacklinkReference.vue';
 
 import { marked } from 'marked';
 
 export default {
     components: {
         Block,
+        BacklinkReference,
     },
     data() {
         return {
             page: store.getPage(),
             content: '',
+            backlinks: []
         }
     },
     computed: {
@@ -41,6 +45,9 @@ export default {
         fetch(`/page/get/${this.page.name}`)
             .then(response => response.json())
             .then(data => this.content = data.content)
+        fetch(`/meta/backlinks/${this.page.name}`)
+            .then(response => response.json())
+            .then(data => this.backlinks = data)
     },
     methods: {
         updateDocument() {
@@ -60,28 +67,39 @@ export default {
 
 <template>
     <h1>{{ page.name }}</h1>
-    <textarea
-      v-model="content"
-      @input="debounce(updateDocument, 1000)"
-      class="pc-page-text">
-    </textarea>
+    
+    <div class="pc-wrapper">
+        <textarea
+        v-model="content"
+        @input="debounce(updateDocument, 1000)"
+        class="pc-page-text">
+        </textarea>
 
-    <!-- <div class="pc-page-text">
-        <div v-for="line in splitIntoLines()">
-            <Block
-              :text="line">
-            </Block>
+        <div class="pc-back-links-section">
+            <BacklinkReference
+              v-for="backlink in backlinks"
+              :pageReferences="backlink">
+            </BacklinkReference>
         </div>
-    </div> -->
-
-    <!-- <div class="pc-page-text" v-html="MarkdownAsHTML"></div> -->
+    </div>
 </template>
 
 <style>
-.pc-page-text {
+.pc-wrapper {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
     width: 100%;
     height: 100%;
+}
 
+.pc-page-text {
+    height: 100%;
+    flex: 1 0 0;
+}
+
+.pc-back-links-section {
     overflow: auto;
+    flex: 1 0 0;
 }
 </style>
