@@ -6,9 +6,12 @@ import Block from './Block.vue'
 import BacklinkReference from './BacklinkReference.vue';
 
 import { marked } from 'marked';
+import { parseMarkdownToBlocks } from '@/BlockUtils';
+import BlockItem from './BlockItem.vue';
 
 export default {
     components: {
+        BlockItem,
         Block,
         BacklinkReference,
     },
@@ -16,7 +19,8 @@ export default {
         return {
             page: store.getPage(),
             content: '',
-            backlinks: []
+            backlinks: [],
+            rootLevelBlocks: [],
         }
     },
     computed: {
@@ -44,7 +48,11 @@ export default {
     mounted() {
         fetch(`/page/get/${this.page.name}`)
             .then(response => response.json())
-            .then(data => this.content = data.content)
+            .then(data => {
+                this.content = data.content
+                this.rootLevelBlocks = parseMarkdownToBlocks(this.content)
+                console.log(this.rootLevelBlocks)
+            })
         fetch(`/meta/backlinks/${this.page.name}`)
             .then(response => response.json())
             .then(data => this.backlinks = data)
@@ -68,12 +76,13 @@ export default {
 <template>
     <h1>{{ page.name }}</h1>
     
-    <div class="pc-wrapper">
-        <textarea
-        v-model="content"
-        @input="debounce(updateDocument, 1000)"
-        class="pc-page-text">
-        </textarea>
+    <div class="page-content-wrapper">
+        <BlockItem
+            v-for="child in rootLevelBlocks"
+            :key="child.id"
+            :block="child"
+            :level="0">
+        </BlockItem>
 
         <div class="pc-back-links-section">
             <BacklinkReference
@@ -85,7 +94,7 @@ export default {
 </template>
 
 <style>
-.pc-wrapper {
+.page-content-wrapper {
     display: flex;
     flex-direction: column;
     overflow: auto;
@@ -93,12 +102,7 @@ export default {
     height: 100%;
 }
 
-.pc-page-text {
-    height: 100%;
-    flex: 1 0 0;
-}
-
-.pc-back-links-section {
+.page-content-back-links-section {
     overflow: auto;
     flex: 1 0 0;
 }
