@@ -2,17 +2,15 @@
 import { store } from '@/store.js'
 import { fetchWithToken } from '@/utils.js'
 
-import Block from './Block.vue'
 import BacklinkReference from './BacklinkReference.vue';
+import { parseMarkdownToBlocks } from '@/BlockUtils';
 
 import { marked } from 'marked';
-import { parseMarkdownToBlocks } from '@/BlockUtils';
-import BlockItem from './BlockItem.vue';
+import BlockEditor from './BlockEditor.vue';
 
 export default {
     components: {
-        BlockItem,
-        Block,
+        BlockEditor,
         BacklinkReference,
     },
     data() {
@@ -21,6 +19,7 @@ export default {
             content: '',
             backlinks: [],
             rootLevelBlocks: [],
+            editingId: null,
         }
     },
     computed: {
@@ -68,7 +67,24 @@ export default {
         },
         splitIntoLines() {
             return this.content.split('\n')
-        }
+        },
+        handleUpdate(updatedBlock) {
+            // Traverse and update block in nested structure
+            const updateRecursive = (blocks) => {
+                console.log(blocks)
+                return blocks.map(block => {
+                    console.log(block)
+                    if (block.id === updatedBlock.id) {
+                        return { ...updatedBlock }
+                    } else if (block.blocks) {
+                        return { ...block, blocks: updateRecursive(block.blocks) }
+                    }
+                    return block
+                })
+            }
+            this.blocks = updateRecursive(this.rootLevelBlocks)
+            this.editingId = null
+        },
     }
 }
 </script>
@@ -77,12 +93,22 @@ export default {
     <h1>{{ page.name }}</h1>
     
     <div class="page-content-wrapper">
-        <BlockItem
+        <!-- <BlockItem
             v-for="child in rootLevelBlocks"
             :key="child.id"
             :block="child"
             :level="0">
-        </BlockItem>
+        </BlockItem> -->
+
+        <BlockEditor
+          v-for="block in rootLevelBlocks"
+          :key="block.id"
+          :block="block"
+          :editing-id="editingId"
+          :level="0"
+          @start-editing="editingId = $event"
+          @update-block="handleUpdate"
+        />
 
         <div class="pc-back-links-section">
             <BacklinkReference
