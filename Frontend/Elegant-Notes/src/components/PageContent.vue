@@ -8,6 +8,8 @@ import { parseMarkdownToBlocks } from '@/BlockUtils';
 import { marked } from 'marked';
 import BlockEditor from './BlockEditor.vue';
 
+import { v4 as uuidv4 } from 'uuid'
+
 export default {
     components: {
         BlockEditor,
@@ -82,6 +84,7 @@ export default {
             }
             this.blocks = updateRecursive(this.rootLevelBlocks)
             this.editingId = null
+            // TODO actually send the updated stuff to the backend
         },
         navigateTo(direction) {
             const flattenBlocks = (blocks, flatList = []) => { // TODO move this to its own utilities file
@@ -103,6 +106,41 @@ export default {
                 this.editingId = flatList[targetIndex].id
             }
         },
+        createBlockAfter(targetId) {
+            const newBlock = {
+                id: uuidv4(),
+                content: '',
+                children: []
+            }
+
+            const insertAfterRecursive = (blocks) => { // TODO move this to its own file
+                for (let i = 0; i < blocks.length; i++) {
+                    const block = blocks[i]
+                    if (block.id === targetId) {
+                        blocks.splice(i + 1, 0, newBlock)
+                        return true
+                    } else if (block.children) {
+                        const inserted = insertAfterRecursive(block.children)
+                        if (inserted) { return true }
+                    }
+                }
+                return false
+            }
+
+            const blocksCopy = JSON.parse(JSON.stringify(this.rootLevelBlocks))
+            if (insertAfterRecursive(blocksCopy)) {
+                this.rootLevelBlocks = blocksCopy
+                this.editingId = newBlock.id
+                
+                // Wait until the new BlockEditor component is actually created before trying to focus it
+                this.$nextTick(() => {
+                    const blockEditors = this.$refs.blockEditors;
+                    const editorsArray = Array.isArray(blockEditors) ? blockEditors : Object.values(blockEditors);
+                    const newEditor = editorsArray.find(e => e.block.id === newBlock.id);
+                    newEditor?.focusInput();
+                });
+            }
+        },
     }
 }
 </script>
@@ -117,9 +155,13 @@ export default {
           :block="block"
           :editing-id="editingId"
           :level="0"
+          ref="blockEditors"
+          :ref-for="true"
           @start-editing="editingId = $event"
           @update-block="handleUpdate"
-          @navigate="navigateTo"/>
+          @navigate="navigateTo"
+          @create-block-after="createBlockAfter"
+        />
 
         <div class="pc-back-links-section">
             <BacklinkReference

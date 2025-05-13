@@ -1,8 +1,8 @@
 <script>
 /**
  * Being completely honest, I've struggled with this part before with parent/child
- *   communications/updating and asked ChatGPT how it would do it. This is mostly
- *   what was suggested with a few modifications.
+ *   communications/updating and asked ChatGPT how it would do it. A lot the concepts
+ *   were generated from ChatGPT but the actual code usually had modifications to it.
  */
 
 import markdownParser from '@/markdownParser.js'
@@ -17,6 +17,7 @@ export default {
         'update-block',
         'start-editing',
         'navigate',
+        'create-block-after',
     ],
     data() {
         return {
@@ -39,6 +40,9 @@ export default {
         }
     },
     methods: {
+        focusInput() {
+            this.$nextTick(() => this.$refs.input?.focus());
+        },
         startEditing() {
             this.$emit('start-editing', this.block.id)
         },
@@ -58,7 +62,9 @@ export default {
                 this.$emit('navigate', 'up')
             }
             else if (e.key === 'Enter') {
+                e.preventDefault()
                 this.onBlur()
+                this.$emit('create-block-after', this.block.id)
             }
         },
     }
@@ -73,6 +79,7 @@ export default {
         <!-- Markdown renderer and inline text editing -->
         <input
           v-if="isEditing"
+          :key="block.id"
           v-model="editableContent"
           @blur="onBlur"
           @keydown="onInputKeydown"
@@ -93,7 +100,9 @@ export default {
           :level="(level + 1)"
           @start-editing="$emit('start-editing', $event)"
           @update-block="$emit('update-block', $event)"
-          @navigate="$emit('navigate', $event)"/>
+          @navigate="$emit('navigate', $event)"
+          @create-block-after="$emit('create-block-after', $event)"
+          />
     </div>
 </template>
 
