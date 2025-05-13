@@ -15,7 +15,8 @@ export default {
     },
     emits: [
         'update-block',
-        'start-editing'
+        'start-editing',
+        'navigate',
     ],
     data() {
         return {
@@ -46,7 +47,20 @@ export default {
                 ...this.block,
                 content: this.editableContent
             })
-        }
+        },
+        onInputKeydown(e) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                this.$emit('navigate', 'down')
+            }
+            else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                this.$emit('navigate', 'up')
+            }
+            else if (e.key === 'Enter') {
+                this.onBlur()
+            }
+        },
     }
 }
 </script>
@@ -61,7 +75,7 @@ export default {
           v-if="isEditing"
           v-model="editableContent"
           @blur="onBlur"
-          @keydown.enter="onBlur"
+          @keydown="onInputKeydown"
           ref="input"/>
         <div
           v-else
@@ -78,7 +92,8 @@ export default {
           :editing-id="editingId"
           :level="(level + 1)"
           @start-editing="$emit('start-editing', $event)"
-          @update-block="$emit('update-block', $event)"/>
+          @update-block="$emit('update-block', $event)"
+          @navigate="$emit('navigate', $event)"/>
     </div>
 </template>
 

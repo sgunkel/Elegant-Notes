@@ -70,10 +70,8 @@ export default {
         },
         handleUpdate(updatedBlock) {
             // Traverse and update block in nested structure
-            const updateRecursive = (blocks) => {
-                console.log(blocks)
+            const updateRecursive = (blocks) => { // TODO move this to its own file
                 return blocks.map(block => {
-                    console.log(block)
                     if (block.id === updatedBlock.id) {
                         return { ...updatedBlock }
                     } else if (block.blocks) {
@@ -85,6 +83,26 @@ export default {
             this.blocks = updateRecursive(this.rootLevelBlocks)
             this.editingId = null
         },
+        navigateTo(direction) {
+            const flattenBlocks = (blocks, flatList = []) => { // TODO move this to its own utilities file
+                blocks.forEach(block => {
+                    flatList.push(block)
+                    if (block.children.length > 0) {
+                        flattenBlocks(block.children, flatList)
+                    }
+                })
+                return flatList
+            }
+
+            const flatList = flattenBlocks(this.rootLevelBlocks)
+            const currentIndex = flatList.findIndex(b => b.id === this.editingId)
+            if (currentIndex === -1) { return }
+
+            const targetIndex = ((direction === 'up') ? currentIndex - 1 : currentIndex + 1)
+            if (flatList[targetIndex]) {
+                this.editingId = flatList[targetIndex].id
+            }
+        },
     }
 }
 </script>
@@ -93,13 +111,6 @@ export default {
     <h1>{{ page.name }}</h1>
     
     <div class="page-content-wrapper">
-        <!-- <BlockItem
-            v-for="child in rootLevelBlocks"
-            :key="child.id"
-            :block="child"
-            :level="0">
-        </BlockItem> -->
-
         <BlockEditor
           v-for="block in rootLevelBlocks"
           :key="block.id"
@@ -108,7 +119,7 @@ export default {
           :level="0"
           @start-editing="editingId = $event"
           @update-block="handleUpdate"
-        />
+          @navigate="navigateTo"/>
 
         <div class="pc-back-links-section">
             <BacklinkReference
