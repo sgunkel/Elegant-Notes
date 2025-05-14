@@ -24,6 +24,11 @@ export default {
             editableContent: this.block.content,
         }
     },
+    mounted() {
+        if (this.isEditing) {
+            this.focusInput();
+        }
+    },
     computed: {
         isEditing() {
             return this.block.id === this.editingId
@@ -35,9 +40,9 @@ export default {
     watch: {
         isEditing(newVal) {
             if (newVal) {
-                this.$nextTick(() => this.$refs.input?.focus())
+                this.deferFocus();
             }
-        }
+        },
     },
     methods: {
         focusInput() {
@@ -66,6 +71,20 @@ export default {
                 this.onBlur()
                 this.$emit('create-block-after', this.block.id)
             }
+        },
+        deferFocus() {
+            this.$nextTick(() => {
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    const el = this.$refs.input;
+                    if (el && typeof el.focus === 'function') {
+                        el.focus();
+                    } else {
+                        console.warn('Input not focusable', el);
+                    }
+                    }, 0);
+                });
+            });
         },
     }
 }

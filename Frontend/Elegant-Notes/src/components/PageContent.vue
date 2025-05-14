@@ -117,8 +117,15 @@ export default {
                 for (let i = 0; i < blocks.length; i++) {
                     const block = blocks[i]
                     if (block.id === targetId) {
-                        blocks.splice(i + 1, 0, newBlock)
-                        return true
+                        // New entry should be the first child if the block already has
+                        //   children - seems more natural
+                        if (block.children.length > 0) {
+                            block.children.unshift(newBlock);
+                        } else {
+                            // Insert the new entry as a sibling
+                            blocks.splice(i + 1, 0, newBlock);
+                        }
+                        return true;
                     } else if (block.children) {
                         const inserted = insertAfterRecursive(block.children)
                         if (inserted) { return true }
@@ -131,14 +138,7 @@ export default {
             if (insertAfterRecursive(blocksCopy)) {
                 this.rootLevelBlocks = blocksCopy
                 this.editingId = newBlock.id
-                
-                // Wait until the new BlockEditor component is actually created before trying to focus it
-                this.$nextTick(() => {
-                    const blockEditors = this.$refs.blockEditors;
-                    const editorsArray = Array.isArray(blockEditors) ? blockEditors : Object.values(blockEditors);
-                    const newEditor = editorsArray.find(e => e.block.id === newBlock.id);
-                    newEditor?.focusInput();
-                });
+                // BlockEditor components handle <input> focus logic
             }
         },
     }
