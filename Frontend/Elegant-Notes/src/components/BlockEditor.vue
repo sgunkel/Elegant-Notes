@@ -18,6 +18,8 @@ export default {
         'start-editing',
         'navigate',
         'create-block-after',
+        'indent-block',
+        'outdent-block',
     ],
     data() {
         return {
@@ -72,6 +74,12 @@ export default {
                 this.$emit('create-block-after', this.block.id)
             }
         },
+        handleTab() {
+            this.$emit('indent-block', this.block.id)
+        },
+        handleShiftTab() {
+            this.$emit('outdent-block', this.block.id)
+        },
         deferFocus() {
             this.$nextTick(() => {
             requestAnimationFrame(() => {
@@ -102,6 +110,8 @@ export default {
           v-model="editableContent"
           @blur="onBlur"
           @keydown="onInputKeydown"
+          @keydown.tab.exact="handleTab"
+          @keydown.shift.tab="handleShiftTab"
           ref="input"/>
         <div
           v-else
@@ -121,6 +131,8 @@ export default {
           @update-block="$emit('update-block', $event)"
           @navigate="$emit('navigate', $event)"
           @create-block-after="$emit('create-block-after', $event)"
+          @indent-block="$emit('indent-block', $event)"
+          @outdent-block="$emit('outdent-block', $event)"
           />
     </div>
 </template>
