@@ -22,6 +22,7 @@ export default {
             backlinks: [],
             rootLevelBlocks: [],
             editingId: null,
+            refocusKey: 0,
         }
     },
     computed: {
@@ -85,7 +86,7 @@ export default {
             this.blocks = updateRecursive(this.rootLevelBlocks)
             this.editingId = null
             // TODO actually send the updated stuff to the backend
-            /// ^^ do this after block delete and tab/shift+tab support
+            /// ^^ we should be able to do this now
         },
         navigateTo(direction) {
             const flattenBlocks = (blocks, flatList = []) => { // TODO move this to its own utilities file
@@ -166,7 +167,22 @@ export default {
             const copy = JSON.parse(JSON.stringify(this.rootLevelBlocks))
             if (indent(copy)) {
                 this.rootLevelBlocks = copy
-                this.editingId = blockId
+
+                this.refocusKey++ // might be able to delete
+                
+                this.$nextTick(() => {
+                    this.editingId = blockId;
+                    const editors = this.$refs.blockEditors;
+                    const targetEditor = Array.isArray(editors)
+                        ? editors.find(ref => ref.block.id === blockId)
+                        : editors?.block?.id === blockId
+                            ? editors
+                            : null;
+
+                    if (targetEditor && typeof targetEditor.focusInput === 'function') {
+                        targetEditor.focusInput();
+                    }
+                });
             }
         },
         outdentBlock(blockId) {
@@ -214,7 +230,24 @@ export default {
 
             if (findAndOutdent(blocksCopy)) {
                 this.rootLevelBlocks = blocksCopy
-                this.editingId = blockId
+
+                this.refocusKey++ // might not need anymore...
+
+                this.$nextTick(() => {
+                    this.editingId = blockId;
+                    requestAnimationFrame(() => {
+                        const editors = this.$refs.blockEditors;
+                        const targetEditor = Array.isArray(editors)
+                            ? editors.find(ref => ref.block.id === blockId)
+                            : editors?.block?.id === blockId
+                                ? editors
+                                : null;
+
+                        if (targetEditor && typeof targetEditor.focusInput === 'function') {
+                            targetEditor.focusInput();
+                        }
+                    })
+                });
             }
         },
     }
@@ -231,6 +264,7 @@ export default {
           :block="block"
           :editing-id="editingId"
           :level="0"
+          :refocus-key="refocusKey"
           ref="blockEditors"
           :ref-for="true"
           @start-editing="editingId = $event"

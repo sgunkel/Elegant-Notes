@@ -12,6 +12,7 @@ export default {
         block: Object,
         level: Number,
         editingId: String,
+        refocusKey: Number,
     },
     emits: [
         'update-block',
@@ -45,19 +46,28 @@ export default {
                 this.deferFocus();
             }
         },
+        // refocusKey() {
+        //     if (this.editingId) {
+        //         this.deferFocus()
+        //     }
+        // }
     },
     methods: {
         focusInput() {
+            console.log(this.block.id)
             this.$nextTick(() => this.$refs.input?.focus());
         },
         startEditing() {
             this.$emit('start-editing', this.block.id)
         },
-        onBlur() {
+        saveBlockState() {
             this.$emit('update-block', {
                 ...this.block,
                 content: this.editableContent
             })
+        },
+        onBlur() {
+            this.saveBlockState()
         },
         onInputKeydown(e) {
             if (e.key === 'ArrowDown') {
@@ -75,22 +85,28 @@ export default {
             }
         },
         handleTab() {
+            this.saveBlockState()
             this.$emit('indent-block', this.block.id)
         },
         handleShiftTab() {
+            this.saveBlockState()
             this.$emit('outdent-block', this.block.id)
         },
         deferFocus() {
+            console.log("Focusing:", this.block.id)
+            // Only run when it switches to true
             this.$nextTick(() => {
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    const el = this.$refs.input;
-                    if (el && typeof el.focus === 'function') {
-                        el.focus();
-                    } else {
-                        console.warn('Input not focusable', el);
-                    }
+                requestAnimationFrame(() => {
+                const el = this.$refs.input;
+                if (el && typeof el.focus === 'function') {
+                    // Small timeout ensures focus works even in Firefox
+                    setTimeout(() => {
+                    el.focus();
+                    el.selectionStart = el.selectionEnd = el.value.length;
                     }, 0);
+                } else {
+                    console.warn('[BlockEditor] Input not focusable for block', this.block.id);
+                }
                 });
             });
         },
