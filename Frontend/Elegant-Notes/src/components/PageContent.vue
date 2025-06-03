@@ -144,6 +144,27 @@ export default {
                 // BlockEditor components handle <input> focus logic
             }
         },
+        deleteBlock(blockID) {
+            const deleteByID = (blocks, targetID) => {
+                for (let i = 0; i < blocks.length; i++) {
+                    const block = blocks[i]
+                    if (block.id === targetID) {
+                        // assume we have already checked that the given Block does **not** have children
+                        blocks.splice(i, 1)
+                        return true
+                    }
+                    else if (block.children && deleteByID(block.children, targetID)) {
+                        return true
+                    }
+                }
+                return false
+            }
+            const copy = JSON.parse(JSON.stringify(this.rootLevelBlocks))
+            if (deleteByID(copy, blockID)) {
+                this.rootLevelBlocks = copy
+                // The Block that was deleted already handled shifting focus to the next block
+            }
+        },
         indentBlock(blockId) {
             console.log('indent')
             const indent = (blocks) => {
@@ -271,6 +292,7 @@ export default {
           @update-block="handleUpdate"
           @navigate="navigateTo"
           @create-block-after="createBlockAfter"
+          @delete-block="deleteBlock"
           @indent-block="indentBlock"
           @outdent-block="outdentBlock"
         />

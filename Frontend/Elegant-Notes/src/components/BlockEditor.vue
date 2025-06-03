@@ -19,6 +19,7 @@ export default {
         'start-editing',
         'navigate',
         'create-block-after',
+        'delete-block',
         'indent-block',
         'outdent-block',
     ],
@@ -82,6 +83,12 @@ export default {
                 e.preventDefault()
                 this.onBlur()
                 this.$emit('create-block-after', this.block.id)
+            }
+            else if (e.key === 'Backspace') {
+                if (this.editableContent === '' && this.block.children.length === 0) {
+                    this.$emit('navigate', 'down')
+                    this.$emit('delete-block', this.block.id)
+                }
             }
         },
         handleTab() {
@@ -147,6 +154,7 @@ export default {
           @update-block="$emit('update-block', $event)"
           @navigate="$emit('navigate', $event)"
           @create-block-after="$emit('create-block-after', $event)"
+          @delete-block="$emit('delete-block', $event)"
           @indent-block="$emit('indent-block', $event)"
           @outdent-block="$emit('outdent-block', $event)"
           />
