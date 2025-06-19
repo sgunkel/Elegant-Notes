@@ -26,11 +26,15 @@ export default {
     data() {
         return {
             editableContent: this.block.content,
+            tabbing: false,
+            keepFocusOnBlock: false,
         }
     },
     mounted() {
         if (this.isEditing) {
-            this.focusInput();
+            this.tabbing = true
+            this.keepFocusOnBlock = true
+            this.deferFocusUntilReady();
         }
     },
     computed: {
@@ -44,76 +48,146 @@ export default {
     watch: {
         isEditing(newVal) {
             if (newVal) {
-                this.deferFocus();
+                // this.deferFocus();
+                this.deferFocusUntilReady();
+                this.keepFocusOnBlock = true
             }
         },
-        // refocusKey() {
-        //     if (this.editingId) {
-        //         this.deferFocus()
-        //     }
-        // }
+        refocusKey() {
+            if (this.isEditing) {
+                this.deferFocus()
+            }
+        },
+        editableContent(newVal) {
+            console.log('Block', this.block.id, 'content changed to:', newVal)
+        },
+        // 'block.content'(newContent) {
+        //     this.editableContent = newContent
+        // },
     },
     methods: {
-        focusInput() {
-            console.log(this.block.id)
-            this.$nextTick(() => this.$refs.input?.focus());
+        focusInput() { // not used....
+            console.log('focusInput on id', this.block.id)
+            this.$nextTick(() => {
+                this.$refs.input?.focus()
+                console.log('set focus via $refs')
+            });
         },
         startEditing() {
+            this.keepFocusOnBlock = true
             this.$emit('start-editing', this.block.id)
         },
-        saveBlockState() {
+        saveBlockState(keepFocus, shouldDebounce = true) {
+            keepFocus ??= false
+            console.log('saveBlockState - keepFocus:', keepFocus)
             this.$emit('update-block', {
                 ...this.block,
                 content: this.editableContent
-            })
+            }, keepFocus, shouldDebounce)
         },
         onBlur() {
-            this.saveBlockState()
+            console.log('onBlur - tabbing:', this.tabbing)
+            this.keepFocusOnBlock = false
+            // if (this.tabbing) {
+            //     this.tabbing = false
+            //     // this.focusInput()
+            // }
+            // else {
+            //     this.saveBlockState()
+            // }
+            this.saveBlockState(this.tabbing ?? false)
         },
         onInputKeydown(e) {
+            console.log('onInputKeydown')
             if (e.key === 'ArrowDown') {
                 e.preventDefault()
                 this.$emit('navigate', 'down')
+                this.keepFocusOnBlock = false
             }
             else if (e.key === 'ArrowUp') {
                 e.preventDefault()
                 this.$emit('navigate', 'up')
+                this.keepFocusOnBlock = false
             }
             else if (e.key === 'Enter') {
                 e.preventDefault()
                 this.onBlur()
                 this.$emit('create-block-after', this.block.id)
+                this.keepFocusOnBlock = false
             }
             else if (e.key === 'Backspace') {
-                if (this.editableContent === '' && this.block.children.length === 0) {
+                // if (this.editableContent === '' && this.block.children.length === 0) {
+                //     this.$emit('navigate', 'down')
+                //     this.$emit('delete-block', this.block.id)
+                // }
+                if (this.editableContent === '' && this.block.children.length === 0 && !this.tabbing) {
                     this.$emit('navigate', 'down')
                     this.$emit('delete-block', this.block.id)
                 }
             }
         },
         handleTab() {
-            this.saveBlockState()
-            this.$emit('indent-block', this.block.id)
+            this.tabbing = true
+            // this.keepFocusOnBlock = false
+            console.log('handleTab editableContent', this.editableContent)
+            this.$emit('indent-block', this.block.id, this.editableContent)
+            // this.saveBlockState(true)
         },
         handleShiftTab() {
-            this.saveBlockState()
-            this.$emit('outdent-block', this.block.id)
+            this.tabbing = true
+            // this.saveBlockState(true, true)
+            // this.keepFocusOnBlock = false
+            console.log('handleShiftTab editableContent', this.editableContent)
+            this.$emit('outdent-block', this.block.id, this.editableContent)
         },
         deferFocus() {
-            console.log("Focusing:", this.block.id)
-            // Only run when it switches to true
+            // console.log("Focusing:", this.block.id)
+            // // Only run when it switches to true
+            // this.$nextTick(() => {
+            //     requestAnimationFrame(() => {
+            //         const el = this.$refs.input;
+            //         if (el && typeof el.focus === 'function') {
+            //             setTimeout(() => {
+            //                 el.focus();
+            //                 el.selectionStart = el.selectionEnd = el.value.length;
+            //             }, 0);
+            //         } else {
+            //             console.warn('[BlockEditor] Input not focusable for block', this.block.id);
+            //         }
+            //     });
+            // });
+
+              console.log("Deferred focus:", this.block.id)
+                this.$nextTick(() => {
+                    requestAnimationFrame(() => {
+                    const el = this.$refs.input;
+                    if (el && typeof el.focus === 'function') {
+                        el.focus();
+                        // Move cursor to end
+                        el.selectionStart = el.selectionEnd = el.value.length;
+                        el.style.outline = '2px solid red'; // debug
+                    } else {
+                        console.warn('[BlockEditor] Input not focusable for block', this.block.id);
+                    }
+                    this.tabbing = false
+                });
+            });
+        },
+        deferFocusUntilReady(retries = 5) {
             this.$nextTick(() => {
                 requestAnimationFrame(() => {
-                const el = this.$refs.input;
-                if (el && typeof el.focus === 'function') {
-                    // Small timeout ensures focus works even in Firefox
-                    setTimeout(() => {
-                    el.focus();
-                    el.selectionStart = el.selectionEnd = el.value.length;
-                    }, 0);
-                } else {
-                    console.warn('[BlockEditor] Input not focusable for block', this.block.id);
-                }
+                    const input = this.$refs.input;
+                    if (input && typeof input.focus === 'function') {
+                        input.focus();
+                        input.selectionStart = input.selectionEnd = input.value.length;
+                        input.style.outline = '2px solid red'; // for debugging
+                        console.log('[BlockEditor] Focused input:', this.block.id);
+                    } else if (retries > 0) {
+                        console.warn('[BlockEditor] Retrying focus for block', this.block.id);
+                        setTimeout(() => this.deferFocusUntilReady(retries - 1), 50);
+                    } else {
+                        console.error('[BlockEditor] Failed to focus input after retries:', this.block.id);
+                    }
                 });
             });
         },
@@ -133,6 +207,7 @@ export default {
           v-model="editableContent"
           @blur="onBlur"
           @keydown="onInputKeydown"
+          @keyup="saveBlockState(this.keepFocusOnBlock)"
           @keydown.tab.exact="handleTab"
           @keydown.shift.tab="handleShiftTab"
           ref="input"/>
@@ -150,6 +225,7 @@ export default {
           :block="child"
           :editing-id="editingId"
           :level="(level + 1)"
+          :refocus-key="refocusKey"
           @start-editing="$emit('start-editing', $event)"
           @update-block="$emit('update-block', $event)"
           @navigate="$emit('navigate', $event)"
