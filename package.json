@@ -1,7 +1,9 @@
 {
   "dependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
+    "markdown-it": "^14.1.0",
     "marked": "^15.0.7",
+    "uuid": "^11.1.0",
     "vue-router": "^4.5.0"
   }
 }
