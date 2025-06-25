@@ -32,7 +32,7 @@ export default {
     },
     mounted() {
         if (this.isEditing) {
-            this.tabbing = true
+            // this.tabbing = true
             this.keepFocusOnBlock = true
             this.deferFocusUntilReady();
         }
@@ -98,7 +98,8 @@ export default {
             this.saveBlockState(this.tabbing ?? false)
         },
         onInputKeydown(e) {
-            console.log('onInputKeydown')
+            console.log('onInputKeydown: `' + e.key + '`')
+            console.log('this.tabbing', this.tabbing)
             if (e.key === 'ArrowDown') {
                 e.preventDefault()
                 this.$emit('navigate', 'down')
@@ -116,11 +117,7 @@ export default {
                 this.keepFocusOnBlock = false
             }
             else if (e.key === 'Backspace') {
-                // if (this.editableContent === '' && this.block.children.length === 0) {
-                //     this.$emit('navigate', 'down')
-                //     this.$emit('delete-block', this.block.id)
-                // }
-                if (this.editableContent === '' && this.block.children.length === 0 && !this.tabbing) {
+                if (this.editableContent === '' && this.block.children.length === 0) {
                     this.$emit('navigate', 'down')
                     this.$emit('delete-block', this.block.id)
                 }
