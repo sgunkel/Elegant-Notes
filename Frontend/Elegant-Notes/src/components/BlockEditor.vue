@@ -177,7 +177,6 @@ export default {
                     if (input && typeof input.focus === 'function') {
                         input.focus();
                         input.selectionStart = input.selectionEnd = input.value.length;
-                        input.style.outline = '2px solid red'; // for debugging
                         console.log('[BlockEditor] Focused input:', this.block.id);
                     } else if (retries > 0) {
                         console.warn('[BlockEditor] Retrying focus for block', this.block.id);
@@ -197,22 +196,29 @@ export default {
       class="block-editor-wrapper"
       :style="{ marginLeft: ((level * 20) + 'px') }">
 
-        <!-- Markdown renderer and inline text editing -->
-        <input
-          v-if="isEditing"
-          :key="block.id"
-          v-model="editableContent"
-          @blur="onBlur"
-          @keydown="onInputKeydown"
-          @keyup="saveBlockState(this.keepFocusOnBlock)"
-          @keydown.tab.exact="handleTab"
-          @keydown.shift.tab="handleShiftTab"
-          ref="input"/>
-        <div
-          v-else
-          v-html="convertMarkdownToHTML"
-          class="block-editor-converted-text"
-          @click="startEditing">
+        <div class="block-editor-text-line">
+            <div class="block-editor-info">
+                <!-- TODO add menu for copying Block ID to clipboard -->
+            </div>
+
+            <!-- Markdown renderer and inline text editing -->
+            <input
+              v-if="isEditing"
+              :key="block.id"
+              v-model="editableContent"
+              class="block-editor-text-edit"
+              @blur="onBlur"
+              @keydown="onInputKeydown"
+              @keyup="saveBlockState(this.keepFocusOnBlock)"
+              @keydown.tab.exact="handleTab"
+              @keydown.shift.tab="handleShiftTab"
+              ref="input"/>
+            <div
+              v-else
+              v-html="convertMarkdownToHTML"
+              class="block-editor-converted-text"
+              @click="startEditing">
+            </div>
         </div>
 
         <!-- Children as a nested list -->
@@ -240,7 +246,24 @@ export default {
     margin: 0;
 }
 
+.block-editor-text-line {
+    display: flex;
+    flex-direction: row;
+    margin: 0;
+}
+
+.block-editor-text-edit {
+    width: 100%;
+    flex: 1 1 0;
+}
+
+.block-editor-info {
+    background-color: red;
+    padding: 0.25em;
+}
+
 .block-editor-converted-text {
     padding: 0;
+    width: 100%;
 }
 </style>

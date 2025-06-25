@@ -33,5 +33,15 @@ export function parseMarkdownToBlocks(markdownContent) {
             stack.push(newBlock)
         }
     });
+
+    // Empty file
+    if (rootLevel.length === 0) {
+        rootLevel.push({
+            id: uuidv4(),
+            content: '',
+            children: [],
+            indent: 0,
+        })
+    }
     return rootLevel
 }

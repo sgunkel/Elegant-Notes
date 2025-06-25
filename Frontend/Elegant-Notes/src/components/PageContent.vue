@@ -84,7 +84,7 @@ export default {
                 content: json2md(this.rootLevelBlocks, 0)// this.rootLevelBlocks
             }
             console.log(data)
-            // fetchWithToken('/page/update', data, 'POST')
+            fetchWithToken('/page/update', data, 'POST')
         },
         splitIntoLines() {
             return this.content.split('\n')
