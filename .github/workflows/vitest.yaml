@@ -21,3 +21,4 @@ jobs:
 
       - name: Execute Tests
         run: npm run test
+        working-directory: ./Frontend/Elegant-Notes
