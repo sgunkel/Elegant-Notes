@@ -7,6 +7,7 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "vite-plugin-vue-devtools": "^7.7.7",
     "vitest": "^3.2.4"
   }
 }
