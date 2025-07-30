@@ -20,5 +20,5 @@ jobs:
         run: npm ci
 
       - name: Execute Tests
-        run: npm run test
         working-directory: ./Frontend/Elegant-Notes
+        run: npm run test

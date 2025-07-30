@@ -1,23 +1,24 @@
 import os
 import re
-from typing import List
+from typing import List, Optional
+from pathlib import Path
 
 from .config import get_pages_path
 from .meta_model import BackLink, BackLinkReference
 
-PAGE_PATH = get_pages_path()
-PAGE_PATH_STR = str(PAGE_PATH)
-
-def get_back_links_by_page_name(page_name: str) -> List[BackLink]:
+def get_back_links_by_page_name(page_name: str, page_path: Optional[Path] = None) -> List[BackLink]:
     all_back_links = []
-    for file_name in os.listdir(PAGE_PATH_STR):
-        path = str(PAGE_PATH / file_name)
+    if page_path is None:
+        page_path = get_pages_path()
+    page_path_str = str(page_path)
+    for file_name in os.listdir(page_path_str):
+        path = str(page_path / file_name)
         references = __extract_references_from_page(path, page_name)
         if len(references) != 0:
             name = os.path.basename(path).replace('.md', '')
             new_back_link = BackLink(page_name=name, references=references)
             all_back_links.append(new_back_link)
-    return all_back_links
+    return all_back_links # maybe use `sorted` and sort by page names..?
 
 def __extract_references_from_page(path: str, page_name: str) -> List[BackLinkReference]:
     with open(path) as f:
