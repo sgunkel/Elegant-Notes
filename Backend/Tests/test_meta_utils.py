@@ -1,6 +1,6 @@
 import pytest
 
-from .utils import generate_random_md_file, generate_and_write_md_file, generate_and_write_n_md_files, write_md_content
+from .utils import generate_and_write_md_file, generate_and_write_n_md_files, write_md_content
 from ..meta_utils import get_back_links_by_page_name
 from ..meta_model import BackLink, BackLinkReference
 

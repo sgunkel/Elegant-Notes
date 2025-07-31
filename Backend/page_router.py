@@ -1,4 +1,6 @@
 import os
+from typing import Optional
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, status, Depends
 
@@ -16,7 +18,9 @@ PAGE_PATH_STR = str(PAGE_PATH)
 
 @router.get('/all')
 def get_all_pages():
-    file_names = os.listdir(PAGE_PATH_STR)
+    return handle_get_all_pages(PAGE_PATH)
+def handle_get_all_pages(page_path: Path):
+    file_names = os.listdir(str(page_path))
     pages = []
     for file_name in file_names:
         page = PageMetaData(name=file_name.replace('.md', ''), creation='n/a', last_modified='n/a')
@@ -25,7 +29,9 @@ def get_all_pages():
 
 @router.post('/create')
 def new_page(page_info: NamedPage):
-    new_file_path = PAGE_PATH / (page_info.name + '.md')
+    return handle_new_page(PAGE_PATH, page_info)
+def handle_new_page(page_path: Path, page_info: NamedPage):
+    new_file_path = page_path / (page_info.name + '.md')
     if new_file_path.exists():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='File already exists.')
     open(str(new_file_path), 'a').close() # TODO find a better way to create an empty file
@@ -33,7 +39,9 @@ def new_page(page_info: NamedPage):
 
 @router.get('/get/{page_name}')
 def get_page_by_name(page_name: str):
-    full_path = PAGE_PATH / (page_name + '.md')
+    return handle_get_page_by_name(PAGE_PATH, page_name)
+def handle_get_page_by_name(page_path: Path, page_name: str):
+    full_path = page_path / (page_name + '.md')
     if not full_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='File not found')
 
@@ -49,7 +57,9 @@ def get_page_by_name(page_name: str):
 
 @router.post('/update')
 def update_page(page_info: PageWithContentWithoutMetaData):
-    full_path = PAGE_PATH / (page_info.name + '.md')
+    return handle_update_page(PAGE_PATH, page_info)
+def handle_update_page(page_path: Path, page_info: PageWithContentWithoutMetaData):
+    full_path = page_path / (page_info.name + '.md')
     if not full_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Page not found')
 
