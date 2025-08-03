@@ -3,8 +3,8 @@ import re
 from typing import List, Optional
 from pathlib import Path
 
-from .config import get_pages_path
-from .meta_model import BackLink, BackLinkReference
+from ..config import get_pages_path
+from ..models.meta_model import BackLink, BackLinkReference
 
 def get_back_links_by_page_name(page_name: str, page_path: Optional[Path] = None) -> List[BackLink]:
     all_back_links = []
