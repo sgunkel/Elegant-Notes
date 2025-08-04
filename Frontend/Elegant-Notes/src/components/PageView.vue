@@ -1,4 +1,5 @@
 <script>
+import { pageOperations } from '@/helpers/pageFetchers'
 import PageEntry from '@/components/PageEntry.vue'
 import NewPageDialog from '@/components/NewPageDialog.vue'
 
@@ -19,10 +20,9 @@ export default {
     },
     methods: {
         refreshPages() {
-            fetch('/page/all')
-                .then(data => data.json())
-                .then(processed => this.pageObjects = processed)
-                .catch(err => this.error = err)
+            const pageReceivedFn = (processedPageObjects) => this.pageObjects = processedPageObjects
+            const failureGettingPageFn = (errorMsg) => this.error = errorMsg
+            pageOperations.getAllPages(pageReceivedFn, failureGettingPageFn)
         },
         showNewPageDialog() {
             // this.$router.push('/new-page')
@@ -46,10 +46,10 @@ export default {
             <p @click="refreshPages()">Update page list</p>
             <p @click="showNewPageDialog()">New page</p>
             <div
-            class="pv-list"
-            v-for="page in pageObjects">
+              class="pv-list"
+              v-for="page in pageObjects">
                 <PageEntry
-                :page="page">
+                  :page="page">
                 </PageEntry>
             </div>
         </div>
