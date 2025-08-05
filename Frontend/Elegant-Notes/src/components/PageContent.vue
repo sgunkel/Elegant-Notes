@@ -1,13 +1,12 @@
 <script>
 import { store } from '@/store.js'
-import { fetchWithToken } from '@/utils.js'
 
 import BacklinkReference from './BacklinkReference.vue';
-import { parseMarkdownToBlocks } from '@/BlockUtils';
 import { pageOperations } from '@/helpers/pageFetchers.js';
 import { metaOperations } from '@/helpers/metaFetchers.js'
-import { json2md } from '@/helpers/json2MdConverter';
 import { createDebounce } from '@/helpers/debouncer';
+import { md2json } from '@/helpers/md2json';
+import { json2md } from '@/helpers/json2MdConverter';
 
 import { marked } from 'marked';
 import BlockEditor from './BlockEditor.vue';
@@ -52,7 +51,7 @@ export default {
     mounted() {
         const receivedPageFn = (data) => {
             this.content = data.content
-            this.rootLevelBlocks = parseMarkdownToBlocks(this.content)
+            this.rootLevelBlocks = md2json(this.content)
             console.log(this.rootLevelBlocks)
         }
         const pageNotReceivedFn = (errorMsg) => console.log(`error receiving page: ${errorMsg}`)
