@@ -63,8 +63,8 @@ export const blockUtilities = {
                 const [moved] = blocks.splice(i, 1);
                 prev.children.push(moved);
 
-                updateFn(moved, true) // this.handleUpdate(moved, true);
-                idChangeFn(blockId) // this.editingId = blockId;
+                updateFn(moved, true) // not actually needed - calls blockUtilities.updateRecursive(), which is used for updating Block content (text). We'll revisit this later...
+                idChangeFn(blockId)
                 if (newText !== undefined) {
                     moved.content = newText
                 }

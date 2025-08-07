@@ -121,9 +121,9 @@ export default {
             /// THIS DOESN'T WORK UNLESS THERE'S BEEN TIME FOR THE DEBOUNCE TO COMPLETE!!!
 
             console.log('indent', blockId, newContent)
-            blockUtilities.indent(blockId, this.rootLevelBlocks, newContent,
-                (moved, success) => this.handleUpdate(moved, success),
-                (newID) => this.editingId = newID)
+            const updateFn = (moved, success) => this.handleUpdate(moved, success)
+            const idChangedFn = (newID) => this.editingId = newID
+            blockUtilities.indent(blockId, this.rootLevelBlocks, newContent, updateFn, idChangedFn)
         },
         outdentBlock(blockId, newText) {
             const blocksCopy = blockUtilities.createBlocksCopy(this.rootLevelBlocks)
