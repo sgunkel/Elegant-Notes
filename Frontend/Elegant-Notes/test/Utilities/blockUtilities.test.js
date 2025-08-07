@@ -90,3 +90,113 @@ describe('updateRecursive tests', () => {
         expect(actual).toStrictEqual(expected)
     })
 })
+
+describe('flattenBlocks tests', () => {
+    it('Empty root level', () => {
+        const expected = []
+        const actual = blockUtilities.flattenBlocks([])
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('single level', () => {
+        const blocks = [
+            { content: 'a', children: [] },
+            { content: 'b', children: [] },
+            { content: 'c', children: [] },
+        ]
+        const expected = blocks // just a single level, so it shouldn't matter
+        const actual = blockUtilities.flattenBlocks(blocks)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('two levels', () => {
+        const given = [
+            { id: 'aa', content: 'a', children: [
+                { id: 'bb', content: 'b', children: [] },
+            ] },
+            { id: 'cc', content: 'c', children: [] },
+        ]
+        const expected = [
+            { id: 'aa', content: 'a', children: [
+                { id: 'bb', content: 'b', children: [] },
+            ] },
+            { id: 'bb', content: 'b', children: [] },
+            { id: 'cc', content: 'c', children: [] },
+        ]
+        const actual = blockUtilities.flattenBlocks(given)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Three levels', () => {
+        const given = [
+            { id: 'aa', content: 'a', children: [
+                { id: 'bb', content: 'b', children: [
+                    { id: 'cc', content: 'c', children: [] },
+                ] },
+            ] },
+            { id: 'dd', content: 'd', children: [] },
+        ]
+        const expected = [
+            { id: 'aa', content: 'a', children: [
+                { id: 'bb', content: 'b', children: [
+                    { id: 'cc', content: 'c', children: [] },
+                ] },
+            ] },
+            { id: 'bb', content: 'b', children: [
+                    { id: 'cc', content: 'c', children: [] },
+            ] },
+            { id: 'cc', content: 'c', children: [] },
+            { id: 'dd', content: 'd', children: [] },
+        ]
+        const actual = blockUtilities.flattenBlocks(given)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Varying levels', () => {
+        const given = [
+            { id: 'aa', content: 'a', children: [
+                { id: 'bb', content: 'b', children: [
+                    { id: 'cc', content: 'c', children: [] },
+                ] },
+                { id: 'dd', content: 'd', children: [] },
+            ] },
+            { id: 'ee', content: 'e', children: [] },
+            { id: 'ff', content: 'f', children: [
+                { id: 'g', content: 'g', children: [
+                    { id: 'hh', content: 'h', children: [] },
+                    { id: 'ii', content: 'i', children: [] },
+                ] },
+            ] },
+            { id: 'jj', content: 'j', children: [] },
+        ]
+        const expected = [
+            { id: 'aa', content: 'a', children: [
+                { id: 'bb', content: 'b', children: [
+                    { id: 'cc', content: 'c', children: [] },
+                ] },
+                { id: 'dd', content: 'd', children: [] },
+            ] },
+            { id: 'bb', content: 'b', children: [
+                { id: 'cc', content: 'c', children: [] },
+            ] },
+            { id: 'cc', content: 'c', children: [] },
+            { id: 'dd', content: 'd', children: [] },
+            { id: 'ee', content: 'e', children: [] },
+            { id: 'ff', content: 'f', children: [
+                { id: 'g', content: 'g', children: [
+                    { id: 'hh', content: 'h', children: [] },
+                    { id: 'ii', content: 'i', children: [] },
+                ] },
+            ] },
+            { id: 'g', content: 'g', children: [
+                { id: 'hh', content: 'h', children: [] },
+                { id: 'ii', content: 'i', children: [] },
+            ] },
+            { id: 'hh', content: 'h', children: [] },
+            { id: 'ii', content: 'i', children: [] },
+            { id: 'jj', content: 'j', children: [] },
+        ]
+        const actual = blockUtilities.flattenBlocks(given)
+        expect(actual).toStrictEqual(expected)
+    })
+})
