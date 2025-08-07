@@ -1,42 +1,39 @@
 import { blockUtilities } from '@/helpers/blockUtilities.js'
-import { assert, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-describe('Copy empty Block object list', () => {
-    const original = []
-    const copy = blockUtilities.createBlocksCopy(original)
-    it('Copied version must equal original before modifications', () => expect(copy).toStrictEqual(original))
-})
+describe('createBlocksCopy tests', () => {
+    const emptyList = []
+    const fullList = [
+        { content: 'a', children: [
+            { content: 'b', children: [] }
+        ] }
+    ]
 
-describe('Copy empty Block object list - check modifications do not affect the copy', () => {
-    const original = []
-    const copy = blockUtilities.createBlocksCopy(original)
-    original.push({
-        content: 'ab',
-        children: [],
+    it('Empty Block list', () => {
+        const copy = blockUtilities.createBlocksCopy(emptyList)
+        expect(copy).toStrictEqual(emptyList)
     })
-    it('Original was modified and should not affect the copy', () => expect(copy).not.toStrictEqual(original))
-})
 
-describe('Copy full Block list tests - check values', () => {
-    const original = [
-        { content: 'a', children: [
-            { content: 'b', children: [] }
-        ] }
-    ]
-    const copy = blockUtilities.createBlocksCopy(original)
-    it('Copied version must equal original before modifications', () => expect(copy).toStrictEqual(original))
-})
+    it('Add to empty list', () => {
+        const copy = blockUtilities.createBlocksCopy(emptyList)
+        copy.push({
+            content: 'ab',
+            children: [],
+        })
+        expect(copy).not.toStrictEqual(emptyList)
+    })
 
-describe('Copy full Block list tests - check modifications do not affect copy', () => {
-    const original = [
-        { content: 'a', children: [
-            { content: 'b', children: [] }
-        ] }
-    ]
-    const copy = blockUtilities.createBlocksCopy(original)
-    original[0].content = 'b'
-    original[0].children[0].content = 'a'
-    it('Original was modified and should not affect the copy', () => expect(original).not.toStrictEqual(copy))
+    it('Full Block list', () => {
+        const copy = blockUtilities.createBlocksCopy(fullList)
+        expect(copy).toStrictEqual(fullList)
+    })
+
+    it('Modify full Block list after copy', () => {
+        const copy = blockUtilities.createBlocksCopy(fullList)
+        copy[0].content = 'b'
+        copy[0].children[0].content = 'a'
+        expect(fullList).not.toStrictEqual(copy)
+    })
 })
 
 describe('updateRecursive tests', () => {
