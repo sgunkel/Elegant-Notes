@@ -343,4 +343,69 @@ describe('insertAfterRecursive tests', () => {
         expect(successForthInsert).toBeTruthy()
         expect(actual).toStrictEqual(expected)
     })
+
+    // TODO add tests for failure to insert (invalid ID case)
+})
+
+describe('deleteByID tests', () => {
+    /*
+     * NOTE: current implementation for deleteByID assumes the object to delete does
+     *   *not* contain children. Henceforth, no test will have an object that contains
+     *   children *yet*.
+     */
+
+    it('Single level', () => {
+        const blocks = [
+            { id: 'aa', content: 'a', children: [] },
+            { id: 'bb', content: 'b', children: [] },
+            { id: 'cc', content: 'c', children: [] },
+        ]
+        const expected = blockUtilities.createBlocksCopy(blocks)
+        expected.splice(1, 1)
+
+        const actual = blockUtilities.createBlocksCopy(blocks)
+        const success = blockUtilities.deleteByID(actual, 'bb')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Duel level', () => {
+        const blocks = [
+            { id: 'aa', content: 'a', children: [
+                { id: 'bb', content: 'b', children: [] },
+                { id: 'cc', content: 'c', children: [] },
+            ] },
+            { id: 'dd', content: 'd', children: [] },
+        ]
+        const expected = blockUtilities.createBlocksCopy(blocks)
+        expected[0].children.splice(0, 1)
+
+        const actual = blockUtilities.createBlocksCopy(blocks)
+        const success = blockUtilities.deleteByID(actual, 'bb')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Triple level', () => {
+        const blocks = [
+            { id: 'aa', content: 'a', children: [
+                { id: 'bb', content: 'b', children: [
+                    { id: 'cc', content: 'c', children: [] },
+                ] },
+            ] },
+            { id: 'dd', content: 'd', children: [] },
+        ]
+        const expected = blockUtilities.createBlocksCopy(blocks)
+        expected[0].children[0].children.splice(0, 1)
+
+        const actual = blockUtilities.createBlocksCopy(blocks)
+        const success = blockUtilities.deleteByID(actual, 'cc')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    // TODO add tests for failure to delete (invalid ID case)
 })
