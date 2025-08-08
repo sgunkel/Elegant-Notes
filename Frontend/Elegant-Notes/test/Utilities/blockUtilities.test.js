@@ -200,3 +200,147 @@ describe('flattenBlocks tests', () => {
         expect(actual).toStrictEqual(expected)
     })
 })
+
+describe('insertAfterRecursive tests', () => {
+    const singleLevelBlocks = [
+        { id: 'aa', content: 'a', children: [] },
+        { id: 'bb', content: 'b', children: [] },
+        { id: 'cc', content: 'c', children: [] },
+    ]
+    const duelLevelBlocks = [
+        { id: 'aa', content: 'a', children: [
+            { id: 'bb', content: 'b', children: [] },
+            { id: 'cc', content: 'c', children: [] },
+            { id: 'dd', content: 'd', children: [] },
+        ] },
+    ]
+    const tripleLevelBlocks = [
+        { id: 'aa', content: 'a', children: [
+            { id: 'bb', content: 'b', children: [
+                { id: 'cc', content: 'c', children: [] },
+                { id: 'dd', content: 'd', children: [] },
+            ] },
+        ] },
+    ]
+    const varyingLevels = [
+        { id: 'aa', content: 'a', children: [
+            { id: 'bb', content: 'b', children: [] },
+            { id: 'cc', content: 'c', children: [
+                { id: 'dd', content: 'd', children: [] },
+            ] },
+        ] },
+        { id: 'ee', content: 'e', children: [] },
+        { id: 'ff', content: 'f', children: [
+            { id: 'gg', content: 'g', children: [] },
+            { id: 'hh', content: 'h', children: [] },
+            { id: 'ii', content: 'i', children: [
+                { id: 'jj', content: 'j', children: [
+                    { id: 'kk', content: 'k', children: [] },
+                    { id: 'll', content: 'l', children: [] },
+                    { id: 'mm', content: 'm', children: [] },
+                ] },
+                { id: 'nn', content: 'n', children: [
+                    { id: 'oo', content: 'o', children: [] },
+                    { id: 'pp', content: 'p', children: [] },
+                ] },
+            ] },
+        ] },
+    ]
+
+    it('One level at the end', () => {
+        const newBlock = { id: 'dd', content: 'd', children: [] }
+        const expected = blockUtilities.createBlocksCopy(singleLevelBlocks)
+        expected.push(newBlock)
+
+        const actual = blockUtilities.createBlocksCopy(singleLevelBlocks)
+        const success = blockUtilities.insertAfterRecursive(actual, newBlock, 'cc')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('One level in the middle', () => {
+        const newBlock = { id: 'dd', content: 'd', children: [] }
+        const expected = blockUtilities.createBlocksCopy(singleLevelBlocks)
+        expected.splice(1, 0, newBlock)
+
+        const actual = blockUtilities.createBlocksCopy(singleLevelBlocks)
+        const success = blockUtilities.insertAfterRecursive(actual, newBlock, 'aa')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it ('Two levels at the end', () => {
+        const newBlock = { id: 'ee', content: 'e', children: [] }
+        const expected = blockUtilities.createBlocksCopy(duelLevelBlocks)
+        expected[0].children.push(newBlock)
+
+        const actual = blockUtilities.createBlocksCopy(duelLevelBlocks)
+        const success = blockUtilities.insertAfterRecursive(actual, newBlock, 'dd')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Two levels in the middle', () => {
+        const newBlock = { id: 'ee', content: 'e', children: [] }
+        const expected = blockUtilities.createBlocksCopy(duelLevelBlocks)
+        expected[0].children.splice(2, 0, newBlock)
+
+        const actual = blockUtilities.createBlocksCopy(duelLevelBlocks)
+        const success = blockUtilities.insertAfterRecursive(actual, newBlock, 'cc')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Three levels at the end', () => {
+        const newBlock = { id: 'ee', content: 'e', children: [] }
+        const expected = blockUtilities.createBlocksCopy(tripleLevelBlocks)
+        expected[0].children[0].children.push(newBlock)
+
+        const actual = blockUtilities.createBlocksCopy(tripleLevelBlocks)
+        const success = blockUtilities.insertAfterRecursive(actual, newBlock, 'dd')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+    
+    it('Three levels in the middle', () => {
+        const newBlock = { id: 'ee', content: 'e', children: [] }
+        const expected = blockUtilities.createBlocksCopy(tripleLevelBlocks)
+        expected[0].children[0].children.splice(1, 0, newBlock)
+
+        const actual = blockUtilities.createBlocksCopy(tripleLevelBlocks)
+        const success = blockUtilities.insertAfterRecursive(actual, newBlock, 'cc')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Varying levels & multiple inserts', () => {
+        const afterBB = { id: '123', content: 'after bb', children: [] }
+        const afterEE = { id: '456', content: 'after ee', children: [] }
+        const afterKK = { id: '789', content: 'after kk', children: [] }
+        const afterNN = { id: '987654321', content: 'after nn', children: [] }
+
+        const expected = blockUtilities.createBlocksCopy(varyingLevels)
+        expected[0].children.splice(1, 0, afterBB)
+        expected.splice(2, 0, afterEE)
+        expected[3].children[2].children[0].children.splice(1, 0, afterKK)
+        expected[3].children[2].children[1].children.unshift(afterNN)
+
+        const actual = blockUtilities.createBlocksCopy(varyingLevels)
+        const successFirstInsert = blockUtilities.insertAfterRecursive(actual, afterBB, 'bb')
+        const successSecondInsert = blockUtilities.insertAfterRecursive(actual, afterEE, 'ee')
+        const successThirdInsert = blockUtilities.insertAfterRecursive(actual, afterKK, 'kk')
+        const successForthInsert = blockUtilities.insertAfterRecursive(actual, afterNN, 'nn')
+
+        expect(successFirstInsert).toBeTruthy()
+        expect(successSecondInsert).toBeTruthy()
+        expect(successThirdInsert).toBeTruthy()
+        expect(successForthInsert).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+})
