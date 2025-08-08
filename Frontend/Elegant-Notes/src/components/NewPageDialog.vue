@@ -1,7 +1,8 @@
 <script>
-import { router } from '@/routes'
+import { router } from '@/router/routes.js'
 import { store } from '@/store.js'
 import { fetchWithToken } from '@/utils.js'
+import { pageOperations } from '@/helpers/pageFetchers.js'
 
 export default {
     emits: [
@@ -23,8 +24,7 @@ export default {
             const data = {
                 name: this.pageName
             }
-            fetchWithToken('/page/create', data, 'POST')
-                .then(response => this.error = response)
+            pageOperations.createPage(data, (errorMsg) => this.error = errorMsg)
             // TODO figure out how to detect if this fails
             store.setPage({name: this.pageName, content: ''})
             router.push('/page-content')

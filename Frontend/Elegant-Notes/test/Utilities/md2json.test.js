@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { removeIDsFromBlockObjects } from '../blockObjUtils.js'
-import { parseMarkdownToBlocks } from '@/blockUtils.js'
+import { md2json } from '@/helpers/md2json.js'
 
 ///
 /// Mock Markdown content to be parsed
@@ -86,7 +86,7 @@ describe.each([
     ['Single grandparent with one child and one grandchild', expectedSingleWithGrandchildren, singleWithGrandchildren],
     ['Multiple grandparents', expectedMultipleGrandparents, multipleGrandparents],
 ])('Parsed Markdown Object Structure', (testTitle, expectedResult, mdFileContent) => {
-    const parsedMd = parseMarkdownToBlocks(mdFileContent)
+    const parsedMd = md2json(mdFileContent)
     const actualListWithoutIDs = removeIDsFromBlockObjects(parsedMd)
     it(testTitle, () => expect(actualListWithoutIDs, testTitle).toEqual(expectedResult))
 })

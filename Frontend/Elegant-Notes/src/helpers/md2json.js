@@ -1,6 +1,6 @@
 import {v4 as uuidv4} from 'uuid'
 
-export function parseMarkdownToBlocks(markdownContent) {
+export function md2json(markdownContent) {
     const lines = markdownContent.split('\n')
     const stack = []
     const rootLevel = []

@@ -21,4 +21,4 @@ jobs:
 
       - name: Execute Tests
         working-directory: ./Frontend/Elegant-Notes
-        run: npm run test
+        run: npm run test --reporter=verbose
