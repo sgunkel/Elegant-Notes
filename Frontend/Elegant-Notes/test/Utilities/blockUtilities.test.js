@@ -344,7 +344,16 @@ describe('insertAfterRecursive tests', () => {
         expect(actual).toStrictEqual(expected)
     })
 
-    // TODO add tests for failure to insert (invalid ID case)
+    it('Invalid Block (ID) to insert after', () => {
+        const expected = blockUtilities.createBlocksCopy(singleLevelBlocks)
+
+        const actual = blockUtilities.createBlocksCopy(singleLevelBlocks)
+        const newBlock = { id: '456', content: 'does not exist', children: [] }
+        const success = blockUtilities.insertAfterRecursive(actual, newBlock, '123')
+
+        expect(success).not.toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
 })
 
 describe('deleteByID tests', () => {
@@ -407,7 +416,23 @@ describe('deleteByID tests', () => {
         expect(actual).toStrictEqual(expected)
     })
 
-    // TODO add tests for failure to delete (invalid ID case)
+    it('Delete invalid Block (ID)', () => {
+        const blocks = [
+            { id: 'aa', content: 'a', children: [
+                { id: 'bb', content: 'b', children: [
+                    { id: 'cc', content: 'c', children: [] },
+                ] },
+            ] },
+            { id: 'dd', content: 'd', children: [] },
+        ]
+        const expected = blockUtilities.createBlocksCopy(blocks)
+
+        const actual = blockUtilities.createBlocksCopy(blocks)
+        const success = blockUtilities.deleteByID(actual, '123')
+
+        expect(success).not.toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
 })
 
 describe('indent tests', () => {
