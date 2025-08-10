@@ -409,3 +409,212 @@ describe('deleteByID tests', () => {
 
     // TODO add tests for failure to delete (invalid ID case)
 })
+
+describe('indent tests', () => {
+    // blockUtilities.indent takes in two functions as the last parameters where one of which
+    //   is not really needed. This will be revisited in the future when we clean up the whole
+    //   codebase; in the meantime, we'll use this helper function for these tests
+    const indent = (blockID, blocks, newText) => blockUtilities.indent(blockID, blocks, newText, () => {}, () => {})
+
+    const singleLevel = [
+        { id: 'aa', content: 'a', children: [] },
+        { id: 'bb', content: 'b', children: [] },
+        { id: 'cc', content: 'c', children: [] },
+    ]
+    const duelLevel = [
+        { id: 'aa', content: 'a', children: [
+            { id: 'bb', content: 'b', children: [] },
+            { id: 'cc', content: 'c', children: [] },
+            { id: 'dd', content: 'd', children: [] },
+        ] },
+        { id: 'ee', content: 'e', children: [] },
+    ]
+    const tripleLevel = [
+        { id: 'aa', content: 'a', children: [
+            { id: 'bb', content: 'b', children: [] },
+            { id: 'cc', content: 'c', children: [
+                { id: 'dd', content: 'd', children: [] },
+                { id: 'ee', content: 'e', children: [] },
+                { id: 'ff', content: 'f', children: [] },
+            ] },
+            { id: 'gg', content: 'g', children: [] },
+        ] },
+        { id: 'hh', content: 'h', children: [] },
+    ]
+
+    it('Single level indent at the end', () => {
+        /*      -> 
+         * - a      - a
+         * - b      - b
+         * - c          - c
+         */
+        const expected = blockUtilities.createBlocksCopy(singleLevel)
+        const cBlock = expected.pop()
+        expected[1].children.push(cBlock)
+
+        const actual = blockUtilities.createBlocksCopy(singleLevel)
+        const success = indent('cc', actual, 'c')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Single level indent in the middle', () => {
+        /*      -> 
+         * - a      - a
+         * - b          - b
+         * - c      - c
+         */
+        const expected = blockUtilities.createBlocksCopy(singleLevel)
+        const [cBlock] = expected.splice(1, 1)
+        expected[0].children.push(cBlock)
+
+        const actual = blockUtilities.createBlocksCopy(singleLevel)
+        const success = indent('bb', actual, 'b')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Single level indent at the beginning', () => {
+        /* Should fail - we cannot indent the first Block in a list
+         *      -> 
+         * - a      - a
+         * - b      - b
+         * - c      - c
+         */
+        const expected = blockUtilities.createBlocksCopy(singleLevel)
+
+        const actual = blockUtilities.createBlocksCopy(singleLevel)
+        const success = indent('aa', actual, 'a')
+
+        expect(success).not.toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Duel level indent at the end', () => {
+        /*        -> 
+         * - a        - a
+         *    - b        - b
+         *    - c        - c
+         *    - d            - d
+         */
+        const expected = blockUtilities.createBlocksCopy(duelLevel)
+        const dBlock = expected[0].children.pop()
+        expected[0].children[1].children.push(dBlock)
+
+        const actual = blockUtilities.createBlocksCopy(duelLevel)
+        const success = indent('dd', actual, 'd')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Duel level indent in the middle', () => {
+        /*        -> 
+         * - a        - a
+         *    - b        - b
+         *    - c            - c
+         *    - d        - d
+         */
+        const expected = blockUtilities.createBlocksCopy(duelLevel)
+        const [cBlock] = expected[0].children.splice(1, 1)
+        expected[0].children[0].children.push(cBlock)
+
+        const actual = blockUtilities.createBlocksCopy(duelLevel)
+        const success = indent('cc', actual, 'c')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Duel level indent at the end', () => {
+        /*        -> 
+         * - a        - a
+         *    - b        - b
+         *    - c        - c
+         *    - d        - d
+         */
+        const expected = blockUtilities.createBlocksCopy(duelLevel)
+
+        const actual = blockUtilities.createBlocksCopy(duelLevel)
+        const success = indent('bb', actual, 'b')
+
+        expect(success).not.toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Triple level indent at the end', () => {
+        /*             -> 
+         * - a              - a
+         *     - b              - b
+         *     - c              - c
+         *         - d              - d
+         *         - e              - e
+         *         - f                  - f
+         *     - g              - g
+         * - h              - h
+         */
+        const expected = blockUtilities.createBlocksCopy(tripleLevel)
+        const fBlock = expected[0].children[1].children.pop()
+        expected[0].children[1].children[1].children.push(fBlock)
+
+        const actual = blockUtilities.createBlocksCopy(tripleLevel)
+        const success = indent('ff', actual, 'f')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Triple level indent in the middle', () => {
+        /*             -> 
+         * - a              - a
+         *     - b              - b
+         *     - c              - c
+         *         - d              - d
+         *         - e                  - e
+         *         - f              - f
+         *     - g              - g
+         * - h              - h
+         */
+        const expected = blockUtilities.createBlocksCopy(tripleLevel)
+        const [eBlock] = expected[0].children[1].children.splice(1, 1)
+        expected[0].children[1].children[0].children.push(eBlock)
+
+        const actual = blockUtilities.createBlocksCopy(tripleLevel)
+        const success = indent('ee', actual, 'e')
+
+        expect(success).toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Triple level indent in the middle', () => {
+        /*             -> 
+         * - a              - a
+         *     - b              - b
+         *     - c              - c
+         *         - d              - d
+         *         - e              - e
+         *         - f              - f
+         *     - g              - g
+         * - h              - h
+         */
+        const expected = blockUtilities.createBlocksCopy(tripleLevel)
+
+        const actual = blockUtilities.createBlocksCopy(tripleLevel)
+        const success = indent('dd', actual, 'd')
+
+        expect(success).not.toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Invalid Block (ID) indent', () => {
+        const expected = blockUtilities.createBlocksCopy(tripleLevel)
+
+        const actual = blockUtilities.createBlocksCopy(tripleLevel)
+        const success = indent('123', actual, 'this ID does not exist')
+
+        expect(success).not.toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+})
