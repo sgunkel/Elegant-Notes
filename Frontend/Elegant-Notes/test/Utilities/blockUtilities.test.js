@@ -613,7 +613,7 @@ describe('indent tests', () => {
         expect(actual).toStrictEqual(expected)
     })
 
-    it('Triple level indent in the middle', () => {
+    it('Triple level indent at the beginning', () => {
         /*             -> 
          * - a              - a
          *     - b              - b
@@ -640,6 +640,297 @@ describe('indent tests', () => {
         const success = indent('123', actual, 'this ID does not exist')
 
         expect(success).not.toBeTruthy()
+        expect(actual).toStrictEqual(expected)
+    })
+})
+
+describe('outdentRecursive tests', () => {
+    /*
+     * NOTE: the currently implementation of outdentRecursive function takes
+     *   the Blocks copy, modifies it, and also returns it as a 'new copy'
+     *   - this will be changed in the future and will require a little bit of
+     *   tweaking in these tests...
+     */
+    const singleLevel = [
+        { id: 'aa', content: 'a', children: [] },
+        { id: 'bb', content: 'b', children: [] },
+        { id: 'cc', content: 'c', children: [] },
+    ]
+    const duelLevel = [
+        { id: 'aa', content: 'a', children: [
+            { id: 'bb', content: 'b', children: [] },
+            { id: 'cc', content: 'c', children: [] },
+            { id: 'dd', content: 'd', children: [] },
+        ] },
+        { id: 'ee', content: 'e', children: [] },
+    ]
+    const tripleLevel = [
+        { id: 'aa', content: 'a', children: [
+            { id: 'bb', content: 'b', children: [] },
+            { id: 'cc', content: 'c', children: [
+                { id: 'dd', content: 'd', children: [] },
+                { id: 'ee', content: 'e', children: [] },
+                { id: 'ff', content: 'f', children: [] },
+            ] },
+            { id: 'gg', content: 'g', children: [] },
+        ] },
+        { id: 'hh', content: 'h', children: [] },
+    ]
+
+    it('Single level at the beginning', () => {
+        /* Cannot outdent anything at the root level
+         *      -> 
+         * - a      - a
+         * - b      - b
+         * - c      - c
+         */
+        const expected = blockUtilities.createBlocksCopy(singleLevel)
+
+        const actual = blockUtilities.createBlocksCopy(singleLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, 'aa', 'a')
+
+        expect(success).not.toBeTruthy()
+        expect(movedBlock).toBeNull()
+        expect(newCopy).toStrictEqual(actual)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Single level in the middle', () => {
+        /* Cannot outdent anything at the root level
+         *      -> 
+         * - a      - a
+         * - b      - b
+         * - c      - c
+         */
+        const expected = blockUtilities.createBlocksCopy(singleLevel)
+
+        const actual = blockUtilities.createBlocksCopy(singleLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, 'bb', 'b')
+
+        expect(success).not.toBeTruthy()
+        expect(movedBlock).toBeNull()
+        expect(newCopy).toStrictEqual(actual)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Single level at the end', () => {
+        /* Cannot outdent anything at the root level
+         *      -> 
+         * - a      - a
+         * - b      - b
+         * - c      - c
+         */
+        const expected = blockUtilities.createBlocksCopy(singleLevel)
+
+        const actual = blockUtilities.createBlocksCopy(singleLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, 'cc', 'c')
+
+        expect(success).not.toBeTruthy()
+        expect(movedBlock).toBeNull()
+        expect(newCopy).toStrictEqual(actual)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Duel level at the beginning', () => {
+        /*        -> 
+         * - a        - a
+         *    - b     - b
+         *    - c         - c
+         *    - d         - d
+         * - e        - e
+         */
+        const expected = blockUtilities.createBlocksCopy(duelLevel)
+        const children = expected[0].children
+        expected[0].children = []
+        const [bBlock] = children.splice(0, 1)
+        bBlock.children = children
+        expected.splice(1, 0, bBlock)
+        const expectedMovedBlock = { id: 'bb', content: 'b', children: [
+            { id: 'cc', content: 'c', children: [] },
+            { id: 'dd', content: 'd', children: [] },
+        ] }
+
+        const actual = blockUtilities.createBlocksCopy(duelLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, 'bb', 'b')
+
+        expect(success).toBeTruthy()
+        expect(movedBlock).toStrictEqual(expectedMovedBlock)
+        expect(newCopy).toStrictEqual(actual)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Duel level in the middle', () => {
+        /*        -> 
+         * - a        - a
+         *    - b         - b
+         *    - c     - c
+         *    - d         - d
+         * - e        - e
+         */
+        const expected = blockUtilities.createBlocksCopy(duelLevel)
+        const dBlock = expected[0].children.pop()
+        const cBlock = expected[0].children.pop()
+        cBlock.children.push(dBlock)
+        expected.splice(1, 0, cBlock)
+        const expectedMovedBlock = { id: 'cc', content: 'c', children: [
+            { id: 'dd', content: 'd', children: [] },
+        ] }
+
+        const actual = blockUtilities.createBlocksCopy(duelLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, 'cc', 'c')
+
+        expect(success).toBeTruthy()
+        expect(movedBlock).toStrictEqual(expectedMovedBlock)
+        expect(newCopy).toStrictEqual(actual)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Duel level at the end', () => {
+        /*        -> 
+         * - a        - a
+         *    - b         - b
+         *    - c         - c
+         *    - d     - d
+         * - e        - e
+         */
+        const expected = blockUtilities.createBlocksCopy(duelLevel)
+        const dBlock = expected[0].children.pop()
+        expected.splice(1, 0, dBlock)
+        const expectedMovedBlock = { id: 'dd', content: 'd', children: [] }
+
+        const actual = blockUtilities.createBlocksCopy(duelLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, 'dd', 'd')
+
+        expect(success).toBeTruthy()
+        expect(movedBlock).toStrictEqual(expectedMovedBlock)
+        expect(newCopy).toStrictEqual(actual)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Triple level at the beginning', () => {
+        /*             -> 
+         * - a              - a
+         *     - b              - b
+         *     - c              - c
+         *         - d          - d
+         *         - e              - e
+         *         - f              - f
+         *     - g              - g
+         * - h              - h
+         */
+        const expected = blockUtilities.createBlocksCopy(tripleLevel)
+        const children = expected[0].children[1].children
+        expected[0].children[1].children = []
+        const [dBlock] = children.splice(0, 1)
+        dBlock.children = children
+        expected[0].children.splice(2, 0, dBlock)
+        const expectedMovedBlock = { id: 'dd', content: 'd', children: [
+            { id: 'ee', content: 'e', children: [] },
+            { id: 'ff', content: 'f', children: [] },
+        ] }
+
+        const actual = blockUtilities.createBlocksCopy(tripleLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, 'dd', 'd')
+
+        expect(success).toBeTruthy()
+        expect(movedBlock).toStrictEqual(expectedMovedBlock)
+        expect(newCopy).toStrictEqual(actual)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Triple level in the middle', () => {
+        /*             -> 
+         * - a              - a
+         *     - b              - b
+         *     - c              - c
+         *         - d              - d
+         *         - e          - e
+         *         - f              - f
+         *     - g              - g
+         * - h              - h
+         */
+        const expected = blockUtilities.createBlocksCopy(tripleLevel)
+        const [eBlock, fBlock] = expected[0].children[1].children.splice(1, 2)
+        eBlock.children.push(fBlock)
+        expected[0].children.splice(2, 0, eBlock)
+        const expectedMovedBlock = { id: 'ee', content: 'e', children: [
+            { id: 'ff', content: 'f', children: [] },
+        ] }
+
+        const actual = blockUtilities.createBlocksCopy(tripleLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, 'ee', 'e')
+
+        expect(success).toBeTruthy()
+        expect(movedBlock).toStrictEqual(expectedMovedBlock)
+        expect(newCopy).toStrictEqual(actual)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Triple level at the end', () => {
+        /*             -> 
+         * - a              - a
+         *     - b              - b
+         *     - c              - c
+         *         - d              - d
+         *         - e              - e
+         *         - f          - f
+         *     - g              - g
+         * - h              - h
+         */
+        const expected = blockUtilities.createBlocksCopy(tripleLevel)
+        const fBlock = expected[0].children[1].children.pop()
+        expected[0].children.splice(2, 0, fBlock)
+        const expectedMovedBlock = { id: 'ff', content: 'f', children: [] }
+
+        const actual = blockUtilities.createBlocksCopy(tripleLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, 'ff', 'f')
+
+        expect(success).toBeTruthy()
+        expect(movedBlock).toStrictEqual(expectedMovedBlock)
+        expect(newCopy).toStrictEqual(actual)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('With children & acquires a child', () => {
+        /*             -> 
+         * - a              - a
+         *     - b              - b
+         *     - c          - c
+         *         - d          - d
+         *         - e          - e
+         *         - f          - f
+         *     - g              - g
+         * - h              - h
+         */
+        const expected = blockUtilities.createBlocksCopy(tripleLevel)
+        const [cBlock] = expected[0].children.splice(1, 1)
+        cBlock.children.push(expected[0].children.pop())
+        expected.splice(1, 0, cBlock)
+        const expectedMovedBlock = { id: 'cc', content: 'c', children: [
+            { id: 'dd', content: 'd', children: [] },
+            { id: 'ee', content: 'e', children: [] },
+            { id: 'ff', content: 'f', children: [] },
+            { id: 'gg', content: 'g', children: [] },
+        ] }
+
+        const actual = blockUtilities.createBlocksCopy(tripleLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, 'cc', 'c')
+
+        expect(success).toBeTruthy()
+        expect(movedBlock).toStrictEqual(expectedMovedBlock)
+        expect(newCopy).toStrictEqual(actual)
+        expect(actual).toStrictEqual(expected)
+    })
+
+    it('Invalid Block (ID)', () => {
+        const expected = blockUtilities.createBlocksCopy(singleLevel)
+
+        const actual = blockUtilities.createBlocksCopy(singleLevel)
+        const [success, movedBlock, newCopy] = blockUtilities.outdentRecursive(actual, '123', 'this does not exist')
+
+        expect(success).not.toBeTruthy()
+        expect(movedBlock).toBeNull()
+        expect(newCopy).toStrictEqual(actual)
         expect(actual).toStrictEqual(expected)
     })
 })
