@@ -35,3 +35,4 @@ coverage
 *.egg-info
 
 secret-key.txt
+*.db
