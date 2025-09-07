@@ -101,7 +101,7 @@ def test_update_page_by_name(tmp_dir, content_before, content_after):
     page_info = PageWithContentWithoutMetaData(name='example', content=content_after)
     handle_update_page(tmp_dir, page_info, DUMMY_USER)
 
-    actual = handle_get_page_by_name(tmp_dir, 'example')
+    actual = handle_get_page_by_name(tmp_dir, 'example', DUMMY_USER)
     assert actual.content == content_after
 
 def test_update_page_by_name_with_nonexistent_page(tmp_dir):
