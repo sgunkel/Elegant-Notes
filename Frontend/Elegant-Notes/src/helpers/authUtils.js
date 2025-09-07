@@ -69,5 +69,24 @@ export const authUtils = {
             .then(response => response.json())
             .then(data => successFn(data))
             .catch(error => failureFn(error))
-    }
+    },
+    sendLoginForm: (username, password, successFn, failureFn) => {
+        const headerData = {
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
+        const bodyData = {
+            username,
+            password,
+        }
+        const payload = {
+            method: 'POST',
+            headers: headerData,
+            body: JSON.stringify(bodyData),
+        }
+        fetch(authRoutes.loginUser, payload)
+            .then(response => response.json())
+            .then(data => successFn(data))
+            .catch(error => failureFn(error))
+    },
 }
