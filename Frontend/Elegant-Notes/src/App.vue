@@ -1,12 +1,18 @@
 <script>
 import { store } from './store.js';
 
-store.init()
+import AuthPage from '@/components/AuthPage.vue'
+
+(async () => await store.init())()
 
 export default {
+    components: {
+        AuthPage,
+    },
     data() {
         return {
             activity: store.history,
+            store,
         }
     }
 }
@@ -15,7 +21,12 @@ export default {
 <template>
     <div class="app-background">
         <div class="app-routes-background">
-            <router-view></router-view>
+            <div v-if="this.store.isUserAuthenticated()">
+                <router-view></router-view>
+            </div>
+            <div v-else>
+                <auth-page></auth-page>
+            </div>
         </div>
         <div class="app-activity">
               <div

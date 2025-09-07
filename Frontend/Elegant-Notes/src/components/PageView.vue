@@ -20,9 +20,20 @@ export default {
     },
     methods: {
         refreshPages() {
-            const pageReceivedFn = (processedPageObjects) => this.pageObjects = processedPageObjects
-            const failureGettingPageFn = (errorMsg) => this.error = errorMsg
-            pageOperations.getAllPages(pageReceivedFn, failureGettingPageFn)
+            pageOperations.getAllPages(this.pageReceived, this.pageRetrievalFailed)
+        },
+        pageReceived(data) {
+            // might test for unauthorized users here...
+            if (data.detail) {
+                this.pageRetrievalFailed(data.detail)
+            }
+            else {
+                this.pageObjects = data
+            }
+        },
+        pageRetrievalFailed(errorMsg) {
+            this.error = errorMsg
+            // might test for unauthorized users here...
         },
         showNewPageDialog() {
             // this.$router.push('/new-page')

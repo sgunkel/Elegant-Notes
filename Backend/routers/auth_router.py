@@ -44,6 +44,13 @@ def get_logged_in_user_info(current_user: Annotated[User, Depends(get_current_us
     # TODO add documentation for SwaggerUI/in general
     return current_user
 
+@router.get('/test')
+def test_auth_token(current_user: Annotated[User, Depends(get_current_user)]):
+    '''## Test JWT token being valid
+    Called when the frontend loads to test if any existing tokens are still valid.
+    '''
+    return {'detail': 'User is valid'}
+
 @router.post('/token')
 def log_user_in(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> UserTokens:
     info = UserCredentials(username=form_data.username, password=form_data.password)
