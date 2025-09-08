@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from fastapi import HTTPException
 
@@ -16,7 +18,7 @@ from .utils import (
     write_md_content,
 )
 
-DUMMY_USER = User(username='example@email.com', password='abc123', name='Test User')
+DUMMY_USER = User(id=str(uuid.uuid4()), username='example@email.com', password='abc123', name='Test User')
 
 @pytest.fixture
 def tmp_dir(tmp_path):

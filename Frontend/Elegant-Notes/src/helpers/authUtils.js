@@ -56,6 +56,7 @@ export const authUtils = {
             'Content-Type': 'application/json',
         }
         const bodyData = {
+            id: 'should be changed on the backend',
             name,
             username,
             password,
