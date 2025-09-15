@@ -15,10 +15,7 @@ router = APIRouter(
     responses={404: {'description': 'Not found'}},
 )
 
-PAGE_PATH = get_pages_path()
-PAGE_PATH_STR = str(PAGE_PATH)
-
 @router.get('/backlinks/{page_name}')
 def get_back_links(page_name: str, current_user: Annotated[User, Depends(get_current_user)]):
-    path = get_user_pages_path(current_user, PAGE_PATH)
+    path = get_user_pages_path(current_user)
     return handle_get_backlinks(page_name, path)

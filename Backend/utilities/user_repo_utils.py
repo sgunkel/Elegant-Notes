@@ -19,7 +19,7 @@ USER_ROOT_REPO_DIRS = [
 ]
 
 def get_repo_path() -> Path:
-    path = get_pages_path()
+    path = get_pages_path().parent
     create_path_if_not_exit(path)
     return path
 

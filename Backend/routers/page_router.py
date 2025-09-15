@@ -23,25 +23,23 @@ router = APIRouter(
     responses={404: {'description': 'Not found'}},
 )
 
-PAGE_PATH = get_pages_path()
-PAGE_PATH_STR = str(PAGE_PATH)
-
 @router.get('/all')
 def get_all_pages(current_user: Annotated[User, Depends(get_current_user)]):
-    path = get_user_pages_path(current_user, PAGE_PATH)
+    path = get_user_pages_path(current_user)
+    print(str(path))
     return handle_get_all_pages(path)
 
 @router.post('/create')
 def new_page(page_info: NamedPage, current_user: Annotated[User, Depends(get_current_user)]):
-    path = get_user_pages_path(current_user, PAGE_PATH)
+    path = get_user_pages_path(current_user)
     return handle_new_page(path, page_info)
 
 @router.get('/get/{page_name}')
 def get_page_by_name(page_name: str, current_user: Annotated[User, Depends(get_current_user)]):
-    path = get_user_pages_path(current_user, PAGE_PATH)
+    path = get_user_pages_path(current_user)
     return handle_get_page_by_name(path, page_name)
 
 @router.post('/update')
 def update_page(page_info: PageWithContentWithoutMetaData, current_user: Annotated[User, Depends(get_current_user)]):
-    path = get_user_pages_path(current_user, PAGE_PATH)
+    path = get_user_pages_path(current_user)
     return handle_update_page(path, page_info)
