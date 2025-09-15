@@ -1,7 +1,10 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from ..utilities.user_repo_utils import get_repo_path
 from ..models.user_model import (
     User,
     DBUser,
@@ -14,15 +17,20 @@ from ..utilities.db_utils import (
     db_get_user_by_username,
     db_add_user,
 )
-from ..utilities.auth_utils import hash_equals_plaintext, create_access_token
+from ..utilities.auth_utils import (
+    hash_equals_plaintext,
+    create_access_token,
+)
+from ..utilities.user_repo_utils import create_user_repo
 
-def handle_user_registration(user_info: User, db: Session) -> UserTokens:
+def handle_user_registration(user_info: User, db: Session, repo_path: Path = get_repo_path()) -> UserTokens:
     user_with_same_username = db_get_user_by_username(db, user_info.username)
     if user_with_same_username is not None:
         raise HTTPException(status_code=400, detail="Username already registered")
     
     db_add_user(db, user_info)
-    return handle_user_login(user_info, db)
+    create_user_repo(repo_path, user_info)
+    return handle_user_login(user_info, db) # generates JWT token for us
 
 def handle_user_login(user_info: UserCredentials, db: Session) -> UserTokens:
     user = db_get_user_by_username(db, user_info.username)

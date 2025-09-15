@@ -4,29 +4,26 @@ import { authUtils } from './authUtils.js'
 
 export const pageOperations = {
     getAllPages: (successFn, failureFn) => {
-        // TODO send JWT token and redirect to login page
-        // fetch(PageRoutes.getAllPages)
         authUtils.getWithAuth(PageRoutes.getAllPages)
             .then(response => response.json())
             .then(data => successFn(data))
             .catch(err => failureFn(err))
     },
     getPageByName: (pageName, successFn, failureFn) => {
-        // TODO send JWT token and redirect to login page
+
+        // send JSON with page name instead of sending it via the routes
         const fullRoute = `${PageRoutes.getPage}/${pageName}`
-        fetch(fullRoute)
+        authUtils.getWithAuth(fullRoute)
             .then(response => response.json())
             .then(data => successFn(data))
             .catch(err => failureFn(err))
     },
     createPage: (data, failureFn) => {
-        // TODO send JWT token and redirect to login page
-        fetchWithToken(PageRoutes.createPage, data, 'POST')
+        authUtils.postWithAuth(PageRoutes.createPage, data)
             .then(err => failureFn(err))
     },
     updatePage: (data, failureFn) => {
-        // TODO send JWT token and redirect to login page
-        fetchWithToken(PageRoutes.updatePage, data, 'POST')
+        authUtils.postWithAuth(PageRoutes.updatePage, data)
             .then(err => failureFn(err))
     },
 }
