@@ -47,6 +47,7 @@ export const authUtils = {
             if (info.detail) {
                 result = info.detail === 'User is valid'
             }
+            // should we have the logic of going to the login screen if the user is not authenticated here?
         } catch (e) { }
         return result
     },
