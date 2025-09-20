@@ -2,6 +2,7 @@
 import { pageOperations } from '@/helpers/pageFetchers'
 import PageEntry from '@/components/PageEntry.vue'
 import NewPageDialog from '@/components/NewPageDialog.vue'
+import { store } from '@/store'
 
 export default {
     components: {
@@ -19,11 +20,13 @@ export default {
         this.refreshPages()
     },
     methods: {
+        logout() {
+            store.setJWTToken(undefined)
+        },
         refreshPages() {
             pageOperations.getAllPages(this.pageReceived, this.pageRetrievalFailed)
         },
         pageReceived(data) {
-            // might test for unauthorized users here...
             if (data.detail) {
                 this.pageRetrievalFailed(data.detail)
             }
@@ -33,7 +36,6 @@ export default {
         },
         pageRetrievalFailed(errorMsg) {
             this.error = errorMsg
-            // might test for unauthorized users here...
         },
         showNewPageDialog() {
             // this.$router.push('/new-page')
@@ -53,6 +55,7 @@ export default {
           @cancel="hideNewPageDialog">
         </NewPageDialog>
         <div v-else>
+            <div @click="logout()">Log out</div>
             <H1>{{ error }}</H1>
             <p @click="refreshPages()">Update page list</p>
             <p @click="showNewPageDialog()">New page</p>
