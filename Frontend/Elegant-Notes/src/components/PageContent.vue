@@ -62,6 +62,9 @@ export default {
         metaOperations.getBacklinks(this.page.name, receivedBacklinkFn, couldNotReceiveBacklinksFn)
     },
     methods: {
+        logOut() {
+            store.setJWTToken(undefined)
+        },
         updateDocument() {
             console.log(`${new Date().toLocaleString()}: updating doc`)
             const data = {
@@ -140,6 +143,11 @@ export default {
 </script>
 
 <template>
+    <div
+      class="page-logout-btn"
+      @click="logOut()">
+        Log out
+    </div>
     <h1>{{ page.name }}</h1>
     
     <div class="page-content-wrapper">
@@ -177,6 +185,12 @@ export default {
     overflow: auto;
     width: 100%;
     height: 100%;
+}
+
+.page-logout-btn {
+    padding: 0.25em;
+    border: 0.15em solid #000;
+    border-radius: 0.15em;
 }
 
 .page-content-back-links-section {

@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
+from typing import Annotated
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 
 from ..models.page_model import (
     PageMetaData,
@@ -9,6 +10,7 @@ from ..models.page_model import (
     NamedPage,
     PageWithContent
 )
+from ..models.user_model import User
 
 def handle_get_all_pages(page_path: Path):
     file_names = os.listdir(str(page_path))

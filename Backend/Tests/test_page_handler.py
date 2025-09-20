@@ -1,7 +1,10 @@
+import uuid
+
 import pytest
 from fastapi import HTTPException
 
 from ..models.page_model import NamedPage, PageWithContentWithoutMetaData
+from ..models.user_model import User
 
 from ..handlers.page_handler import (
     handle_get_all_pages,
@@ -14,6 +17,8 @@ from .utils import (
     generate_and_write_n_md_files,
     write_md_content,
 )
+
+DUMMY_USER = User(id=str(uuid.uuid4()), username='example@email.com', password='abc123', name='Test User')
 
 @pytest.fixture
 def tmp_dir(tmp_path):
