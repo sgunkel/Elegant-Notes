@@ -45,6 +45,11 @@ def handle_user_login(user_info: UserCredentials, db: Session) -> UserTokens:
     access_token = create_access_token(data)
     return UserTokens(access_token=access_token, token_type='bearer')
 
+def handle_token_refresh(user_info: User, db: Session) -> UserTokens:
+    data = {'sub': user_info.username}
+    access_token = create_access_token(data)
+    return UserTokens(access_token=access_token, token_type='bearer')
+
 def handle_user_logout(user_info: UserTokens, db: Session) -> UserLogOutInfo:
     # TODO implement this
     return UserLogOutInfo(log_out_successful=True)

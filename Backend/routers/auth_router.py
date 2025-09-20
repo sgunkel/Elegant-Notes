@@ -16,6 +16,7 @@ from ..handlers.auth_handler import (
     handle_user_registration,
     handle_user_login,
     handle_user_logout,
+    handle_token_refresh,
 )
 
 router = APIRouter(
@@ -55,3 +56,7 @@ def test_auth_token(current_user: Annotated[User, Depends(get_current_user)]):
 def log_user_in(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> UserTokens:
     info = UserCredentials(username=form_data.username, password=form_data.password)
     return handle_user_login(info, db)
+
+@router.get('/refresh')
+def refresh_jwt_token(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(get_db)):
+    return handle_token_refresh(current_user, db)

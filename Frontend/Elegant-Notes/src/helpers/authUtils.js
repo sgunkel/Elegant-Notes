@@ -35,6 +35,12 @@ export const authUtils = {
         if (dataToSend) {
             request.body = JSON.stringify(dataToSend)
         }
+        // Calling `store.checkAccess()` here might not be a bad idea - have a rotating JWT.
+        //   Unfortunately, setting up the JWT at the beginning is asynchronous and we'll
+        //   run into race conditions; the noticeable problem is logging in and refreshing
+        //   the page, which will take you back to the login screen. This can be fixed, or
+        //   we can just have the debouncing thread in `store.checkAccess()` handle that
+        //   logic and rotate the JWT whenever it's called.
         return fetch(url, request)
     },
     getWithAuth: (url, token) => authUtils.fetchWithAuth('GET', url, undefined, token),

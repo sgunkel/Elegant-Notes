@@ -68,6 +68,9 @@ export const store = reactive({
                         authUtils.clearAuthToken()
                         this.setJWTToken(undefined)
                     }
+                    else if (info.detail === 'User is valid') {
+                        authFetcher.refreshToken(this.getJWTToken(), (info) => this.setJWTToken(info), (error) => console.log('error when refreshing access token:', error))
+                    }
                 }
                 this.checkAccess()
             }
@@ -79,7 +82,7 @@ export const store = reactive({
                 }
 
                 if (failedAttempts <= authConstants.accessAttempts) {
-                    console.log(time, `Attempt ${failedAttempts} out of ${authConstants.accessAttempts}`)
+                    console.log(time, errMsg, `Attempt ${failedAttempts} out of ${authConstants.accessAttempts}`)
                     this.checkAccess(failedAttempts + 1)
                 }
             }

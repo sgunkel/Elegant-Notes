@@ -1,4 +1,3 @@
-import { fetchWithToken } from '@/utils.js'
 import { PageRoutes } from "@/constants/routeConstants.js"
 import { authUtils } from './authUtils.js'
 
@@ -10,7 +9,6 @@ export const pageOperations = {
             .catch(err => failureFn(err))
     },
     getPageByName: (pageName, successFn, failureFn) => {
-
         // send JSON with page name instead of sending it via the routes
         const fullRoute = `${PageRoutes.getPage}/${pageName}`
         authUtils.getWithAuth(fullRoute)

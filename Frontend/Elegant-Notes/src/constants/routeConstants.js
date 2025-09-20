@@ -16,4 +16,5 @@ export const authRoutes = {
     logoutUser: '/auth/logout',
     userToken: '/auth/token',
     authTest: '/auth/test',
+    refresh: '/auth/refresh',
 }
