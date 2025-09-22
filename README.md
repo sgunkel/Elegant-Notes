@@ -2,7 +2,7 @@
 A simple, easy to use note-taking application. This system strives for organization with a parent/child relationship in the format of bullet-point lists.
 
 ## Notice
-This is still a work in progress. Current state of everything:
+This is still a work in progress. See the [roadmap](./roadmap.md) of the project with planned features for V1.0. Current state of everything:
 ![](./Screenshots/home-screen--first-draft-with-decent-ux.png)
 ![](/Screenshots/page-screen--first-draft-with-decent-ux.png)
 This shows the actual application on the left with traffic on the right

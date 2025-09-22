@@ -1,0 +1,112 @@
+# Elegant Notes Roadmap
+The current status and remaining portions to be implemented can be found here!
+
+## Version 1.0
+The full list of TODOs before releasing version 1.0.
+- [ ] Page/Block architecture
+    - [ ] Basic operations
+        - [x] Create Pages
+        - [ ] Rename Pages
+        - [x] Create Blocks in Pages
+        - [x] Create Blocks in Blocks (nested)
+        - [x] Delete Blocks
+        - [x] Markdown support
+        - [x] Edit Blocks; lose focus on a Block and see the newly rendered Markdown
+    - [ ] Keyboard navigation through Blocks
+        - [x] Using up/down arrow keys to go to different Blocks
+        - [x] Indent Blocks
+        - [x] Outdent Blocks
+        - [ ] Select multiple Blocks to indent/outdent/delete
+    - [ ] New Block based on cursor position
+        - [x] Enter key -> new Block
+        - [ ] Cursor at the end of text -> new Block *below* previous one
+        - [ ] Cursor at the beginning of text -> new Block *above* previous Block
+        - [ ] Cursor between text -> text split between existing *and new Block*
+    - [ ] References
+        - [ ] Backlinks (Page references)
+            - [x] Page links (`[[` ***page-name*** `]]` syntax)
+                - [x] Show page links in UI Backlink section
+                - [ ] Show available Pages when users type `[[` trigger, followed by closing `]]`
+                - [ ] Logseq compatible
+            - [ ] Tags (`#` ***page-name*** syntax)
+                - [ ] Show tags in UI Backlink section
+                - [ ] Show available Pages when users type `#` trigger
+                - [ ] Logseq compatible
+        - [ ] Block reference links
+            - [ ] Copy Block ID to clipboard
+            - [ ] Show Block text by ID via `((` ***block-id*** `))` syntax as a link in Markdown
+            - [ ] Show available Blocks when user types the `((` trigger, followed by the closing `))`
+            - [ ] Logseq compatible
+        - [ ] Block embedded links
+            - [ ] Copy embedded Block to clipboard
+            - [ ] Show Block text and Block's children
+            - [ ] Show available Blocks when user types the `{{embed ((` trigger, followed by the closing `))}}`
+            - [ ] Copy Block and embedded Block options via children in embedded Block
+            - [ ] Edit children in embedded Block
+            - [ ] Logseq compatible
+    - [ ] Mitigation
+        - [ ] Import Logseq Markdown files
+        - [ ] Export whole user information (Pages and Tasks)
+- [ ] Production UI elements
+    - [ ] Journal
+    - [ ] All Pages
+    - [ ] Page content
+    - [ ] Block item
+    - [ ] Block/Page search box
+    - [ ] Task content
+    - [ ] Log in/log out
+    - [ ] User registration
+    - [ ] Version control operations
+    - [ ] Page diff
+- [ ] Version control
+    - [ ] Basic operations
+        - [ ] Commit
+        - [ ] Diff
+        - [ ] Branching
+            - [ ] Create branch
+            - [ ] Change branch
+            - [ ] Delete branch
+        - [ ] Merge
+        - [ ] Rebase
+    - [ ] Automation
+        - [ ] Daily commit
+        - [ ] Empty journal Page removal
+- [ ] Tasks
+    - [ ] Basic operations
+        - [ ] Create Task
+        - [ ] Delete Task
+        - [ ] Modify Task
+    - [ ] References
+        - [ ] Task link (Page link syntax)
+        - [ ] Tag (Page tag syntax)
+        - [ ] Task embed
+- [ ] Security
+    - [ ] User control
+        - [x] User registration (create accounts)
+        - [x] User log in
+        - [x] User log out
+        - [ ] Delete user account + related data
+    - [ ] Authorization
+        - [x] Require a valid user for Page manipulation
+        - [x] Require a valid user for Block manipulation
+        - [x] Require a valid user for reading Block and Page references
+        - [ ] Require a valid user for version control
+        - [ ] Require a valid user for tasks
+    - [x] Sandboxing
+        - [x] User information in separate folders
+        - [x] Backlinks searches only in user folder
+    - [ ] Transit
+        - [ ] HTTPS on all routes
+        - [ ] End to End Encryption with sending/receiving raw Pages
+    - [ ] Monitoring
+        - [ ] Prometheus metrics compatible
+        - [ ] Grafana metrics compatible
+- [ ] CI/CD
+    - [x] Project test structure
+        - [x] Backend (Pytest) structure
+        - [x] Frontend (Vitest) structure
+        - [x] Run tests in Pull Requests
+        - [x] Require all tests to pass for merge
+    - [ ] Docker image
+        - [ ] Create Docker image for each release
+        - [ ] Update to latest version when released
