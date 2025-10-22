@@ -27,7 +27,7 @@ export default {
         }
     },
     mounted() {
-        console.log(new Date().toLocaleString(), 'BaseEditor mounted', this.rootObjID, (this.isEditing) ? 'in edit mode' : 'in presentation mode', '\t', this.readonlyText)
+        // console.log(new Date().toLocaleString(), 'BaseEditor mounted', this.rootObjID, (this.isEditing) ? 'in edit mode' : 'in presentation mode', '\t', this.readonlyText)
         if (this.isEditing) {
             this.keepFocusOnBlock = true
             this.deferFocusUntilReady()

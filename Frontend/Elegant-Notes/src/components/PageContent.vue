@@ -52,8 +52,7 @@ export default {
             }
         }
     },
-    setup()
-    {
+    setup() {
         return {
             debounce: createDebounce(),
         };
@@ -166,13 +165,14 @@ export default {
                 this.pageDialogMeta.showDialog = true
             }
         },
-        HandlePageRenameConfirm() {
+        HandlePageRenameConfirm(renameReferences) {
             this.pageDialogMeta.showDialog = false
             this.page.name = this.pageDialogMeta.oldName = this.pageDialogMeta.newName
             this.refocusKey++
 
             // TODO implement this logic in the backend
             console.log(this.page.name, '->', this.pageDialogMeta.newName)
+            console.log('references to rename', renameReferences)
         },
         HandlePageRenameCancel() {
             this.pageDialogMeta.showDialog = false
@@ -187,11 +187,11 @@ export default {
             //
         },
         focusBlockAbove(blockID) {
-            console.log(new Date().toLocaleString(), 'above', blockID, this.editingId)
+            // console.log(new Date().toLocaleString(), 'above', blockID, this.editingId)
             this.navigateTo('up')
         },
         focusBlockBelow(blockID) {
-            console.log(new Date().toLocaleString(), 'below', blockID, this.editingId)
+            // console.log(new Date().toLocaleString(), 'below', blockID, this.editingId)
             this.navigateTo('down')
         },
 
@@ -200,7 +200,7 @@ export default {
         ///
 
         handleEditRequest(objID) {
-            console.log(new Date().toLocaleString(), 'edit request', objID)
+            // console.log(new Date().toLocaleString(), 'edit request', objID)
             this.editingId = objID
             this.refocusKey++
         },
@@ -213,7 +213,7 @@ export default {
             }
         },
         handleBlurRequest(objID, finalText) {
-            console.log(new Date().toLocaleString(), 'parent blur', objID, finalText)
+            // console.log(new Date().toLocaleString(), 'parent blur', objID, finalText)
             if (objID === this.page.id) {
                 this.HandlePageRename(finalText)
             }
@@ -238,6 +238,7 @@ export default {
     <PageRenameDialog v-if="pageDialogMeta.showDialog"
       :new-page-name="pageDialogMeta.newName"
       :old-page-name="pageDialogMeta.oldName"
+      :references="backlinks"
       @rename-confirmed="HandlePageRenameConfirm"
       @rename-cancelled="HandlePageRenameCancel"
     />

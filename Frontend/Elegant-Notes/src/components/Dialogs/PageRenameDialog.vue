@@ -2,11 +2,18 @@
 /**
  * Page rename confirmation dialog
  */
+import { v4 as uuidv4 } from 'uuid'
+
+import PageReferenceRenameOption from '@/components/Menus/PageReferenceRenameOption.vue'
 
  export default {
+    components: {
+        PageReferenceRenameOption,
+    },
     props: {
         oldPageName: String,
         newPageName: String,
+        references: Array,
     },
     emits: [
         'renameConfirmed',
@@ -14,15 +21,35 @@
     ],
     data() {
         return {
-            //
+            referenceOptions: [],
         }
+    },
+    mounted() {
+        this.references.forEach(ref => {
+            const entry = {
+                id: uuidv4(),
+                rename: true,
+                page_name: ref.page_name
+            }
+            this.referenceOptions.push(entry)
+        })
     },
     methods: {
         renamePage() {
-            this.$emit('renameConfirmed')
+            const pagesWithReferencesToUpdate = this.referenceOptions
+                .filter(x => x.rename)
+                .map(x => x.page_name)
+            this.$emit('renameConfirmed', pagesWithReferencesToUpdate)
         },
         renameCancelled() {
             this.$emit('renameCancelled')
+        },
+        handleReferenceRenameOption(refID, shouldRenameFlag) {
+            this.referenceOptions.forEach(ref => {
+                if (ref.id === refID) {
+                    ref.rename = shouldRenameFlag
+                }
+            })
         },
     }
  }
@@ -37,7 +64,18 @@
             <div class="prd-confirm-btn" @click="renameCancelled">No</div>
         </div>
 
-        <!-- Future: show a list showing all references (backlinks) to be updated with the option to update each one or not -->
+         <div class="prd-page-rename-options">
+            <!-- might just make this a component to keep everything clean -->
+             <div v-for="referenceOption in referenceOptions">
+                <PageReferenceRenameOption
+                  :id="referenceOption.id"
+                  :pageName="referenceOption.page_name"
+                  :shouldRename="referenceOption.rename"
+                  :key="(referenceOption.rename)"
+                  @rename-reference-option-changed="handleReferenceRenameOption"
+                />
+            </div>
+         </div>
     </div>
 </template>
 
@@ -52,6 +90,12 @@
 }
 
 .prd-confirm-btn {
+    padding: 0;
+}
+
+.prd-page-rename-options {
+    /* display: flex;
+    flex-direction: row; */
     padding: 0;
 }
 </style>
