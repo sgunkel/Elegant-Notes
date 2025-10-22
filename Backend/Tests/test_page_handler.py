@@ -99,7 +99,7 @@ def test_new_page_with_existing_name(tmp_dir, other_pages_count):
     ('- a\n    - b\n- c', '- a\n    - b\n    - c')
 ])
 def test_update_page_by_name(tmp_dir, content_before, content_after):
-    write_md_content(tmp_dir / 'example.md', content_before) # y dis no werk????
+    write_md_content(tmp_dir / 'example.md', content_before)
     page_info = PageWithContentWithoutMetaData(name='example', content=content_after)
     handle_update_page(tmp_dir, page_info)
 

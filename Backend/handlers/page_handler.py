@@ -8,9 +8,11 @@ from ..models.page_model import (
     PageMetaData,
     PageWithContentWithoutMetaData,
     NamedPage,
-    PageWithContent
+    PageWithContent,
+    PageRenameInfo,
+    PageReferenceToRename,
 )
-from ..models.user_model import User
+from ..utilities.page_utils import rename_page_references_in_str
 
 def handle_get_all_pages(page_path: Path):
     file_names = os.listdir(str(page_path))
@@ -50,3 +52,13 @@ def handle_update_page(page_path: Path, page_info: PageWithContentWithoutMetaDat
     with open(str(full_path), 'w') as f:
         f.write(page_info.content)
     return True
+
+def handle_page_rename(page_path: Path, rename_info: PageRenameInfo):
+    for reference in rename_info.references_to_update:
+        # TODO run these operations in parallel
+        path = page_path / reference.page_name # TODO handle folders - wayyyyy later down the road
+        with open(path, 'r') as f:
+            content = f.read()
+        replaced_references = rename_page_references_in_str(rename_info.old_name, rename_info.new_name, content)
+        with open(path, 'w') as f:
+            f.write(replaced_references)
