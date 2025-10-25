@@ -58,7 +58,7 @@ def handle_page_rename(page_path: Path, rename_info: PageRenameInfo):
     # Update the references to the source Page
     for reference in rename_info.references_to_update:
         # TODO run these operations in parallel
-        path = page_path / reference.page_name # TODO handle folders - wayyyyy later down the road
+        path = page_path / (reference.page_name + '.md') # TODO handle folders - wayyyyy later down the road
         with open(path, 'r') as f:
             content = f.read()
         replaced_references = rename_page_references_in_str(rename_info.old_name, rename_info.new_name, content)

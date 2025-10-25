@@ -140,7 +140,7 @@ def test_rename_page_reference_in_fs(tmp_dir, file_count, ref_count):
     ref_list_to_update = []
     for i in range(ref_count):
         page_name = f'example-{i}'
-        write_md_content(tmp_dir / page_name, '- [[actual]]')
+        write_md_content(tmp_dir / (page_name + '.md'), '- [[actual]]')
         ref_list_to_update.append(PageReferenceToRename(page_name=page_name))
     generate_and_write_md_file(tmp_dir / 'actual.md')
     
@@ -164,7 +164,7 @@ def test_rename_page_reference_in_fs(tmp_dir, file_count, ref_count):
     updated_ref = f'[[{expected_new_name}]]'
     old_ref = f'[[{expected_old_name}]]'
     for updated_page in ref_list_to_update:
-        file_name = tmp_dir / updated_page.page_name
+        file_name = tmp_dir / (updated_page.page_name + '.md')
         content = file_name.read_text()
         assert updated_ref in content
         assert old_ref not in content
