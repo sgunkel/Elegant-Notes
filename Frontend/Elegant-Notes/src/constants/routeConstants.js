@@ -4,6 +4,7 @@ export const PageRoutes = {
     getPage: '/page/get',
     createPage: '/page/create',
     updatePage: '/page/update',
+    renamePage: '/page/rename',
 }
 
 export const metaRoutes = {

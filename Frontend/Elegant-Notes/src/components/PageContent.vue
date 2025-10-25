@@ -66,10 +66,8 @@ export default {
         }
         const pageNotReceivedFn = (errorMsg) => console.log(`error receiving page: ${errorMsg}`)
         pageOperations.getPageByName(this.page.name, receivedPageFn, pageNotReceivedFn)
-        
-        const receivedBacklinkFn = (data) => this.backlinks = data
-        const couldNotReceiveBacklinksFn = (errorMsg) => console.log(`error receiving backlinks: ${errorMsg}`)
-        metaOperations.getBacklinks(this.page.name, receivedBacklinkFn, couldNotReceiveBacklinksFn)
+
+        this.loadBacklinks()
     },
     methods: {
         logOut() {
@@ -154,6 +152,12 @@ export default {
                 this.editingId = blockId;
             }
         },
+    
+        loadBacklinks() {
+            const receivedBacklinkFn = (data) => this.backlinks = data
+            const couldNotReceiveBacklinksFn = (errorMsg) => console.log(`error receiving backlinks: ${errorMsg}`)
+            metaOperations.getBacklinks(this.page.name, receivedBacklinkFn, couldNotReceiveBacklinksFn)
+        },
 
         ///
         /// Page Dialog Helpers
@@ -167,12 +171,21 @@ export default {
         },
         HandlePageRenameConfirm(renameReferences) {
             this.pageDialogMeta.showDialog = false
-            this.page.name = this.pageDialogMeta.oldName = this.pageDialogMeta.newName
             this.refocusKey++
-
-            // TODO implement this logic in the backend
-            console.log(this.page.name, '->', this.pageDialogMeta.newName)
-            console.log('references to rename', renameReferences)
+            
+            // Send page rename request
+            const pageRenameRequest = {
+                'old_name': this.pageDialogMeta.oldName,
+                'new_name': this.pageDialogMeta.newName,
+                'references_to_update': renameReferences, // already converted to the correct format from the PageRenameDialog function
+            }
+            const pageSuccessfullyRenamed = (msg) => {
+                console.log('Page rename successful', msg)
+                this.loadBacklinks() // Load the new Backlinks
+            }
+            const pageFailedToBeRenamed = (msg) => console.log('Page could not be renamed:', msg)
+            pageOperations.renamePage(pageRenameRequest, pageSuccessfullyRenamed, pageFailedToBeRenamed)
+            this.page.name = this.pageDialogMeta.oldName = this.pageDialogMeta.newName
         },
         HandlePageRenameCancel() {
             this.pageDialogMeta.showDialog = false

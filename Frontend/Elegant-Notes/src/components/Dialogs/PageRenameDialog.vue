@@ -38,7 +38,7 @@ import PageReferenceRenameOption from '@/components/Menus/PageReferenceRenameOpt
         renamePage() {
             const pagesWithReferencesToUpdate = this.referenceOptions
                 .filter(x => x.rename)
-                .map(x => x.page_name)
+                .map(x => { return {'page_name': x.page_name} })
             this.$emit('renameConfirmed', pagesWithReferencesToUpdate)
         },
         renameCancelled() {

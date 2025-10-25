@@ -24,4 +24,10 @@ export const pageOperations = {
         authUtils.postWithAuth(PageRoutes.updatePage, data)
             .then(err => failureFn(err))
     },
+    renamePage: (data, successFn, failureFn) => {
+        authUtils.postWithAuth(PageRoutes.renamePage, data)
+            .then(response => response.json())
+            .then(msg => successFn(msg))
+            .catch(error => failureFn(error))
+    },
 }
