@@ -184,6 +184,7 @@ export default {
     display: flex;
     flex-direction: row;
     margin: 0;
+    width: 100%;
 }
 
 .be-text-edit {

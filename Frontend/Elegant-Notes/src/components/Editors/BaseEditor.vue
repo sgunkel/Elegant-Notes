@@ -38,7 +38,7 @@ export default {
             return this.rootObjID === this.editingId
         },
         toPresentationHTML() {
-            return this.textToHTMLFunction(this.editableContent)
+            return this.textToHTMLFunction(this.editableContent || '&nbsp;')
         },
     },
     methods: {
@@ -114,13 +114,13 @@ export default {
 </script>
 
 <template>
-    <div class="block-editor-wrapper">
-        <div class="block-editor-text-line">
+    <div class="base-editor-wrapper">
+        <div class="base-editor-text-line">
             <!-- Markdown renderer and inline text editing -->
             <input v-if="isEditing"
               :key="rootObjID"
               v-model="editableContent"
-              class="block-editor-text-edit"
+              class="base-editor-text-edit"
               @blur="handleInputTagBlur"
               @keydown="onInputKeydown"
               @keyup="handleTextContentUpdate()"
@@ -129,7 +129,7 @@ export default {
               ref="input"/>
             <div v-else
               v-html="toPresentationHTML"
-              class="block-editor-converted-text"
+              class="base-editor-converted-text"
               @click="requestEditMode">
             </div>
         </div>
@@ -140,6 +140,7 @@ export default {
 .base-editor-wrapper {
     padding: 0;
     margin: 0;
+    width: 100%;
 }
 
 .base-editor-text-line {
