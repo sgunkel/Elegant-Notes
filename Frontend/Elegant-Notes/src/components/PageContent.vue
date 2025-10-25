@@ -93,7 +93,7 @@ export default {
             
             blockUtilities.updateRecursive(this.rootLevelBlocks, updatedBlock)
             this.debounce(() => {
-                //this.updateDocument()
+                this.updateDocument()
             }, 1000)
         },
         navigateTo(direction) {
