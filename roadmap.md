@@ -4,9 +4,10 @@ The current status and remaining portions to be implemented can be found here!
 ## Version 1.0
 The full list of TODOs before releasing version 1.0.
 - [ ] Page/Block architecture
-    - [ ] Basic operations
+    - [x] Basic operations
         - [x] Create Pages
-        - [ ] Rename Pages
+        - [x] Rename Pages
+            - [x] Update references to Page
         - [x] Create Blocks in Pages
         - [x] Create Blocks in Blocks (nested)
         - [x] Delete Blocks
