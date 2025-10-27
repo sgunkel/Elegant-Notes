@@ -1,3 +1,4 @@
+from typing import List
 
 from pydantic import BaseModel
 
@@ -13,3 +14,11 @@ class PageWithContent(PageMetaData):
 
 class PageWithContentWithoutMetaData(NamedPage):
     content: str
+
+class PageReferenceToRename(BaseModel):
+    page_name: str
+
+class PageRenameInfo(BaseModel):
+    old_name: str
+    new_name: str
+    references_to_update: List[PageReferenceToRename]
