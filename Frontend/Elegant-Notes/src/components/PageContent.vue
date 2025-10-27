@@ -228,12 +228,14 @@ export default {
             }
         },
         handleBlurRequest(objID, finalText) {
-            if (this.pendingFocusId ===objID) {
+            if (this.pendingFocusId === objID && objID != this.page.id) {
                 return // skip if this block is about to focus again
                 // Note that Vue has some weird timing issues with how an <input>'s @blur
                 //     and @click works - when a BaseEditor component has focus and the
                 //     user selects another one, the original component's @blur fires
                 //     *before* the new one's @click.
+                // Also, this messes with firing the Page Rename dialog, so we ignore that.
+                //
                 // This is handled at the highest level (this file) to keep BaseEditor
                 //     small and simple :)
             }
