@@ -30,7 +30,9 @@ export default {
             content: '',
             backlinks: [],
             rootLevelBlocks: [],
-            editingId: null,
+            editingId: null,        // The Block or Page with focus
+            pendingFocusId: null,   // Flag to prevent race condition when a BaseEditor
+                                    //     loses focus to another
             refocusKey: 0,
             pageDialogMeta: {
                 showDialog: false,
@@ -213,7 +215,7 @@ export default {
         ///
 
         handleEditRequest(objID) {
-            // console.log(new Date().toLocaleString(), 'edit request', objID)
+            this.pendingFocusId = objID
             this.editingId = objID
             this.refocusKey++
         },
@@ -226,13 +228,23 @@ export default {
             }
         },
         handleBlurRequest(objID, finalText) {
-            // console.log(new Date().toLocaleString(), 'parent blur', objID, finalText)
+            if (this.pendingFocusId ===objID) {
+                return // skip if this block is about to focus again
+                // Note that Vue has some weird timing issues with how an <input>'s @blur
+                //     and @click works - when a BaseEditor component has focus and the
+                //     user selects another one, the original component's @blur fires
+                //     *before* the new one's @click.
+                // This is handled at the highest level (this file) to keep BaseEditor
+                //     small and simple :)
+            }
+
             if (objID === this.page.id) {
                 this.HandlePageRename(finalText)
             }
             else {
                 this.updateBlockText(objID, finalText) // this should use `handleUpdate` but takes in a new block object
             }
+
             if (this.editingId === objID) {
                 this.editingId = undefined // another object requested focus, and the previous object's `blur` signal fired afterward
             }
