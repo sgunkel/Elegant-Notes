@@ -1,21 +1,19 @@
 <script>
+import { v4 as uuidv4 } from 'uuid'
+
 import { store } from '@/store.js'
 
 import BlockEditor from './Editors/BlockEditor.vue';
 import PageNameEditor from './Editors/PageNameEditor.vue';
 import PageRenameDialog from './Dialogs/PageRenameDialog.vue';
-
 import BacklinkReference from './BacklinkReference.vue';
+
 import { pageOperations } from '@/helpers/pageFetchers.js';
 import { metaOperations } from '@/helpers/metaFetchers.js'
-import { createDebounce } from '@/helpers/debouncer';
-import { md2json } from '@/helpers/md2json';
-import { json2md } from '@/helpers/json2MdConverter';
-
-import { marked } from 'marked';
-
-import { v4 as uuidv4 } from 'uuid'
-import { blockUtilities } from '@/helpers/blockUtilities';
+import { createDebounce } from '@/helpers/debouncer.js';
+import { blockUtilities } from '@/helpers/blockUtilities.js';
+import { pageUtils } from '@/helpers/pageUtils.js';
+import { editorConstants } from '@/constants/editorConstants.js';
 
 export default {
     components: {
@@ -26,32 +24,23 @@ export default {
     },
     data() {
         return {
-            page: store.getPage(),
-            content: '',
-            backlinks: [],
+            page: store.getPage(), // moving this to be a prop might be beneficial
+
             rootLevelBlocks: [],
+            linkage: {
+                backlinks: [],
+            },
+
             editingId: null,        // The Block or Page with focus
             pendingFocusId: null,   // Flag to prevent race condition when a BaseEditor
                                     //     loses focus to another
-            refocusKey: 0,
+            refocusKey: 0,          // Easy way to update the root level editors after an action
+
             pageDialogMeta: {
                 showDialog: false,
-                newName: store.getPage().name,
+                newName: store.getPage().name, // if the page object is moved to a prop (which it should), we'll need to update this and below
                 oldName: store.getPage().name
             },
-        }
-    },
-    computed: {
-        MarkdownAsHTML() {
-            return marked(this.content)
-        }
-    },
-    watch: {
-        rootLevelBlocks: {
-            deep: true,
-            handler(val) {
-                // console.log('[rootLevelBlocks] updated:', val)
-            }
         }
     },
     setup() {
@@ -60,68 +49,55 @@ export default {
         };
     },
     mounted() {
-        this.page.id = uuidv4()
-        const receivedPageFn = (data) => {
-            this.content = data.content
-            this.rootLevelBlocks = md2json(this.content)
-            console.log(this.rootLevelBlocks)
-        }
-        const pageNotReceivedFn = (errorMsg) => console.log(`error receiving page: ${errorMsg}`)
-        pageOperations.getPageByName(this.page.name, receivedPageFn, pageNotReceivedFn)
-
+        this.page.id = uuidv4() // if we take the page as a prop, we should have this handled for us at a higher level
+        pageOperations.getPageByName(this.page.name, this.onPageFetchSuccess, this.onPageFetchFail)
         this.loadBacklinks()
     },
     methods: {
         logOut() {
             store.setJWTToken(undefined)
         },
+        refreshEditors() {
+            this.refocusKey++
+        },
         updateDocument() {
             console.log(`${new Date().toLocaleString()}: updating doc`)
-            const data = {
-                name: this.page.name,
-                content: json2md(this.rootLevelBlocks, 0)
-            }
+            const data = pageUtils.createDocUpdateRequest(this.page.name, this.rootLevelBlocks)
             console.log(data)
-            pageOperations.updatePage(data, (errorMsg) => {})
+            pageOperations.updatePage(data, this.onUpdateDocumentFail)
         },
-        splitIntoLines() {
-            return this.content.split('\n')
-        },
-        handleUpdate(updatedBlock, keepFocus, shouldDebounce = true) {
-            console.log(new Date().toLocaleString(), 'keepFocus:', keepFocus, updatedBlock)
+
+        ///
+        /// Block Editor Handlers
+        ///
+
+        handleUpdate(updatedBlock, keepFocus) {
             if (keepFocus !== undefined && !keepFocus) { // idk how, but keepFocus can be randomly undefined even though I've checked everything and have confirmed that it should be a boolean value
                 this.editingId = null
             }
             
             blockUtilities.updateRecursive(this.rootLevelBlocks, updatedBlock)
-            this.debounce(() => {
-                this.updateDocument()
-            }, 1000)
+            this.debounce(this.updateDocument, editorConstants.pageUpdateDebounceDelayMS)
         },
-        navigateTo(direction) {
+        changeEditIDByOffset(offset) {
+            // Flatten root level objects to an array, get the index of the focused Block,
+            //     and change the ID based on the offset.
             const flatList = blockUtilities.flattenBlocks(this.rootLevelBlocks)
             const currentIndex = flatList.findIndex(b => b.id === this.editingId)
             if (currentIndex === -1) { return }
 
-            const targetIndex = ((direction === 'up') ? currentIndex - 1 : currentIndex + 1)
+            const targetIndex = currentIndex + offset
             if (flatList[targetIndex]) {
                 this.editingId = flatList[targetIndex].id
             }
-            this.refocusKey++
+            this.refreshEditors()
         },
         createBlockAfter(targetId) {
-            const newBlock = {
-                id: uuidv4(),
-                content: '',
-                children: []
-            }
-
-            // Note that we are creating a copy of `rootLevelBlocks` by stringifying/parsing it
+            const newBlock = blockUtilities.createNewBlock()
             const blocksCopy = blockUtilities.createBlocksCopy(this.rootLevelBlocks)
             if (blockUtilities.insertAfterRecursive(blocksCopy, newBlock, targetId)) {
                 this.rootLevelBlocks = blocksCopy
-                this.editingId = newBlock.id
-                // BlockEditor components handle <input> focus logic
+                this.editingId = newBlock.id // Automatically focuses the BaseEditor belonging to `newBlock`
             }
         },
         deleteBlock(blockID) {
@@ -132,37 +108,39 @@ export default {
             }
         },
         indentBlock(blockId, newContent) {
-
-            /// THIS DOESN'T WORK UNLESS THERE'S BEEN TIME FOR THE DEBOUNCE TO COMPLETE!!!
-
-            console.log('indent', blockId, newContent)
-            const updateFn = (moved, success) => this.handleUpdate(moved, success)
-            const idChangedFn = (newID) => this.editingId = newID
             const copy = blockUtilities.createBlocksCopy(this.rootLevelBlocks)
-            if (blockUtilities.indent(blockId, copy, newContent, updateFn, idChangedFn)) {
+            if (blockUtilities.indent(blockId, copy, newContent, this.onBlockIndentUpdate, this.onBlockIndentEditIDChange)) {
                 this.rootLevelBlocks = copy
-                this.refocusKey++
+                this.refreshEditors()
             }
         },
         outdentBlock(blockId, newText) {
             const blocksCopy = blockUtilities.createBlocksCopy(this.rootLevelBlocks)
-            let [success, movedBlock, blocksNewCopy] = blockUtilities.outdentRecursive(blocksCopy, blockId, newText)
+            let [success, movedBlock, blocksNewCopy] = blockUtilities.outdentRecursive(blocksCopy, blockId, newText) // we'll update this later (I seriously cannot look at it without dying inside right)
             if (success) {
                 this.rootLevelBlocks = blocksNewCopy
                 this.handleUpdate(movedBlock, true);
-                this.refocusKey++;
                 this.editingId = blockId;
+                this.refreshEditors()
             }
         },
-    
-        loadBacklinks() {
-            const receivedBacklinkFn = (data) => this.backlinks = data
-            const couldNotReceiveBacklinksFn = (errorMsg) => console.log(`error receiving backlinks: ${errorMsg}`)
-            metaOperations.getBacklinks(this.page.name, receivedBacklinkFn, couldNotReceiveBacklinksFn)
+        focusBlockAbove() {
+            this.changeEditIDByOffset(-1)
+        },
+        focusBlockBelow() {
+            this.changeEditIDByOffset(1)
         },
 
         ///
-        /// Page Dialog Helpers
+        /// Metadata Handlers
+        ///
+    
+        loadBacklinks() {
+            metaOperations.getBacklinks(this.page.name, this.onBacklinksReceiveSuccess, this.onBacklinksReceiveFail)
+        },
+
+        ///
+        /// Page Dialog Handlers
         ///
 
         HandlePageRename(newName) {
@@ -173,20 +151,11 @@ export default {
         },
         HandlePageRenameConfirm(renameReferences) {
             this.pageDialogMeta.showDialog = false
-            this.refocusKey++
+            this.refreshEditors()
             
             // Send page rename request
-            const pageRenameRequest = {
-                'old_name': this.pageDialogMeta.oldName,
-                'new_name': this.pageDialogMeta.newName,
-                'references_to_update': renameReferences, // already converted to the correct format from the PageRenameDialog function
-            }
-            const pageSuccessfullyRenamed = (msg) => {
-                console.log('Page rename successful', msg)
-                this.loadBacklinks() // Load the new Backlinks
-            }
-            const pageFailedToBeRenamed = (msg) => console.log('Page could not be renamed:', msg)
-            pageOperations.renamePage(pageRenameRequest, pageSuccessfullyRenamed, pageFailedToBeRenamed)
+            const pageRenameRequest = pageUtils.createPageRenameRequest(this.pageDialogMeta.oldName, this.pageDialogMeta.newName, renameReferences)
+            pageOperations.renamePage(pageRenameRequest, this.onPageRenameSuccess, this.onPageRenameFail)
             this.page.name = this.pageDialogMeta.oldName = this.pageDialogMeta.newName
         },
         HandlePageRenameCancel() {
@@ -195,41 +164,18 @@ export default {
         },
 
         ///
-        /// Block Editor Helpers
-        ///
-
-        updateBlockText(blockID, newText) {
-            //
-        },
-        focusBlockAbove(blockID) {
-            // console.log(new Date().toLocaleString(), 'above', blockID, this.editingId)
-            this.navigateTo('up')
-        },
-        focusBlockBelow(blockID) {
-            // console.log(new Date().toLocaleString(), 'below', blockID, this.editingId)
-            this.navigateTo('down')
-        },
-
-        ///
-        /// Handlers
+        /// Shared Handlers
         ///
 
         handleEditRequest(objID) {
             this.pendingFocusId = objID
             this.editingId = objID
-            this.refocusKey++
-        },
-        handleTextUpdate(objID, newText) {
-            if (objID === this.page.id) {
-                // We do not update the Page name in real time
-            }
-            else {
-                this.updateBlockText(objID, newText)
-            }
+            this.refreshEditors()
         },
         handleBlurRequest(objID, finalText) {
             if (this.pendingFocusId === objID && objID != this.page.id) {
                 return // skip if this block is about to focus again
+
                 // Note that Vue has some weird timing issues with how an <input>'s @blur
                 //     and @click works - when a BaseEditor component has focus and the
                 //     user selects another one, the original component's @blur fires
@@ -243,14 +189,47 @@ export default {
             if (objID === this.page.id) {
                 this.HandlePageRename(finalText)
             }
-            else {
-                this.updateBlockText(objID, finalText) // this should use `handleUpdate` but takes in a new block object
-            }
+            // Blocks are already updated immediately by `handleUpdate`, so no need for that here
 
             if (this.editingId === objID) {
                 this.editingId = undefined // another object requested focus, and the previous object's `blur` signal fired afterward
             }
-            this.refocusKey++
+            this.refreshEditors()
+        },
+
+        //
+        // Callbacks
+        //
+
+        onPageFetchSuccess(data) {
+            this.rootLevelBlocks = pageUtils.convertPageContentToBlockNodes(data.content)
+            console.log(this.rootLevelBlocks)
+        },
+        onPageFetchFail(errorMsg) {
+            console.log(`error receiving page: ${errorMsg}`)
+        },
+        onUpdateDocumentFail(errorMsg) {
+            // TODO show error somehow..?
+        },
+        onBlockIndentUpdate(indentedBlock, wasSuccessful) {
+            this.handleUpdate(indentedBlock, wasSuccessful)
+        },
+        onBlockIndentEditIDChange(newID) {
+            this.editingId = newID
+        },
+        onBacklinksReceiveSuccess(backlinkData) {
+            this.linkage.backlinks = backlinkData
+        },
+        onBacklinksReceiveFail(errorMsg) {
+            // better error message notifying
+            console.log(`error receiving backlinks: ${errorMsg}`)
+        },
+        onPageRenameSuccess(msg) {
+            console.log('Page rename successful', msg)
+            this.loadBacklinks()
+        },
+        onPageRenameFail(msg) {
+            console.log('Page could not be renamed:', msg)
         },
     }
 }
@@ -265,7 +244,7 @@ export default {
     <PageRenameDialog v-if="pageDialogMeta.showDialog"
       :new-page-name="pageDialogMeta.newName"
       :old-page-name="pageDialogMeta.oldName"
-      :references="backlinks"
+      :references="linkage.backlinks"
       @rename-confirmed="HandlePageRenameConfirm"
       @rename-cancelled="HandlePageRenameCancel"
     />
@@ -299,7 +278,7 @@ export default {
 
             <div class="pc-back-links-section">
                 <BacklinkReference
-                  v-for="backlink in backlinks"
+                  v-for="backlink in linkage.backlinks"
                   :pageReferences="backlink">
                 </BacklinkReference>
             </div>
