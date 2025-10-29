@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { removeIDsFromBlockObjects } from '../blockObjUtils.js'
-import { md2json } from '@/helpers/md2json.js'
+import { md2json } from '@/helpers/MarkdownJSONUtils.js'
 
 ///
 /// Mock Markdown content to be parsed
