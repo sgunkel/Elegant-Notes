@@ -1,7 +1,6 @@
 <script>
 import { router } from '@/router/routes.js'
 import { store } from '@/store.js'
-import { fetchWithToken } from '@/utils.js'
 import { pageOperations } from '@/helpers/pageFetchers.js'
 
 export default {
