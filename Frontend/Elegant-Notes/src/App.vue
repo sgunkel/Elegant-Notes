@@ -3,11 +3,15 @@ import { store } from './store.js';
 
 import AuthPage from '@/components/AuthPage.vue'
 
+import { Notivue, Notification } from 'notivue'
+
 (async () => await store.init())()
 
 export default {
     components: {
         AuthPage,
+        Notivue,
+        Notification,
     },
     data() {
         return {
@@ -20,6 +24,9 @@ export default {
 
 <template>
     <div class="app-background">
+        <Notivue v-slot="item" class="nothing">
+            <Notification :item="item" />
+        </Notivue>
         <div class="app-routes-background">
             <div v-if="this.store.isUserAuthenticated()">
                 <router-view></router-view>

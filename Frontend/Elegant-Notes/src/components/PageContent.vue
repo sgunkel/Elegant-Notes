@@ -14,6 +14,7 @@ import { createDebounce } from '@/helpers/debouncer.js';
 import { blockUtilities } from '@/helpers/blockUtilities.js';
 import { pageUtils } from '@/helpers/pageUtils.js';
 import { editorConstants } from '@/constants/editorConstants.js';
+import { notificationUtils } from '@/helpers/notifications.js';
 
 export default {
     components: {
@@ -64,7 +65,7 @@ export default {
             console.log(`${new Date().toLocaleString()}: updating doc`)
             const data = pageUtils.createDocUpdateRequest(this.page.name, this.rootLevelBlocks)
             console.log(data)
-            pageOperations.updatePage(data, this.onUpdateDocumentFail)
+            pageOperations.updatePage(data, this.onUpdateDocumentSuccess, this.onUpdateDocumentFail)
         },
 
         ///
@@ -203,13 +204,16 @@ export default {
 
         onPageFetchSuccess(data) {
             this.rootLevelBlocks = pageUtils.convertPageContentToBlockNodes(data.content)
-            console.log(this.rootLevelBlocks)
         },
         onPageFetchFail(errorMsg) {
             console.log(`error receiving page: ${errorMsg}`)
+            notificationUtils.toastError(`Error loading page: ${errorMsg}`)
+        },
+        onUpdateDocumentSuccess(msg) {
+            // might be useful later..
         },
         onUpdateDocumentFail(errorMsg) {
-            // TODO show error somehow..?
+            notificationUtils.toastError(`Can not update Page: ${errorMsg}`)
         },
         onBlockIndentUpdate(indentedBlock, wasSuccessful) {
             this.handleUpdate(indentedBlock, wasSuccessful)
@@ -221,14 +225,18 @@ export default {
             this.linkage.backlinks = backlinkData
         },
         onBacklinksReceiveFail(errorMsg) {
-            // better error message notifying
+            // TODO how should we actually display the error? It'll most likely be large and
+            //     shouldn't be part of the toast notification...
+            notificationUtils.toastError('Failed to receive backlinks. Check console.log')
             console.log(`error receiving backlinks: ${errorMsg}`)
         },
         onPageRenameSuccess(msg) {
             console.log('Page rename successful', msg)
+            notificationUtils.toastSuccess(msg)
             this.loadBacklinks()
         },
         onPageRenameFail(msg) {
+            notificationUtils.toastError(msg)
             console.log('Page could not be renamed:', msg)
         },
     }
