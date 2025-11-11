@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router"
 
 import PageView from "@/components/PageView.vue"
-import PageContent from "@/components/PageContent.vue"
+import PageEditor from "@/components/Editors/PageEditor.vue"
 import NewPageDialog from "@/components/NewPageDialog.vue"
 
 const routes = [
@@ -11,9 +11,9 @@ const routes = [
         component: PageView
     },
     {
-        path: '/page-content',
-        name: 'PageContent',
-        component: PageContent
+        path: '/page-editor',
+        name: 'PageEditor',
+        component: PageEditor
     },
     {
         path: '/new-page',

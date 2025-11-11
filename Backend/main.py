@@ -16,7 +16,7 @@ app.include_router(auth_router_obj)
 
 # to fix some frustrations
 @app.router.get('/page-create')
-@app.router.get('/page-content')
+@app.router.get('/page-editor')
 @app.router.get('/pages')
 def redirect_pages_to_home():
     return RedirectResponse(url='/')

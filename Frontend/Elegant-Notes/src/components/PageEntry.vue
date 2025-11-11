@@ -13,7 +13,7 @@ export default {
     methods: {
         selectPage() {
             store.setPage(this.page)
-            this.$router.push('/page-content')
+            this.$router.push('/page-editor')
         }
     }
 }

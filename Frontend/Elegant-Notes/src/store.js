@@ -8,6 +8,8 @@ import { notificationUtils } from "./helpers/notifications.js";
 
 export const store = reactive({
     history: [],
+    editingId: null,        // This is global because it is used by multiple components to only give one editor focus
+    pendingFocusId: null,   // ^^
     _page: Object,
     _jwtToken: undefined,
     _authCheckDebouncer: undefined,

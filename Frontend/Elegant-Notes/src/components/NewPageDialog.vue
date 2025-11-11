@@ -26,7 +26,7 @@ export default {
             pageOperations.createPage(data, (errorMsg) => this.error = errorMsg)
             // TODO figure out how to detect if this fails
             store.setPage({name: this.pageName, content: ''})
-            router.push('/page-content')
+            router.push('/page-editor')
         },
         cancel() {
             this.pageName = ''
