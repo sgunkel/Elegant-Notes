@@ -1,4 +1,9 @@
-import {v4 as uuidv4} from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
+import MarkdownIt from 'markdown-it'
+
+const md = new MarkdownIt()
+// TODO add rules for changing Block references to links that go to that reference
+export default md
 
 export function md2json(markdownContent) {
     const lines = markdownContent.split('\n')

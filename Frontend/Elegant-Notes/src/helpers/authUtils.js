@@ -3,6 +3,19 @@ import { authStorage } from "@/constants/localStorageConstants.js"
 
 import { store } from '@/store.js'
 
+const createPayload = (bodyData, method) => {
+    const headerData = {
+        'accept': 'application/json',
+        'Content-Type': 'application/json',
+    }
+    const payload = {
+        method,
+        headers: headerData,
+        body: JSON.stringify(bodyData),
+    }
+    return payload
+}
+
 export const authUtils = {
     tryGetAuthTokenCookie: () => {
         let result
@@ -58,40 +71,24 @@ export const authUtils = {
         return result
     },
     sendRegistrationForm: (name, username, password, successFn, failureFn) => {
-        const headerData = {
-            'accept': 'application/json',
-            'Content-Type': 'application/json',
-        }
-        const bodyData = {
+        const formData = {
             id: 'should be changed on the backend',
             name,
             username,
             password,
         }
-        const payload = {
-            method: 'POST',
-            headers: headerData,
-            body: JSON.stringify(bodyData),
-        }
+        const payload = createPayload(formData, 'POST')
         fetch(authRoutes.registerUserRoute, payload)
             .then(response => response.json())
             .then(data => successFn(data))
             .catch(error => failureFn(error))
     },
     sendLoginForm: (username, password, successFn, failureFn) => {
-        const headerData = {
-            'accept': 'application/json',
-            'Content-Type': 'application/json',
-        }
-        const bodyData = {
+        const formData = {
             username,
             password,
         }
-        const payload = {
-            method: 'POST',
-            headers: headerData,
-            body: JSON.stringify(bodyData),
-        }
+        const payload = createPayload(formData, 'POST')
         fetch(authRoutes.loginUser, payload)
             .then(response => response.json())
             .then(data => successFn(data))

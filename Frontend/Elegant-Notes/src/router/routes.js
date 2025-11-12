@@ -4,26 +4,28 @@ import PageView from "@/components/PageView.vue"
 import PageEditor from "@/components/Editors/PageEditor.vue"
 import NewPageDialog from "@/components/NewPageDialog.vue"
 
+import { routerConstants } from "@/constants/routerConstants.js"
+
 const routes = [
     {
-        path: '/pages',
-        name: 'Pages',
+        path: routerConstants.allPagesRoute,
+        name: routerConstants.allPagesName,
         component: PageView
     },
     {
-        path: '/page-editor',
-        name: 'PageEditor',
+        path: routerConstants.pageEditorRoute,
+        name: routerConstants.pageEditorName,
         component: PageEditor
     },
     {
-        path: '/new-page',
-        name: 'NewPage',
+        path: routerConstants.newPageRoute,
+        name: routerConstants.newPageName,
         component: NewPageDialog
     },
 
     {
-        path: '/',
-        redirect: '/pages'
+        path: routerConstants.rootPath,
+        redirect: routerConstants.allPagesRoute
     },
 ]
 

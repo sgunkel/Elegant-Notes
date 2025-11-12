@@ -5,7 +5,7 @@
 
 import BaseEditor from './BaseEditor.vue';
 
-import markdownParser from '@/markdownParser.js'
+import md from '@/helpers/MarkdownJSONUtils.js'
 
 export default {
     components: {
@@ -40,7 +40,7 @@ export default {
     },
     methods: {
         MarkdownToHTML(content) {
-            return markdownParser.render(content)
+            return md.render(content)
         },
 
         ///

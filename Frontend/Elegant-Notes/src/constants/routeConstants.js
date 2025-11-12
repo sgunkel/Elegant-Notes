@@ -1,3 +1,7 @@
+/**
+ * Constants for the backend routes - not to be confused with `routerConstants.js`
+ *     which are routes for the Vue Router.
+ */
 
 export const PageRoutes = {
     getAllPages: '/page/all',
