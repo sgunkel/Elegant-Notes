@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router"
 
-import PageView from "@/components/PageView.vue"
+import PageView from "@/components/Pages/AllPagesPage.vue"
 import PageEditor from "@/components/Editors/PageEditor.vue"
-import NewPageDialog from "@/components/NewPageDialog.vue"
+import NewPageDialog from "@/components/Dialogs/NewPageDialog.vue"
 
 import { routerConstants } from "@/constants/routerConstants.js"
 

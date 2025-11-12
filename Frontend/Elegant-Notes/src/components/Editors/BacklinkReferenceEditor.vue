@@ -13,6 +13,7 @@ export default {
 </script>
 
 <template>
+    <!-- TODO add editing functionality -->
     <h2>{{ pageReferences.page_name }}</h2>
     <div v-for="child in pageReferences.references">
         <div>{{ child.line }}</div>

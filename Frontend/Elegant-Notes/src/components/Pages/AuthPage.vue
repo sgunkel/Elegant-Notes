@@ -1,6 +1,6 @@
 <script>
-import LoginView from '@/components/LoginView.vue';
-import RegisterUserView from './RegisterUserView.vue';
+import LoginView from '@/components/Views/LoginView.vue';
+import RegisterUserView from '@/components/Views/RegisterUserView.vue';
 
 export default {
     components: {

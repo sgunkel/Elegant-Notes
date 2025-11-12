@@ -1,7 +1,7 @@
 <script>
 import { store } from './store.js';
 
-import AuthPage from '@/components/AuthPage.vue'
+import AuthPage from '@/components/Pages/AuthPage.vue'
 
 import { Notivue, Notification, NotificationProgress } from 'notivue'
 

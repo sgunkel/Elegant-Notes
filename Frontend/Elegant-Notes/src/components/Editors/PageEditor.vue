@@ -8,7 +8,7 @@ import { store } from '@/store.js'
 
 import PageNameEditor from './PageNameEditor.vue';
 import PageRenameDialog from '../Dialogs/PageRenameDialog.vue';
-import BacklinkReference from '../BacklinkReference.vue';
+import BacklinkReference from './BacklinkReferenceEditor.vue';
 import PageBlocksEditor from './PageBlocksEditor.vue';
 
 import { pageOperations } from '@/helpers/pageFetchers.js';
