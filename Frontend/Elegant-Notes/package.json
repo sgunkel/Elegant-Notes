@@ -11,8 +11,9 @@
     "test": "vitest --reporter=verbose"
   },
   "dependencies": {
+    "@vue/test-utils": "^2.4.6",
     "marked": "^15.0.7",
-    "vue": "^3.5.13"
+    "vue": "^3.5.24"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
