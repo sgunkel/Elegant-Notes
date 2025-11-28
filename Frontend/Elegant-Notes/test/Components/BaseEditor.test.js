@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 /**
- * Component testing for BaseEditor
+ * Component testing for components/Editors/BaseEditor.vue
  */
 import { describe, expect, it, test } from 'vitest'
 import { nextTick } from 'vue'
