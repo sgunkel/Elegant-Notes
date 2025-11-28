@@ -40,6 +40,11 @@ export default {
             return this.textToHTMLFunction(this.editableContent || '&nbsp;')
         },
     },
+    watch: {
+        readonlyText(newVal) {
+            this.editableContent = newVal
+        }
+    },
     methods: {
 
         ///
