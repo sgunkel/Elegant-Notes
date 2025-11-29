@@ -30,12 +30,15 @@ import { mount } from "@vue/test-utils";
  * @returns Function that take props to override initial props and returns a mounted component for testing
  */
 export const createMountingHelper = (component, initialProps) => {
-    return (props = {}) => {
+    return (props = {}, globals = {}) => {
         return mount(component, {
             props: {
                 ...initialProps,
                 ...props,
             },
+            global: {
+                ...globals
+            }
         })
     }
 }
