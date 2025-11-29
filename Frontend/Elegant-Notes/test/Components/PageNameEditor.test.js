@@ -3,7 +3,7 @@
 /**
  * Component testing for components/Editors/PageNameEditor.vue
  */
-import { describe, expect, it, test } from 'vitest'
+import { describe, expect, it, test, vi, beforeEach } from 'vitest'
 import { v4 as uuidv4 } from 'uuid'
 
 import { createMountingHelper } from '../ComponentMountingUtils.js'
@@ -27,6 +27,11 @@ const mountPageNameEditor = createMountingHelper(PageNameEditor, {
 const blurEvent = 'request-blur'
 const focusEvent = 'request-focus'
 const textUpdateEvent = 'request-text-update'
+
+beforeEach(() => {
+    const raf = fn => setTimeout(() => fn(new Date()), 16)
+    vi.stubGlobal('requestAnimationFrame', raf)
+})
 
 describe('PageNameEditor Component Tests', () => {
     describe('Mounting', () => {

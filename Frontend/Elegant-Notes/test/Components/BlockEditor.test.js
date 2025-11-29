@@ -8,7 +8,7 @@
  *     this file are mainly checking for how Blocks are rendered with children
  *     before and after an event happens.
  */
-import { describe, expect, it, test } from 'vitest'
+import { describe, expect, it, test, vi, beforeEach } from 'vitest'
 import { nextTick } from 'vue'
 
 import { v4 as uuidv4 } from 'uuid'
@@ -68,6 +68,11 @@ const getTextFromID = (id, block) => {
     }
     return null
 }
+
+beforeEach(() => {
+    const raf = fn => setTimeout(() => fn(new Date()), 16)
+    vi.stubGlobal('requestAnimationFrame', raf)
+})
 
 describe('BaseEditor Component Tests', () => {
     describe('Mounting', () => {

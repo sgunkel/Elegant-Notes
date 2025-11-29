@@ -3,7 +3,7 @@
 /**
  * Component testing for components/Editors/BaseEditor.vue
  */
-import { describe, expect, it, test } from 'vitest'
+import { beforeEach, describe, expect, it, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { v4 as uuidv4 } from 'uuid'
@@ -18,6 +18,11 @@ const mountBaseEditor = createMountingHelper(BaseEditor, {
     rootObjID: uuidv4(),
     readonlyText: 'Hello World',
     textToHTMLFunction: (x) => `<p>${x}</p>`
+})
+
+beforeEach(() => {
+    const raf = fn => setTimeout(() => fn(new Date()), 16)
+    vi.stubGlobal('requestAnimationFrame', raf)
 })
 
 describe('BaseEditor Component Tests', () => {
