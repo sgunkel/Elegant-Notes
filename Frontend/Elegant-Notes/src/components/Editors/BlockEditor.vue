@@ -13,7 +13,7 @@ export default {
     },
     props: {
         blockObj: Object,
-        editingID: Number,
+        editingID: String,
         indentionLevel: Number,
         refocusKey: Number,
     },
@@ -133,7 +133,7 @@ export default {
             </div>
 
             <base-editor
-              :key="(blockObj.id === editingID)"
+              :key="blockObj.id"
               :editing-id="editingID"
               :rootObjID="blockObj.id"
               :readonly-text="blockObj.content"
@@ -156,7 +156,7 @@ export default {
 
         <block-editor
           v-for="child in blockObj.children"
-          :key="(child.id === editingID)"
+          :key="child.id"
           :block-obj="child"
           :editingID="editingID"
           :indention-level="(indentionLevel + 1)"

@@ -40,6 +40,11 @@ export default {
             return this.textToHTMLFunction(this.editableContent || '&nbsp;')
         },
     },
+    watch: {
+        readonlyText(newVal) {
+            this.editableContent = newVal
+        }
+    },
     methods: {
 
         ///
@@ -102,7 +107,7 @@ export default {
                         console.warn(`[BaseEditor] Retrying focus for object #${retries}`, this.rootObjID, `"${this.editableContent}"`);
                         setTimeout(() => this.deferFocusUntilReady(retries - 1), 50);
                     } else {
-                        console.error('[BaseEditor] Failed to focus input after retries:', this.block.id);
+                        console.error('[BaseEditor] Failed to focus input after retries:', this.rootObjID);
                     }
                 })
             })

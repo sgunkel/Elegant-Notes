@@ -19,7 +19,7 @@ window.fetch = async (input, options) => {
     return new Response(content, {
         status: response.status,
         statusText: response.statusText,
-        headers: response.headers
+        headers: new Headers(response.headers)
     })
 }
 
