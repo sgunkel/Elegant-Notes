@@ -12,7 +12,7 @@ export default {
     },
     props: {
         pageObj: Object,
-        editingId: Number,
+        editingId: String,
     },
     emits: [
         'request-blur',

@@ -37,11 +37,22 @@ export default {
 </script>
 
 <template>
-    <h1>{{ error }}</h1>
-    <input type="text" v-model="pageName">
-    <p @click="createNewPage()">create page</p>
-    <p @click="cancel()">Cancel</p>
+    <div class="npd-wrapper">
+        <h1>{{ error }}</h1>
+        <input type="text" class="page-name-text-entry" v-model="pageName">
+        <p @click="createNewPage()" class="create-page-btn">create page</p>
+        <p @click="cancel()" class="cancel-btn">Cancel</p>
+    </div>
 </template>
 
 <style>
+.npd-wrapper {
+    padding: 0;
+}
+
+.page-name-text-entry,
+.create-page-btn,
+.cancel-btn {
+    padding: 0;
+}
 </style>
