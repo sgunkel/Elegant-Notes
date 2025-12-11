@@ -29,8 +29,20 @@ vi.mock('@/helpers/pageFetchers.js', () => ({
     }
 }))
 
+vi.mock('@/helpers/notifications.js', () => ({
+    notificationUtils: {
+        toastSuccess: vi.fn(),
+        toastError: vi.fn(),
+        toastWarning: vi.fn(),
+        toastInfo: vi.fn(),
+        startProgressToast: vi.fn(),
+        tryResolveProgressToast: vi.fn(),
+        tryRejectProgressToast: vi.fn(),
+    }
+}))
+
 import { createMountingHelper } from '../ComponentMountingUtils.js';
-import NewPageDialog from '@/components/NewPageDialog.vue';
+import NewPageDialog from '@/components/Dialogs/NewPageDialog.vue';
 
 import { pageOperations } from '@/helpers/pageFetchers.js'
 import { store } from '@/store.js'
@@ -58,6 +70,6 @@ describe('NewPageDialog Component Testing', () => {
         await wrapper.get('.create-page-btn').trigger('click')
         expect(pageOperations.createPage).toHaveBeenCalled()
         expect(store.setPage).toHaveBeenCalledWith({name: pageName, content: ''})
-        expect(router.push).toHaveBeenCalledWith('/page-content')
+        expect(router.push).toHaveBeenCalledWith('/page-editor')
     })
 })

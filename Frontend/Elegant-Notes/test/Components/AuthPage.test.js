@@ -7,11 +7,24 @@
  *     components and they are tested separately. We only test the high-level
  *     functionality that AuthPage supplies.
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { createMountingHelper } from '../ComponentMountingUtils.js';
-import AuthPage from '@/components/AuthPage.vue';
+
+vi.mock('@/helpers/notifications.js', () => ({
+    notificationUtils: {
+        toastSuccess: vi.fn(),
+        toastError: vi.fn(),
+        toastWarning: vi.fn(),
+        toastInfo: vi.fn(),
+        startProgressToast: vi.fn(),
+        tryResolveProgressToast: vi.fn(),
+        tryRejectProgressToast: vi.fn(),
+    }
+}))
+
+import AuthPage from '@/components/Pages/AuthPage.vue';
 
 const mountAuthPage = createMountingHelper(AuthPage)
 

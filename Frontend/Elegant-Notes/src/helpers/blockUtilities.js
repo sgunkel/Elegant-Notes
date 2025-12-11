@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid'
 
 export const blockUtilities = {
     createBlocksCopy: (originalBlocks) => JSON.parse(JSON.stringify(originalBlocks)),
@@ -75,6 +76,7 @@ export const blockUtilities = {
         return false;
     },
     outdentRecursive: (blocksCopy, blockId, newText) => {
+        // TODO clean this monstrosity up when I have the energy and patience to do so
         let movedBlock = null;
         const innerOutdentRecursive = (
             blocks,
@@ -128,5 +130,12 @@ export const blockUtilities = {
             return false;
         }
         return [innerOutdentRecursive(blocksCopy), movedBlock, blocksCopy]
+    },
+    createNewBlock: () => {
+        return {
+            id: uuidv4(),
+            content: '',
+            children: []
+        }
     },
 }

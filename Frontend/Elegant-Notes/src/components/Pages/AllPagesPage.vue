@@ -1,7 +1,7 @@
 <script>
 import { pageOperations } from '@/helpers/pageFetchers'
-import PageEntry from '@/components/PageEntry.vue'
-import NewPageDialog from '@/components/NewPageDialog.vue'
+import PageEntry from '@/components/Menus/PageEntry.vue'
+import NewPageDialog from '@/components/Dialogs/NewPageDialog.vue'
 import { store } from '@/store'
 
 export default {

@@ -1,13 +1,18 @@
 <script>
 import { store } from './store.js';
 
-import AuthPage from '@/components/AuthPage.vue'
+import AuthPage from '@/components/Pages/AuthPage.vue'
+
+import { Notivue, Notification, NotificationProgress } from 'notivue'
 
 (async () => await store.init())()
 
 export default {
     components: {
         AuthPage,
+        Notivue,
+        Notification,
+        NotificationProgress,
     },
     data() {
         return {
@@ -20,6 +25,11 @@ export default {
 
 <template>
     <div class="app-background">
+        <Notivue v-slot="item" class="nothing">
+            <Notification :item="item">
+                <NotificationProgress :item="item" />
+            </Notification>
+        </Notivue>
         <div class="app-routes-background">
             <div v-if="this.store.isUserAuthenticated()">
                 <router-view></router-view>

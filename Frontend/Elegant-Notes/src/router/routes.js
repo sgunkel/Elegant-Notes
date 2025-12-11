@@ -1,23 +1,25 @@
 import { createRouter, createWebHistory } from "vue-router"
 
-import PageView from "@/components/PageView.vue"
-import PageContent from "@/components/PageContent.vue"
+import PageView from "@/components/Pages/AllPagesPage.vue"
+import PageEditor from "@/components/Editors/PageEditor.vue"
+
+import { routerConstants } from "@/constants/routerConstants.js"
 
 const routes = [
     {
-        path: '/pages',
-        name: 'Pages',
+        path: routerConstants.allPagesRoute,
+        name: routerConstants.allPagesName,
         component: PageView
     },
     {
-        path: '/page-content',
-        name: 'PageContent',
-        component: PageContent
+        path: routerConstants.pageEditorRoute,
+        name: routerConstants.pageEditorName,
+        component: PageEditor
     },
 
     {
-        path: '/',
-        redirect: '/pages'
+        path: routerConstants.rootPath,
+        redirect: routerConstants.allPagesRoute
     },
 ]
 

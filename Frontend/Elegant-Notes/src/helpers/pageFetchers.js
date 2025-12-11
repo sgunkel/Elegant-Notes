@@ -20,14 +20,16 @@ export const pageOperations = {
         authUtils.postWithAuth(PageRoutes.createPage, data)
             .then(err => failureFn(err))
     },
-    updatePage: (data, failureFn) => {
+    updatePage: (data, successFn, failureFn) => {
         authUtils.postWithAuth(PageRoutes.updatePage, data)
-            .then(err => failureFn(err))
+            .then(response => response.json)
+            .then(msg => successFn(msg))
+            .catch(err => failureFn(err))
     },
     renamePage: (data, successFn, failureFn) => {
         authUtils.postWithAuth(PageRoutes.renamePage, data)
             .then(response => response.json())
-            .then(msg => successFn(msg))
+            .then(successObject => successFn(successObject.msg))
             .catch(error => failureFn(error))
     },
 }

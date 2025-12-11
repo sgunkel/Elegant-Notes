@@ -1,4 +1,4 @@
-import { json2md } from "@/helpers/json2MdConverter";
+import { json2md } from "@/helpers/MarkdownJSONUtils.js";
 import { describe, it, expect } from 'vitest'
 
 const emptyRootLevel = []

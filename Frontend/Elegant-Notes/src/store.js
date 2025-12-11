@@ -4,9 +4,12 @@ import { authUtils } from "./helpers/authUtils.js";
 import { createDebounce } from "./helpers/debouncer.js";
 import { authConstants } from "./constants/authConstants.js";
 import { authFetcher } from "./helpers/authFetchers.js";
+import { notificationUtils } from "./helpers/notifications.js";
 
 export const store = reactive({
     history: [],
+    editingId: null,        // This is global because it is used by multiple components to only give one editor focus
+    pendingFocusId: null,   // ^^
     _page: Object,
     _jwtToken: undefined,
     _authCheckDebouncer: undefined,
@@ -48,7 +51,7 @@ export const store = reactive({
     isUserAuthenticated() {
         return this._jwtToken !== undefined
     },
-    checkAccess(failedAttempts) {
+    checkAccess(failedAttempts, __progressNotificationID) {
         /**
          * Note that this repeatedly runs in the background and is thus recursive in the sense that it calls `checkAccess()`
          *   once it finishes. With how the debounce functionality works, there is no build up of the function call stack as
@@ -62,20 +65,29 @@ export const store = reactive({
                 /**
                  * Note that expired token responses go through here, so we check for them
                  */
+                let progressStatus = 'Issue resolved' // TODO is this an okay-ish message?
                 if (info.detail) {
                     if (authConstants.notAuthenticatedMsgList.includes(info.detail) && this.isUserAuthenticated()) {
                         console.log(time, 'JWT is invalid: user is signed out')
                         authUtils.clearAuthToken()
                         this.setJWTToken(undefined)
+                        progressStatus = 'Credentials expired'
                     }
                     else if (info.detail === 'User is valid') {
                         authFetcher.refreshToken(this.getJWTToken(), (info) => this.setJWTToken(info), (error) => console.log('error when refreshing access token:', error))
                     }
                 }
+
+                // Handle any possible progress notifications that may pop up if there's been issues communicating to the backend
+                if (__progressNotificationID) {
+                    if (!notificationUtils.tryResolveProgressToast(__progressNotificationID, progressStatus)) {
+                        console.log('Could not stop progress notification') // TODO is this enough?
+                    }
+                }
                 this.checkAccess()
             }
             const tokenIsInvalidOrSystemIsDown = (error) => {
-                let errMsg = `error when checking access: ${error}`
+                let errMsg = `Error when checking access: ${error}`
                 failedAttempts = failedAttempts || 1
                 if (String(error).startsWith('TypeError: NetworkError')) {
                     errMsg = 'Networking error: backend not responding.'
@@ -83,7 +95,13 @@ export const store = reactive({
 
                 if (failedAttempts <= authConstants.accessAttempts) {
                     console.log(time, errMsg, `Attempt ${failedAttempts} out of ${authConstants.accessAttempts}`)
-                    this.checkAccess(failedAttempts + 1)
+                    const progressNotificationID = __progressNotificationID || notificationUtils.startProgressToast(errMsg)
+                    this.checkAccess(failedAttempts + 1, progressNotificationID)
+                }
+                else {
+                    if (!notificationUtils.tryRejectProgressToast(__progressNotificationID, 'Cannot communicate with Backend server. Please refresh the page.')) {
+                        console.log('Backend not responding and cannot stop progress notification.')
+                    }
                 }
             }
             authFetcher.checkAccessToken(this.getJWTToken(), tokenIsValid, tokenIsInvalidOrSystemIsDown)

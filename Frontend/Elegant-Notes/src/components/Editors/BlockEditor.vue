@@ -5,7 +5,7 @@
 
 import BaseEditor from './BaseEditor.vue';
 
-import markdownParser from '@/markdownParser.js'
+import md from '@/helpers/MarkdownJSONUtils.js'
 
 export default {
     components: {
@@ -40,7 +40,7 @@ export default {
     },
     methods: {
         MarkdownToHTML(content) {
-            return markdownParser.render(content)
+            return md.render(content)
         },
 
         ///
@@ -66,10 +66,10 @@ export default {
             this.relayOutdentRequest(this.blockObj.id, this.editableContent)
         },
         handleNavigateUpRequest() {
-            this.relayNavigateUpRequest(this.blockObj.id)
+            this.relayNavigateUpRequest()
         },
         handleNavigateDownRequest() {
-            this.relayNavigateDownRequest(this.blockObj.id)
+            this.relayNavigateDownRequest()
         },
         handleFocusRequest() {
             this.relayFocusRequest(this.blockObj.id)
@@ -103,11 +103,11 @@ export default {
         relayOutdentRequest(blockID, latestText) {
             this.$emit('request-outdent', blockID, latestText)
         },
-        relayNavigateUpRequest(blockID) {
-            this.$emit('request-navigate-up', blockID)
+        relayNavigateUpRequest() {
+            this.$emit('request-navigate-up')
         },
-        relayNavigateDownRequest(blockID) {
-            this.$emit('request-navigate-down', blockID)
+        relayNavigateDownRequest() {
+            this.$emit('request-navigate-down')
         },
         relayFocusRequest(blockID) {
             this.$emit('request-focus', blockID)

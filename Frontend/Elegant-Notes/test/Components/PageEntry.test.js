@@ -6,7 +6,19 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createMountingHelper } from '../ComponentMountingUtils'
 
-import PageEntry from '@/components/PageEntry.vue'
+vi.mock('@/helpers/notifications.js', () => ({
+    notificationUtils: {
+        toastSuccess: vi.fn(),
+        toastError: vi.fn(),
+        toastWarning: vi.fn(),
+        toastInfo: vi.fn(),
+        startProgressToast: vi.fn(),
+        tryResolveProgressToast: vi.fn(),
+        tryRejectProgressToast: vi.fn(),
+    }
+}))
+
+import PageEntry from '@/components/Menus/PageEntry.vue'
 
 const createPageObj = (args = {}) => {
     return {
@@ -52,6 +64,6 @@ describe('PageEntry Component Tests', () => {
         const div = wrapper.get(divCSS)
         await div.trigger('click')
 
-        expect(mockPush).toHaveBeenCalledWith('/page-content')
+        expect(mockPush).toHaveBeenCalledWith('/page-editor')
     })
 })

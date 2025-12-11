@@ -7,7 +7,20 @@ import { beforeEach, describe, expect, it, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import { createMountingHelper } from '../ComponentMountingUtils.js';
-import LoginView from '@/components/LoginView.vue';
+
+vi.mock('@/helpers/notifications.js', () => ({
+    notificationUtils: {
+        toastSuccess: vi.fn(),
+        toastError: vi.fn(),
+        toastWarning: vi.fn(),
+        toastInfo: vi.fn(),
+        startProgressToast: vi.fn(),
+        tryResolveProgressToast: vi.fn(),
+        tryRejectProgressToast: vi.fn(),
+    }
+}))
+
+import LoginView from '@/components/Views/LoginView.vue';
 
 const usernameSelectorCSS = '.username-field'
 const passwordSelectorCSS = '.password-field'

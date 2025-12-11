@@ -1,4 +1,9 @@
-import {v4 as uuidv4} from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
+import MarkdownIt from 'markdown-it'
+
+const md = new MarkdownIt()
+// TODO add rules for changing Block references to links that go to that reference
+export default md
 
 export function md2json(markdownContent) {
     const lines = markdownContent.split('\n')
@@ -44,4 +49,15 @@ export function md2json(markdownContent) {
         })
     }
     return rootLevel
+}
+
+export const json2md = (blocks, level) => {
+    level || (level = 0)
+    const indention = ' '.repeat(level)
+    let content = ''
+    blocks.forEach(block => {
+        content += indention + '- ' + block.content + '\n'
+        content += json2md(block.children, level + 4)
+    })
+    return content
 }

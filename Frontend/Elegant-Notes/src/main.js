@@ -5,6 +5,21 @@ import { router } from './router/routes.js'
 import App from './App.vue'
 import { store } from './store.js'
 
+// Toast notifications
+import { createNotivue } from 'notivue'
+import 'notivue/notification.css'
+import 'notivue/animations.css'
+
+const toastNotifications = createNotivue({
+    position: 'top-right',
+    limit: 3, // TODO is this too many for mobile users?
+    notifications: {
+        global: {
+            duration: 3000
+        },
+    },
+})
+
 const sendCmd = (args) => store.history.unshift(`${new Date().toLocaleString()} >> ${args}`)
 const receiveCmd = (args) => store.history.unshift(`${new Date().toLocaleString()} << ${args}`)
 
@@ -25,4 +40,5 @@ window.fetch = async (input, options) => {
 
 createApp(App)
     .use(router)
+    .use(toastNotifications)
     .mount('#app')
