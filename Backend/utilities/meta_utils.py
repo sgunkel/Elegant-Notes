@@ -1,75 +1,93 @@
-import os
 import re
-from typing import List, Optional
+from typing import List, Dict
 from pathlib import Path
 
-from ..config import get_pages_path
-from ..models.meta_model import BackLink, BackLinkReference
+from ..models.meta_model import BackLink, BackLinkReference, PageLinkage, BlockRef
 
-def get_back_links_by_page_name(page_name: str, page_path: Optional[Path] = None) -> List[BackLink]:
-    if page_path is None:
-        page_path = get_pages_path().parent
-    return __recursively_get_backlinks_from_dirs(page_name, page_path)
-
-def __recursively_get_backlinks_from_dirs(page_name: str, path: Path):
-    backlinks: List[BackLink] = []
-    for some_name in os.listdir(str(path)):
-        some_path = (path / some_name)
-        new_set = []
-        if os.path.isdir(str(some_path)):
-            new_set = __recursively_get_backlinks_from_dirs(page_name, some_path)
-        elif os.path.isfile(str(some_path)):
-            backlink = __get_any_backlinks_from_file(page_name, some_path)
-            if backlink:
-                new_set.append(backlink)
-        else:
-            # TODO should we do something about this?
-            pass
-
-        if len(new_set) != 0:
-            print(new_set)
-            backlinks.extend(new_set)
-    return backlinks
-
-def __get_any_backlinks_from_file(page_name: str, page_path: Path) -> Optional[BackLink]:
-    backlink: Optional[BackLink] = None
-    page_path_str = str(page_path) # str(page_path / page_name)
-    references = __extract_references_from_page(page_path_str, page_name)
-    if len(references) != 0:
-        name = os.path.basename(page_path_str).replace('.md', '')
-        backlink = BackLink(page_name=name, references=references)
-    return backlink
-
-def __extract_references_from_page(path: str, page_name: str) -> List[BackLinkReference]:
-    with open(path) as f:
-        content = f.readlines()
+class References:
+    def __init__(self):
+        self._backlinks_map: Dict[str, BackLink] = {}
+        self._block_refs: List[BlockRef] = []
+        # TODO make this thread safe when we parallelize everything later - the whole point of abstracting this instead of using meta_model.PageLinkage directly
     
-    all_references = []
-    line_number = 1
-    for line in content:
-        line_offset = line_number - 1
-        rest = content[line_offset:]
-        extracted = __extract_back_links_from_line(page_name, line, line_number, rest)
-        all_references.extend(extracted)
-        line_number += 1
-    return all_references
+    def add_backlink(self, backlink: BackLink) -> None:
+        if backlink.page_name in self._backlinks_map:
+            self._backlinks_map[backlink.page_name].references.extend(backlink.references)
+        else:
+            self._backlinks_map[backlink.page_name] = backlink
+    
+    def add_block_ref(self, block_ref: BlockRef) -> None:
+        self._block_refs.append(block_ref)
+    
+    def to_model(self) -> PageLinkage:
+        return PageLinkage(backlinks=self._backlinks_map.values(), block_refs=self._block_refs)
 
-def __extract_back_links_from_line(page_name: str, line: str, line_number: int, remaining_lines: List[str]) -> List[BackLinkReference]:
-    matches = re.findall(r"\[\[.*?\]\]", line)
-    return __extract_back_link_from_reference(matches, page_name, line, line_number, remaining_lines)
+class ReferenceExtractor:
+    '''## Base reference extraction class
+    Used for extracting types of references (Backlink, Block, etc.) in inherited classes'''
+    def extract(self, text: str, active_page_name: str, line_index: int, remaining: List[str], collected: References) -> None:
+        '''## Reference Extraction
+        Extract a reference from text (if any) and add it to the collection'''
+        raise Exception('Use inherited classes instead of base')
 
-def __extract_back_link_from_reference(matches: List[str], page_name: str, line: str, line_number: int, remaining_lines: List[str]) -> List[BackLinkReference]:
-    references = []
-    for ref_match in matches:
-        back_link_name = re.sub(r"(\[\[|\]\])", "", ref_match)
-        if back_link_name == page_name:
-            children = __extract_block_children(line, remaining_lines)
-            reference = BackLinkReference(line=line, line_number=line_number, children=children)
-            references.append(reference)
-    return references
+class BacklinkExtractor(ReferenceExtractor):
+    def __init__(self, src_page_name: str):
+        self._src_page_name: str = src_page_name.replace('.md', '')
+
+    def extract(self, text: str, active_page_name: str, line_index: int, remaining: List[str], collected: References) -> None:
+        matches = self._get_backlink_matches(text)
+        for match in matches:
+            backlink_name = self._get_backlink_name_from_match(match)
+            if backlink_name == self._src_page_name:
+                children = extract_block_children(text, remaining)
+                references = [BackLinkReference(line=text, line_number=line_index, children=children)]
+                backlink = BackLink(page_name=active_page_name, references=references)
+                collected.add_backlink(backlink) # automatically groups references by page
+    
+    def _get_backlink_matches(self, text: str):
+        return re.findall(r"\[\[.*?\]\]", text)
+    
+    def _get_backlink_name_from_match(self, match) -> str:
+        return re.sub(r"(\[\[|\]\])", "", match)
+
+## TODO Add Tag reference extraction
+## TODO Add Block reference extraction
+
+class ReferenceLocator:
+    def __init__(self, user_path: Path, page_path: Path, block_ids: List[str]):
+        self._user_path: Path = user_path
+        self._page_path: Path = page_path
+        self._block_ids: List[str] = block_ids
+        self._ref_extractors: List[ReferenceExtractor] = []
+        self._refs = References()
+    
+    def _setup(self) -> None:
+        self._ref_extractors.append(BacklinkExtractor(self._page_path.name))
+        # TODO Add Tag reference extraction
+        # TODO Add Block reference extraction
+    
+    def retrieve_all_relationships(self) -> PageLinkage:
+        self._setup()
+        for page in self._get_all_files_in_repo():
+            print('processing file: ' + str(page))
+            self._process_file(page)
+        return self._refs.to_model()
+    
+    def _get_all_files_in_repo(self):
+        return self._user_path.rglob('*.md')
+    
+    def _process_file(self, path: Path) -> None:
+        with open(str(path), 'r') as f:
+            lines = f.readlines()
+        line_index = 0
+        for line in lines:
+            for extractor in self._ref_extractors:
+                # TODO use a more efficient way when slicing `lines` that does not create a new list everything time
+                extractor.extract(line, path.name.replace('.md', ''), line_index + 1, lines[line_index:], self._refs)
+            line_index += 1
 
 # should be generic enough for both Block and Page (back-link) references
-def __extract_block_children(current_line: str, remaining_lines: List[str]) -> List[str]:
+def extract_block_children(current_line: str, remaining_lines: List[str]) -> List[str]:
     children = []
     indention_start = __extract_indention_start(current_line)
     indention_start_length = len(indention_start)

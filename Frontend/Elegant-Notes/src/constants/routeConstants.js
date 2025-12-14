@@ -12,7 +12,7 @@ export const PageRoutes = {
 }
 
 export const metaRoutes = {
-    getBacklinks: '/meta/backlinks',
+    references: '/meta/references',
 }
 
 export const authRoutes = {

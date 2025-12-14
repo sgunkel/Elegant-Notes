@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends
 
 from ..models.user_model import User
 from ..utilities.db_utils import get_current_user
-from ..config import get_pages_path
-from ..handlers.meta_handler import handle_get_backlinks
 from ..utilities.user_repo_utils import get_user_repo_path
+from ..handlers.meta_handler import handle_get_all_references
+from ..models.meta_model import ReferencesRetrievalRequest
 
 router = APIRouter(
     prefix='/meta',
@@ -14,7 +14,7 @@ router = APIRouter(
     responses={404: {'description': 'Not found'}},
 )
 
-@router.get('/backlinks/{page_name}')
-def get_back_links(page_name: str, current_user: Annotated[User, Depends(get_current_user)]):
+@router.post('/references')
+def get_all_references(request: ReferencesRetrievalRequest, current_user: Annotated[User, Depends(get_current_user)]):
     path = get_user_repo_path(current_user)
-    return handle_get_backlinks(page_name, path)
+    return handle_get_all_references(request, path)

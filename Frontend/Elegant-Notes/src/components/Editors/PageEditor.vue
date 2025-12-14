@@ -79,7 +79,7 @@ export default {
         ///
     
         loadBacklinks() {
-            metaOperations.getBacklinks(this.page.name, this.onBacklinksReceiveSuccess, this.onBacklinksReceiveFail)
+            metaOperations.getReferences(this.page.name, [], this.onReferencesReceivedSuccess, this.onReferencesReceivedFail)
         },
 
         ///
@@ -145,14 +145,14 @@ export default {
         onUpdateDocumentFail(errorMsg) {
             notificationUtils.toastError(`Can not update Page: ${errorMsg}`)
         },
-        onBacklinksReceiveSuccess(backlinkData) {
-            this.linkage.backlinks = backlinkData
+        onReferencesReceivedSuccess(references) {
+            this.linkage.backlinks = references.backlinks
         },
-        onBacklinksReceiveFail(errorMsg) {
+        onReferencesReceivedFail(errorMsg) {
             // TODO how should we actually display the error? It'll most likely be large and
             //     shouldn't be part of the toast notification...
-            notificationUtils.toastError('Failed to receive backlinks. Check console.log')
-            console.log(`error receiving backlinks: ${errorMsg}`)
+            notificationUtils.toastError('Failed to receive refernces. Check console.log')
+            console.log(`error receiving references: ${errorMsg}`)
         },
         onPageRenameSuccess(msg) {
             console.log('Page rename successful', msg)
