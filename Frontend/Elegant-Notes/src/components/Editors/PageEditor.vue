@@ -71,7 +71,7 @@ export default {
             pageOperations.updatePage(data, this.onUpdateDocumentSuccess, this.onUpdateDocumentFail)
         },
         updateRootLevel(newRootLevel) {
-            this.rootLevelBlocks = newRootLevel
+            this.updateDocument(newRootLevel)
         },
 
         ///
