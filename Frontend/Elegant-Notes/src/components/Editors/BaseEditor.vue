@@ -1,4 +1,6 @@
 <script>
+import { textUtil } from '@/helpers/textUtil';
+
 /**
  * Base functionality of text editing, including display and edit modes.
  */
@@ -68,6 +70,7 @@ export default {
             this.$emit('focus-for-edit-request')
         },
         onInputKeydown(e) {
+            textUtil.handleTextAutoPair(this.$refs.input, e)
             if (e.key === 'ArrowDown') {
                 e.preventDefault()
                 this.$emit('navigate-down-requested')
