@@ -69,7 +69,6 @@ class ReferenceLocator:
     def retrieve_all_relationships(self) -> PageLinkage:
         self._setup()
         for page in self._get_all_files_in_repo():
-            print('processing file: ' + str(page))
             self._process_file(page)
         return self._refs.to_model()
     

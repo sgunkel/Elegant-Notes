@@ -112,6 +112,11 @@ export default {
                 })
             })
         },
+        
+        getInputRect() {
+            // Used for positioning the reference search box
+            return this.$refs.input?.getBoundingClientRect()
+        },
     }
 }
 

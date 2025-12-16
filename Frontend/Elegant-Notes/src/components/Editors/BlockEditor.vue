@@ -4,12 +4,13 @@
  */
 
 import BaseEditor from './BaseEditor.vue';
-
+import BlockReferenceSelectionDialog from '../Dialogs/BlockReferenceSelectionDialog.vue';
 import md from '@/helpers/MarkdownJSONUtils.js'
 
 export default {
     components: {
         BaseEditor,
+        BlockReferenceSelectionDialog,
     },
     props: {
         blockObj: Object,
@@ -31,6 +32,21 @@ export default {
     data() {
         return {
             editableContent: this.blockObj.content,
+            inputTagRect: null, // Used for positioning the search results when looking up references
+            refList: [
+                {
+                    id: '1',
+                    text: 'suh dude'
+                },
+                {
+                    id: '2',
+                    text: 'sksksks'
+                },
+                {
+                    id: '3',
+                    text: 'ew'
+                },
+            ],
         }
     },
     computed: {
@@ -48,6 +64,7 @@ export default {
         ///
 
         handleBlockUpdate(newText) {
+            this.updateReferenceSelectionDialogPosition()
             console.log(new Date().toLocaleString(), 'block update', this.blockObj.id, newText)
             this.editableContent = newText
             const newBlock = {
@@ -72,6 +89,7 @@ export default {
             this.relayNavigateDownRequest()
         },
         handleFocusRequest() {
+            this.updateReferenceSelectionDialogPosition()
             this.relayFocusRequest(this.blockObj.id)
         },
         handleBlockDeleteRequest() {
@@ -85,6 +103,9 @@ export default {
         },
         handleNewBlockRequest() {
             this.relayNewBlockRequest(this.blockObj.id)
+        },
+        handleReferenceSelected(reference) {
+            console.log('selected reference:', reference)
         },
 
         ///
@@ -118,6 +139,14 @@ export default {
         relayNewBlockRequest(blockID) {
             this.$emit('request-create-block', blockID)
         },
+
+        updateReferenceSelectionDialogPosition() {
+            console.log('updating position')
+            this.$nextTick(() => {
+                this.inputTagRect = this.$refs.baseEditor?.getInputRect()
+                console.log('input tag:', this.inputTagRect)
+            })
+        },
     },
 }
 </script>
@@ -147,12 +176,20 @@ export default {
               @delete-object-requested="handleBlockDeleteRequest"
               @navigate-down-requested="handleNavigateDownRequest"
               @create-new-object-requested="handleNewBlockRequest"
+              ref="baseEditor"
             />
 
             <div>
                 <!-- TODO add reference information (# references with a dialog that shows all references when clicked)-->
             </div>
         </div>
+        
+         <BlockReferenceSelectionDialog
+           :componentRect="inputTagRect"
+           :has-focus="isEditing"
+           :search-results="refList"
+           @reference-selected="handleReferenceSelected"
+           ref="refSelectionDialog"/>
 
         <block-editor
           v-for="child in blockObj.children"

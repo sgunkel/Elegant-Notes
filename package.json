@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@headlessui/vue": "^1.7.23",
     "@vitejs/plugin-vue": "^5.2.3",
     "markdown-it": "^14.1.0",
     "marked": "^15.0.7",
