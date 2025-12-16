@@ -22,6 +22,7 @@ export default {
         'focus-for-edit-request',       // Editor is in Presentation mode and a user clicks/presses the text to enter Edit mode
         'delete-object-requested',      // Text is empty and user pressed the Backspace/Delete key
         'create-new-object-requested',  // Enter key is pressed
+        'reference-symbol-detected',    // User typed in `((` or `[[`
     ],
     data() {
         return {
@@ -68,6 +69,12 @@ export default {
         },
         requestEditMode() {
             this.$emit('focus-for-edit-request')
+        },
+        onInput(e) {
+            const trigger = textUtil.startedReferenceOpening(e.target)
+            if (trigger) {
+                this.$emit('reference-symbol-detected', trigger, e)
+            }
         },
         onInputKeydown(e) {
             textUtil.handleTextAutoPair(this.$refs.input, e)
@@ -133,6 +140,7 @@ export default {
               :key="rootObjID"
               v-model="editableContent"
               class="base-editor-text-edit"
+              @input="onInput"
               @blur="handleInputTagBlur"
               @keydown="onInputKeydown"
               @keyup="handleTextContentUpdate()"

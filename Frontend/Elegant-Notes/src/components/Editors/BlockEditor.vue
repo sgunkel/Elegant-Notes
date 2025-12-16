@@ -47,6 +47,7 @@ export default {
                     text: 'ew'
                 },
             ],
+            showRefSelectionDialog: false,
         }
     },
     computed: {
@@ -74,6 +75,7 @@ export default {
             this.relayBlockUpdate(newBlock, this.isEditing)
         },
         handleBlurRequest() {
+            this.showRefSelectionDialog = false
             this.relayBlurRequest(this.blockObj.id, this.editableContent)
         },
         handleIndentRequest() {
@@ -103,6 +105,11 @@ export default {
         },
         handleNewBlockRequest() {
             this.relayNewBlockRequest(this.blockObj.id)
+        },
+        handleOpenReferenceSelectionDialog(trigger, event) {
+            // TODO should be smart about hiding the dialog when outside of the opening/closing pair
+            console.log('opening reference dialog')
+            this.showRefSelectionDialog = true
         },
         handleReferenceSelected(reference) {
             console.log('selected reference:', reference)
@@ -176,6 +183,7 @@ export default {
               @delete-object-requested="handleBlockDeleteRequest"
               @navigate-down-requested="handleNavigateDownRequest"
               @create-new-object-requested="handleNewBlockRequest"
+              @reference-symbol-detected="handleOpenReferenceSelectionDialog"
               ref="baseEditor"
             />
 
@@ -186,7 +194,7 @@ export default {
         
          <BlockReferenceSelectionDialog
            :componentRect="inputTagRect"
-           :has-focus="isEditing"
+           :has-focus="isEditing && showRefSelectionDialog"
            :search-results="refList"
            @reference-selected="handleReferenceSelected"
            ref="refSelectionDialog"/>
