@@ -107,9 +107,12 @@ export default {
             this.relayNewBlockRequest(this.blockObj.id)
         },
         handleOpenReferenceSelectionDialog(trigger, event) {
-            // TODO should be smart about hiding the dialog when outside of the opening/closing pair
-            console.log('opening reference dialog')
+            console.log('opening reference dialog', trigger, event)
             this.showRefSelectionDialog = true
+        },
+        handleCloseReferenceSelectionDialog() {
+            console.log('Closing reference dialog')
+            this.showRefSelectionDialog = false
         },
         handleReferenceSelected(reference) {
             console.log('selected reference:', reference)
@@ -184,6 +187,7 @@ export default {
               @navigate-down-requested="handleNavigateDownRequest"
               @create-new-object-requested="handleNewBlockRequest"
               @reference-symbol-detected="handleOpenReferenceSelectionDialog"
+              @outside-ref-symbols-detected="handleCloseReferenceSelectionDialog"
               ref="baseEditor"
             />
 

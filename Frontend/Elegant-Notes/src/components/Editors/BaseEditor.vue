@@ -23,6 +23,7 @@ export default {
         'delete-object-requested',      // Text is empty and user pressed the Backspace/Delete key
         'create-new-object-requested',  // Enter key is pressed
         'reference-symbol-detected',    // User typed in `((` or `[[`
+        'outside-ref-symbols-detected', // When the user is outside of a `(())` or `[[]]` set
     ],
     data() {
         return {
@@ -96,6 +97,19 @@ export default {
                 if (this.editableContent === '') {
                     this.$emit('delete-object-requested')
                 }
+                else {
+                    textUtil.handleAutoPairDeletion(this.$refs.input, e)
+                }
+            }
+        },
+        onInputKeyUp(e) {
+            this.handleTextContentUpdate()
+            const trigger = textUtil.startedReferenceOpening(e.target)
+            if (trigger) {
+                this.$emit('reference-symbol-detected', trigger, e)
+            }
+            else if (textUtil.outsideReferencePair(e.target)) {
+                this.$emit('outside-ref-symbols-detected')
             }
         },
 
@@ -143,7 +157,7 @@ export default {
               @input="onInput"
               @blur="handleInputTagBlur"
               @keydown="onInputKeydown"
-              @keyup="handleTextContentUpdate()"
+              @keyup="onInputKeyUp"
               @keydown.tab.exact="handleTabKeyEvent"
               @keydown.shift.tab="handleShiftTabKeyEvent"
               ref="input"/>
