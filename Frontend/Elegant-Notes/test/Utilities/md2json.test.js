@@ -86,7 +86,7 @@ describe.each([
     ['Single grandparent with one child and one grandchild', expectedSingleWithGrandchildren, singleWithGrandchildren],
     ['Multiple grandparents', expectedMultipleGrandparents, multipleGrandparents],
 ])('Parsed Markdown Object Structure', (testTitle, expectedResult, mdFileContent) => {
-    const parsedMd = md2json(mdFileContent)
+    const parsedMd = md2json(mdFileContent).rootLevel
     const actualListWithoutIDs = removeIDsFromBlockObjects(parsedMd)
     it(testTitle, () => expect(actualListWithoutIDs, testTitle).toEqual(expectedResult))
 })

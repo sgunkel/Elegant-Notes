@@ -193,6 +193,7 @@ export default {
 
             <div>
                 <!-- TODO add reference information (# references with a dialog that shows all references when clicked)-->
+                 {{ blockObj.references?.length || '' }}
             </div>
         </div>
         

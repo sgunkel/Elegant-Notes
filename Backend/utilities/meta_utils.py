@@ -50,8 +50,33 @@ class BacklinkExtractor(ReferenceExtractor):
     def _get_backlink_name_from_match(self, match) -> str:
         return re.sub(r"(\[\[|\]\])", "", match)
 
+class BlockReferenceExtractor(ReferenceExtractor):
+    def __init__(self, block_ids: List[str]):
+        self._block_ids: List[str] = block_ids
+        self._match_pattern_str = self._generate_match_regex_str(block_ids)
+    
+    def extract(self, text: str, active_page_name: str, line_index: int, remaining: List[str], collected: References) -> None:
+        # TODO do we want to collect more information here, like the location and any children, or handle that on the frontend?
+        for match in self._get_block_matches(text):
+            block_id = self._extract_id(match)
+            if block_id in self._block_ids:
+                ref = BlockRef(block_id=block_id, source=active_page_name)
+                collected.add_block_ref(ref)
+    
+    def _generate_match_regex_str(self, block_ids: List[str]) -> str:
+        # (
+        #   '((' <Block IDs separated by OR - "|" - characters> '))'
+        # )
+        # e.g. "(\(\(46d04659-f692-4ffc-b4ca-153a0b4468c8|41ef96b7-3dcd-425a-9312-7b47bebee7ec\)\))"gm
+        return r'(\(\(' + r'|'.join(block_ids) + r'\)\))'
+    
+    def _get_block_matches(self, text: str):
+        return re.findall(self._match_pattern_str, text)
+    
+    def _extract_id(self, match: str) -> str:
+        return re.sub(r'(\(\(|\)\))', '', match)
+
 ## TODO Add Tag reference extraction
-## TODO Add Block reference extraction
 
 class ReferenceLocator:
     def __init__(self, user_path: Path, page_path: Path, block_ids: List[str]):
@@ -63,8 +88,8 @@ class ReferenceLocator:
     
     def _setup(self) -> None:
         self._ref_extractors.append(BacklinkExtractor(self._page_path.name))
+        self._ref_extractors.append(BlockReferenceExtractor(self._block_ids))
         # TODO Add Tag reference extraction
-        # TODO Add Block reference extraction
     
     def retrieve_all_relationships(self) -> PageLinkage:
         self._setup()

@@ -1,5 +1,16 @@
 import { v4 as uuidv4 } from 'uuid'
 
+const idRefListToMap = (idList) => {
+    const refMap = {}
+    idList.forEach(ref => {
+        if (!(ref.block_id in refMap)) {
+            refMap[ref.block_id] = []
+        }
+        refMap[ref.block_id].push(ref.source)
+    })
+    return refMap
+}
+
 export const blockUtilities = {
     createBlocksCopy: (originalBlocks) => JSON.parse(JSON.stringify(originalBlocks)),
     updateRecursive: (blocks, updatedBlock) => {
@@ -137,5 +148,17 @@ export const blockUtilities = {
             content: '',
             children: []
         }
+    },
+    assignBlockReferences: (rootLevel, references) => {
+        const obj_src_map = idRefListToMap(references)
+        const do_assignment = (blocks) => {
+            blocks.forEach(block => {
+                if (block.id in obj_src_map) {
+                    block.references = obj_src_map[block.id]
+                }
+                do_assignment(block.children)
+            })
+        }
+        do_assignment(rootLevel)
     },
 }

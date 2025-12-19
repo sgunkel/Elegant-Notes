@@ -16,6 +16,7 @@ import { metaOperations } from '@/helpers/metaFetchers.js'
 import { createDebounce } from '@/helpers/debouncer.js';
 import { pageUtils } from '@/helpers/pageUtils.js';
 import { notificationUtils } from '@/helpers/notifications.js';
+import { blockUtilities } from '@/helpers/blockUtilities';
 
 export default {
     props: {
@@ -35,6 +36,8 @@ export default {
             rootLevelBlocks: [],
             linkage: {
                 backlinks: [],
+                blockIDs: [],
+                blockReferences: [],
             },
 
             pageRefocusKey: 0, // Easy way to update the root level editors after an action
@@ -54,7 +57,6 @@ export default {
     mounted() {
         this.page.id = uuidv4()
         pageOperations.getPageByName(this.page.name, this.onPageFetchSuccess, this.onPageFetchFail)
-        this.loadBacklinks()
     },
     methods: {
         logOut() {
@@ -79,7 +81,7 @@ export default {
         ///
     
         loadBacklinks() {
-            metaOperations.getReferences(this.page.name, [], this.onReferencesReceivedSuccess, this.onReferencesReceivedFail)
+            metaOperations.getReferences(this.page.name, this.linkage.blockIDs, this.onReferencesReceivedSuccess, this.onReferencesReceivedFail)
         },
 
         ///
@@ -133,7 +135,12 @@ export default {
         //
 
         onPageFetchSuccess(data) {
-            this.rootLevelBlocks = pageUtils.convertPageContentToBlockNodes(data.content)
+            const meta = pageUtils.convertPageContentToBlockNodes(data.content)
+            this.rootLevelBlocks = meta.rootLevel
+            this.linkage.blockIDs = meta.blockIDs
+            console.log(meta)
+
+            this.loadBacklinks()
         },
         onPageFetchFail(errorMsg) {
             console.log(`error receiving page: ${errorMsg}`)
@@ -147,11 +154,14 @@ export default {
         },
         onReferencesReceivedSuccess(references) {
             this.linkage.backlinks = references.backlinks
+            this.linkage.blockReferences = references.block_refs
+            console.log('block_refs:', references.block_refs)
+            blockUtilities.assignBlockReferences(this.rootLevelBlocks, this.linkage.blockReferences)
         },
         onReferencesReceivedFail(errorMsg) {
             // TODO how should we actually display the error? It'll most likely be large and
             //     shouldn't be part of the toast notification...
-            notificationUtils.toastError('Failed to receive refernces. Check console.log')
+            notificationUtils.toastError('Failed to receive references. Check console.log')
             console.log(`error receiving references: ${errorMsg}`)
         },
         onPageRenameSuccess(msg) {

@@ -9,6 +9,8 @@ export function md2json(markdownContent) {
     const lines = markdownContent.split('\n')
     const stack = []
     const rootLevel = []
+    const blockIDs = []
+    let lastBlock = null
 
     lines.forEach(line => {
         const trimmed = line.trim()
@@ -18,11 +20,23 @@ export function md2json(markdownContent) {
         }
 
         const indent = line.match(/^\s*/)[0].length
+        const blockText = trimmed.replace(/^- /, '')
         const newBlock = {
             id: uuidv4(), // TODO add support for reading IDs in Logseq format
-            content: trimmed.replace(/^- /, ''),
+            content: blockText,
             children: [],
-            indent
+            indent,
+            writeIDToFile: false,
+        }
+
+        // Block IDs sit beneath the line of text with the indention going towards the start of
+        //     text (not the `-` list character). The syntax is `<indention>id:: <uuid>`, but
+        //     we do not enforce any requirement for `<indention>` *yet*
+        if (blockText.startsWith('id:: ') && lastBlock) {
+            lastBlock.id = blockText.replace(/^id:: /, '').trim()
+            lastBlock.writeIDToFile = true
+            blockIDs.push(lastBlock.id)
+            return
         }
 
         while (stack.length && indent <= stack[stack.length - 1].indent) {
@@ -37,6 +51,8 @@ export function md2json(markdownContent) {
             stack[stack.length - 1].children.push(newBlock)
             stack.push(newBlock)
         }
+
+        lastBlock = newBlock
     });
 
     // Empty file
@@ -48,7 +64,7 @@ export function md2json(markdownContent) {
             indent: 0,
         })
     }
-    return rootLevel
+    return {rootLevel, blockIDs}
 }
 
 export const json2md = (blocks, level) => {
@@ -57,6 +73,9 @@ export const json2md = (blocks, level) => {
     let content = ''
     blocks.forEach(block => {
         content += indention + '- ' + block.content + '\n'
+        if (block.writeIDToFile) {
+            content += indention + '  id:: ' + block.id + '\n'
+        }
         content += json2md(block.children, level + 4)
     })
     return content
