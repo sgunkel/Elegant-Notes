@@ -11,5 +11,14 @@ export const metaOperations = {
             .then(response => response.json())
             .then(data => successFn(data))
             .catch(err => failureFn(err))
-    }
+    },
+    searchPagesByName: (partialName, successFn, failureFn) => {
+        const data = {
+            'query': partialName,
+        }
+        authUtils.postWithAuth(metaRoutes.pageLookup, data)
+            .then(response => response.json())
+            .then(data => successFn(data))
+            .catch(err => failureFn(err))
+    },
 }

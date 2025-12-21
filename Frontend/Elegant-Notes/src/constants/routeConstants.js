@@ -13,6 +13,7 @@ export const PageRoutes = {
 
 export const metaRoutes = {
     references: '/meta/references',
+    pageLookup: '/meta/search-page',
 }
 
 export const authRoutes = {

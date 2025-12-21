@@ -23,7 +23,6 @@ export default {
     },
     computed: {
         styles() {
-            console.log('styles()')
             if (!this.componentRect) {
                 console.log('Editor to display reference results not found or given') // might turn into a notification with a nicer message later
                 return {}
@@ -31,7 +30,7 @@ export default {
 
             const margin = 8
             const hoverBelow = this.componentRect.bottom + 200 < window.innerHeight
-            console.log('old pos', this.lastKnownComponentPosition)
+            // TODO change the `px` units to `em` once we go to a production UI
             this.lastKnownComponentPosition = {
                 position: 'absolute',
                 top: (hoverBelow
@@ -39,8 +38,7 @@ export default {
                     : `${this.componentRect.top - margin}px`),
                 left: `${this.componentRect.left}px`,
             }
-            console.log('new pos', this.lastKnownComponentPosition)
-            return this.lastKnownComponentPosition || {}
+            return this.lastKnownComponentPosition
         },
     },
     methods: {

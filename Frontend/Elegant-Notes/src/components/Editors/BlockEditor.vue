@@ -3,9 +3,13 @@
  * Block editor with Markdown display.
  */
 
+import { nextTick } from 'vue';
 import BaseEditor from './BaseEditor.vue';
 import BlockReferenceSelectionDialog from '../Dialogs/BlockReferenceSelectionDialog.vue';
 import md from '@/helpers/MarkdownJSONUtils.js'
+import { metaOperations } from '@/helpers/metaFetchers';
+import { textUtil } from '@/helpers/textUtil';
+import { notificationUtils } from '@/helpers/notifications';
 
 export default {
     components: {
@@ -33,21 +37,9 @@ export default {
         return {
             editableContent: this.blockObj.content,
             inputTagRect: null, // Used for positioning the search results when looking up references
-            refList: [
-                {
-                    id: '1',
-                    text: 'suh dude'
-                },
-                {
-                    id: '2',
-                    text: 'sksksks'
-                },
-                {
-                    id: '3',
-                    text: 'ew'
-                },
-            ],
+            refList: [], // Filled with Page and Block objects when searching for the respective object
             showRefSelectionDialog: false,
+            refObjType: null, // Type of object - Page or Block - being searched when the user is typing between `((`/`[[` pairs
         }
     },
     computed: {
@@ -107,15 +99,47 @@ export default {
             this.relayNewBlockRequest(this.blockObj.id)
         },
         handleOpenReferenceSelectionDialog(trigger, event) {
-            console.log('opening reference dialog', trigger, event)
+            this.refObjType = trigger
             this.showRefSelectionDialog = true
+
+            const query = textUtil.extractPageReferenceQuery(event.target.value)
+            if (query && trigger === 'Page') {
+                metaOperations.searchPagesByName(query, this.handlePageNameQuerySuccess, this.handlePageNameQueryFailure)
+            }
         },
         handleCloseReferenceSelectionDialog() {
-            console.log('Closing reference dialog')
             this.showRefSelectionDialog = false
+            this.refObjType = null
         },
         handleReferenceSelected(reference) {
-            console.log('selected reference:', reference)
+            const input = this.$refs.baseEditor.getInputElement()
+            const cursorPosition = input.selectionStart
+            const updates = textUtil.replaceSearchQueryWithReference(this.editableContent, reference, cursorPosition, this.refObjType)
+            this.handleBlockUpdate(updates.text)
+            nextTick(() => input.setSelectionRange(updates.cursor, updates.cursor))
+
+            this.handleCloseReferenceSelectionDialog()
+        },
+        handlePageNameQuerySuccess(pages) {
+            this.refList = pages.map(x => {
+                const name = x.replace('/pages/', '').replace('.md', '')
+                return {
+                    id: name,
+                    text: name,
+                }
+            })
+        },
+        handlePageNameQueryFailure(msg) {
+            notificationUtils.toastError('Something when wrong when searching Pages - check console log')
+            console.log(msg)
+        },
+        handleReferenceSearchQueryUpdate(objType, query) {
+            if (!query) {
+                return
+            }
+            else if (objType == 'Page') {
+                metaOperations.searchPagesByName(query, this.handlePageNameQuerySuccess, this.handlePageNameQueryFailure)
+            }
         },
 
         ///
@@ -151,10 +175,8 @@ export default {
         },
 
         updateReferenceSelectionDialogPosition() {
-            console.log('updating position')
             this.$nextTick(() => {
                 this.inputTagRect = this.$refs.baseEditor?.getInputRect()
-                console.log('input tag:', this.inputTagRect)
             })
         },
     },
@@ -188,6 +210,7 @@ export default {
               @create-new-object-requested="handleNewBlockRequest"
               @reference-symbol-detected="handleOpenReferenceSelectionDialog"
               @outside-ref-symbols-detected="handleCloseReferenceSelectionDialog"
+              @search-query-requested="handleReferenceSearchQueryUpdate"
               ref="baseEditor"
             />
 

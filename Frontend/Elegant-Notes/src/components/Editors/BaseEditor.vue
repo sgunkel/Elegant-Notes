@@ -22,12 +22,15 @@ export default {
         'focus-for-edit-request',       // Editor is in Presentation mode and a user clicks/presses the text to enter Edit mode
         'delete-object-requested',      // Text is empty and user pressed the Backspace/Delete key
         'create-new-object-requested',  // Enter key is pressed
+
         'reference-symbol-detected',    // User typed in `((` or `[[`
         'outside-ref-symbols-detected', // When the user is outside of a `(())` or `[[]]` set
+        'search-query-requested',       // The user is typing inside a '(('/'[[' pair searching for a Page/Block object
     ],
     data() {
         return {
             editableContent: this.readonlyText,
+            objRefType: null,
         }
     },
     mounted() {
@@ -106,10 +109,18 @@ export default {
             this.handleTextContentUpdate()
             const trigger = textUtil.startedReferenceOpening(e.target)
             if (trigger) {
+                this.objRefType = trigger
+                const searchQuery = textUtil.extractPageReferenceQuery(e.target)
                 this.$emit('reference-symbol-detected', trigger, e)
+                this.$emit('search-query-requested', trigger, searchQuery)
             }
             else if (textUtil.outsideReferencePair(e.target)) {
+                this.objRefType = null
                 this.$emit('outside-ref-symbols-detected')
+            }
+            else if (this.objRefType) {
+                const searchQuery = textUtil.extractPageReferenceQuery(e.target)
+                this.$emit('search-query-requested', this.objRefType, searchQuery)
             }
         },
 
@@ -139,7 +150,10 @@ export default {
         
         getInputRect() {
             // Used for positioning the reference search box
-            return this.$refs.input?.getBoundingClientRect()
+            return this.getInputElement()?.getBoundingClientRect()
+        },
+        getInputElement() {
+            return this.$refs.input
         },
     }
 }
