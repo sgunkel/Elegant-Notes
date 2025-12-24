@@ -21,4 +21,13 @@ export const metaOperations = {
             .then(data => successFn(data))
             .catch(err => failureFn(err))
     },
+    searchBlocksByText: (text, successFn, failureFn) => {
+        const data = {
+            'query': text
+        }
+        authUtils.postWithAuth(metaRoutes.blockLookup, data)
+            .then(response => response.json())
+            .then(data => successFn(data))
+            .catch(err => failureFn(err))
+    }
 }

@@ -110,7 +110,10 @@ export default {
             const trigger = textUtil.startedReferenceOpening(e.target)
             if (trigger) {
                 this.objRefType = trigger
-                const searchQuery = textUtil.extractPageReferenceQuery(e.target)
+                console.log('trigger:', trigger)
+                const searchQuery = (trigger === 'Page')
+                    ? textUtil.extractPageReferenceQuery(e.target)
+                    : textUtil.extractBlockReferenceQuery(e.target)
                 this.$emit('reference-symbol-detected', trigger, e)
                 this.$emit('search-query-requested', trigger, searchQuery)
             }
@@ -119,7 +122,9 @@ export default {
                 this.$emit('outside-ref-symbols-detected')
             }
             else if (this.objRefType) {
-                const searchQuery = textUtil.extractPageReferenceQuery(e.target)
+                const searchQuery = (this.objRefType === 'Page')
+                    ? textUtil.extractPageReferenceQuery(e.target)
+                    : textUtil.extractBlockReferenceQuery(e.target)
                 this.$emit('search-query-requested', this.objRefType, searchQuery)
             }
         },

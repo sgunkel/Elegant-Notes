@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -25,3 +25,9 @@ class ReferencesRetrievalRequest(BaseModel):
 
 class ReferenceSearchQuery(BaseModel):
     query: str
+
+class BlockSearchResult(BaseModel):
+    block_id: Optional[str]
+    block_text: str
+    line_number: int
+    page_name: str

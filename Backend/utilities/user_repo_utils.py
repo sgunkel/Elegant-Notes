@@ -1,4 +1,4 @@
-import os
+from typing import Generator
 from pathlib import Path
 
 from ..models.user_model import User
@@ -29,6 +29,9 @@ def get_user_repo_path(user: User, root_repo_path: Path = get_repo_path()) -> Pa
     user_path = root_repo_path / USERS_DIR / user.id
     create_path_if_not_exit(user_path)
     return user_path
+
+def get_page_objects(user_repo_path: Path) -> Generator[Path, None, None]:
+    return user_repo_path.rglob('*.md')
 
 def get_user_pages_path(user: User, root_repo_path: Path = get_repo_path()) -> Path:
     pages_path = get_user_repo_path(user, root_repo_path) / 'pages'

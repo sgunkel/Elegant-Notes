@@ -101,10 +101,15 @@ export default {
         handleOpenReferenceSelectionDialog(trigger, event) {
             this.refObjType = trigger
             this.showRefSelectionDialog = true
+            console.log('handling open ref selection')
 
             const query = textUtil.extractPageReferenceQuery(event.target.value)
             if (query && trigger === 'Page') {
                 metaOperations.searchPagesByName(query, this.handlePageNameQuerySuccess, this.handlePageNameQueryFailure)
+            }
+            else if (query && trigger === 'Block') {
+                console.log('search blocks')
+                metaOperations.searchBlocksByText(query, this.handleBlockQuerySuccess, this.handleBlockQueryFailure)
             }
         },
         handleCloseReferenceSelectionDialog() {
@@ -114,6 +119,9 @@ export default {
         handleReferenceSelected(reference) {
             const input = this.$refs.baseEditor.getInputElement()
             const cursorPosition = input.selectionStart
+            if (!reference.id) {
+                textUtil.handleBlockWithNoID(reference)
+            }
             const updates = textUtil.replaceSearchQueryWithReference(this.editableContent, reference, cursorPosition, this.refObjType)
             this.handleBlockUpdate(updates.text)
             nextTick(() => input.setSelectionRange(updates.cursor, updates.cursor))
@@ -126,6 +134,7 @@ export default {
                 return {
                     id: name,
                     text: name,
+                    actual: x,
                 }
             })
         },
@@ -133,12 +142,28 @@ export default {
             notificationUtils.toastError('Something when wrong when searching Pages - check console log')
             console.log(msg)
         },
+        handleBlockQuerySuccess(blocks) {
+            console.log('received blocks:', blocks)
+            this.refList = blocks.map(x => {
+                return {
+                    id: x.block_id,
+                    text: x.block_text,
+                    actual: x,
+                }
+            })
+        },
+        handleBlockQueryFailure(msg) {
+            console.log(msg)
+        },
         handleReferenceSearchQueryUpdate(objType, query) {
             if (!query) {
                 return
             }
-            else if (objType == 'Page') {
+            else if (objType === 'Page') {
                 metaOperations.searchPagesByName(query, this.handlePageNameQuerySuccess, this.handlePageNameQueryFailure)
+            }
+            else if (objType === 'Block') {
+                metaOperations.searchBlocksByText(query, this.handleBlockQuerySuccess, this.handleBlockQueryFailure)
             }
         },
 

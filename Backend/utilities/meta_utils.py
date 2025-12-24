@@ -1,8 +1,14 @@
 import re
-from typing import List, Dict
+from typing import List, Dict, Optional
 from pathlib import Path
 
-from ..models.meta_model import BackLink, BackLinkReference, PageLinkage, BlockRef
+from ..models.meta_model import (
+    BackLink,
+    BackLinkReference,
+    PageLinkage,
+    BlockRef,
+    BlockSearchResult
+)
 
 class References:
     def __init__(self):
@@ -109,6 +115,22 @@ class ReferenceLocator:
                 # TODO use a more efficient way when slicing `lines` that does not create a new list everything time
                 extractor.extract(line, path.name.replace('.md', ''), line_index + 1, lines[line_index:], self._refs)
             line_index += 1
+
+def search_blocks(query: str, page_path: Path) -> List[BlockSearchResult]:
+    block_list: List[BlockSearchResult] = []
+    last_block: Optional[BlockSearchResult]
+    content = page_path.read_text()
+    line_number = 1
+    for line in content.splitlines():
+        if query.lower() in line.lower():
+            last_block = BlockSearchResult(block_id=None, block_text=line, line_number=line_number, page_name=page_path.name)
+            block_list.append(last_block)
+        elif 'id::' in line and last_block is not None:
+            last_block.block_id = line.split('id::')[1].strip()
+        else:
+            last_block = None
+        line_number += 1
+    return block_list
 
 # should be generic enough for both Block and Page (back-link) references
 def extract_block_children(current_line: str, remaining_lines: List[str]) -> List[str]:
