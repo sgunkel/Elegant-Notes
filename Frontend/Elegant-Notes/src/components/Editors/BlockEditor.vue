@@ -32,6 +32,7 @@ export default {
         'request-create-block',
         'request-navigate-up',
         'request-navigate-down',
+        'referenced-new-block', // Use case: user links to Block in the same Page object and the newly referenced block needs to know - or else we will overwrite the temporary ID it was given when we save
     ],
     data() {
         return {
@@ -119,14 +120,19 @@ export default {
         handleReferenceSelected(reference) {
             const input = this.$refs.baseEditor.getInputElement()
             const cursorPosition = input.selectionStart
+            console.log('ref.id:', reference.actual.block_id, 'this.block.id:', this.blockObj.id)
             if (!reference.id) {
-                textUtil.handleBlockWithNoID(reference)
+                this.handleBlockNewlyReferencedBlock(reference.actual.page_name, reference)
             }
+            console.log('ref.id:', reference.actual.block_id, 'this.block.id:', this.blockObj.id)
             const updates = textUtil.replaceSearchQueryWithReference(this.editableContent, reference, cursorPosition, this.refObjType)
             this.handleBlockUpdate(updates.text)
             nextTick(() => input.setSelectionRange(updates.cursor, updates.cursor))
 
             this.handleCloseReferenceSelectionDialog()
+        },
+        handleBlockNewlyReferencedBlock(pageName, reference) {
+            this.relayNewlyReferencedBlock(pageName, reference)
         },
         handlePageNameQuerySuccess(pages) {
             this.refList = pages.map(x => {
@@ -198,6 +204,9 @@ export default {
         relayNewBlockRequest(blockID) {
             this.$emit('request-create-block', blockID)
         },
+        relayNewlyReferencedBlock(pageName, reference) {
+            this.$emit('referenced-new-block', pageName, reference)
+        },
 
         updateReferenceSelectionDialogPosition() {
             this.$nextTick(() => {
@@ -268,6 +277,7 @@ export default {
           @request-navigate-up="relayNavigateUpRequest"
           @request-navigate-down="relayNavigateDownRequest"
           @request-delete-block="relayBlockDeleteRequest"
+          @referenced-new-block="relayNewlyReferencedBlock"
         />
     </div>
 </template>

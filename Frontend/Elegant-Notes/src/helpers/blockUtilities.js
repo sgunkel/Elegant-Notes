@@ -12,6 +12,7 @@ const idRefListToMap = (idList) => {
 }
 
 export const blockUtilities = {
+    newID: () => uuidv4(),
     createBlocksCopy: (originalBlocks) => JSON.parse(JSON.stringify(originalBlocks)),
     updateRecursive: (blocks, updatedBlock) => {
         blocks.forEach(block => {

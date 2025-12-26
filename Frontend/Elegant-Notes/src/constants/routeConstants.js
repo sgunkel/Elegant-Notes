@@ -15,6 +15,7 @@ export const metaRoutes = {
     references: '/meta/references',
     pageLookup: '/meta/search-page',
     blockLookup: '/meta/search-block',
+    blockIdAssignment: '/meta/assign-block-id',
 }
 
 export const authRoutes = {

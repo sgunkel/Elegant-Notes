@@ -1,8 +1,14 @@
 from typing import List
 from pathlib import Path
 
+from fastapi import HTTPException, status
+
 from ..utilities.meta_utils import ReferenceLocator, search_blocks
 from ..utilities.user_repo_utils import get_page_objects
+from ..models.status_model import (
+    OperationResponse,
+    SuccessResponse,
+)
 from ..models.meta_model import (
     PageLinkage,
     ReferencesRetrievalRequest,
@@ -30,3 +36,29 @@ def handle_block_search(given_text: str, user_path: Path) -> List[BlockSearchRes
     for page_obj in get_page_objects(user_path):
         found.extend(search_blocks(given_text, page_obj))
     return found
+
+def handle_block_id_assignment(query: BlockSearchResult, user_repo_path: Path) -> OperationResponse:
+    if query.block_id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='New Block ID (in UUID V4 format) is required - none given')
+    
+    path = user_repo_path / 'pages' / query.page_name # TODO update this to use other folders when we fully support that feature
+    if not path.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Path to Page does not exist')
+    
+    with path.open(mode='r') as f:
+        lines = f.readlines()
+    if len(lines) < query.line_number - 1:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Page file has less lines than given Block location (line_number too large)')
+    
+    line = lines[query.line_number - 1].rstrip()
+    if not line == query.block_text.rstrip():
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Block in file does not match Block location given (text mismatch)')
+    
+    starting_whitespace_len = len(line) - len(line.lstrip())
+    indention = (' ' * starting_whitespace_len) + '  ' # the last two spaces align the unordered list Markdown character (`-`) to the beginning of the Block text
+    id_line = f'{indention}id:: {query.block_id}'
+    lines.insert(query.line_number, id_line)
+    new_content = '\n'.join(line.rstrip() for line in lines)
+    with path.open('w') as f:
+        f.write(new_content + '\n')
+    return SuccessResponse(msg='Block ID assignment successful')

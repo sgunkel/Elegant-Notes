@@ -17,6 +17,8 @@ import { createDebounce } from '@/helpers/debouncer.js';
 import { pageUtils } from '@/helpers/pageUtils.js';
 import { notificationUtils } from '@/helpers/notifications.js';
 import { blockUtilities } from '@/helpers/blockUtilities';
+import { nextTick } from 'vue';
+import { json2md } from '@/helpers/MarkdownJSONUtils';
 
 export default {
     props: {
@@ -32,6 +34,7 @@ export default {
         return {
             store,
             page: store.getPage(), // moving this to be a prop might be beneficial
+            pageContent: '',
 
             rootLevelBlocks: [],
             linkage: {
@@ -56,7 +59,7 @@ export default {
     },
     mounted() {
         this.page.id = uuidv4()
-        pageOperations.getPageByName(this.page.name, this.onPageFetchSuccess, this.onPageFetchFail)
+        this.loadPage()
     },
     methods: {
         logOut() {
@@ -71,9 +74,13 @@ export default {
             const data = pageUtils.createDocUpdateRequest(this.page.name, updatedRootBlocks)
             console.log(data)
             pageOperations.updatePage(data, this.onUpdateDocumentSuccess, this.onUpdateDocumentFail)
+            this.pageContent = json2md(updatedRootBlocks, 0)
         },
         updateRootLevel(newRootLevel) {
             this.updateDocument(newRootLevel)
+        },
+        loadPage() {
+            pageOperations.getPageByName(this.page.name, this.onPageFetchSuccess, this.onPageFetchFail)
         },
 
         ///
@@ -109,6 +116,33 @@ export default {
         },
 
         ///
+        /// Block Reference Handlers
+        ///
+
+        handleBlockRefAssignment(reference) {
+            let blockIndex = 0
+            let lineIndex = 0
+            const lines = this.pageContent.split('\n')
+            lines.forEach(line => {
+                const justContent = line.trim().replace(/^- /, '')
+                console.log(lineIndex, line, '->', justContent)
+                if (!justContent.startsWith('id:: ') && lineIndex < reference.actual.line_number - 1) {
+                    blockIndex++
+                }
+                lineIndex++
+            })
+
+            const flattenBlocks = blockUtilities.flattenBlocks(this.rootLevelBlocks)
+            console.log('block index:', blockIndex, 'block', flattenBlocks[blockIndex], 'reference', reference)
+            const blockProxy = flattenBlocks[blockIndex]
+            // blockProxy.id = reference.id
+            reference.id = blockProxy.id
+            blockProxy.writeIDToFile = true
+            console.log('block', flattenBlocks[blockIndex], 'reference', reference)
+            this.updateDocument(this.rootLevelBlocks)
+        },
+
+        ///
         /// Handlers
         ///
 
@@ -135,7 +169,8 @@ export default {
         //
 
         onPageFetchSuccess(data) {
-            const meta = pageUtils.convertPageContentToBlockNodes(data.content)
+            this.pageContent = data.content
+            const meta = pageUtils.convertPageContentToBlockNodes(this.pageContent)
             this.rootLevelBlocks = meta.rootLevel
             this.linkage.blockIDs = meta.blockIDs
             console.log(meta)
@@ -202,9 +237,11 @@ export default {
         <div class="pe-content-wrapper">
             <PageBlocksEditor
               :root-level-blocks="rootLevelBlocks"
+              :page-name="page.name"
               :key="rootLevelBlocks"
               @update-document="updateDocument"
               @update-root-level="updateRootLevel"
+              @assign-block-id="handleBlockRefAssignment"
             />
 
             <div class="pe-back-links-section">

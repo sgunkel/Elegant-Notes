@@ -22,7 +22,7 @@ export function md2json(markdownContent) {
         const indent = line.match(/^\s*/)[0].length
         const blockText = trimmed.replace(/^- /, '')
         const newBlock = {
-            id: uuidv4(), // TODO add support for reading IDs in Logseq format
+            id: uuidv4(),
             content: blockText,
             children: [],
             indent,

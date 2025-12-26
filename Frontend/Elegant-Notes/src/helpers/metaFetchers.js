@@ -29,5 +29,13 @@ export const metaOperations = {
             .then(response => response.json())
             .then(data => successFn(data))
             .catch(err => failureFn(err))
+    },
+    assignBlockID: (blockSearchResultWithNewID, successFn, failureFn) => {
+        // `blockSearchResultWithNewID` argument should match exactly what was
+        //     returned from `searchBlocksByText()` ***with*** the new ID!!!!
+        authUtils.postWithAuth(metaRoutes.blockIdAssignment, blockSearchResultWithNewID)
+            .then(response => response.json())
+            .then(info => successFn(info))
+            .catch(err => failureFn(err))
     }
 }
