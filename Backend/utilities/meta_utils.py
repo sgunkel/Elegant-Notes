@@ -65,6 +65,8 @@ class BlockReferenceExtractor(ReferenceExtractor):
         # TODO do we want to collect more information here, like the location and any children, or handle that on the frontend?
         for match in self._get_block_matches(text):
             block_id = self._extract_id(match)
+            if f'id:: {block_id}' in text:
+                return # just a line that indicates the reference assigned to a Block
             if block_id in self._block_ids:
                 ref = BlockRef(block_id=block_id, source=active_page_name)
                 collected.add_block_ref(ref)
