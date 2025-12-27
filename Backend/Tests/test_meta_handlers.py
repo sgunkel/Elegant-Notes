@@ -105,7 +105,7 @@ def test_handle_get_all_references__two_backlinks_in_one_file(tmp_dir):
         '    - c',
     ], True, True),
 ])
-def test_handle_get_all_references__expected_block_structure_equals_actual_block_structure(
+def test_handle_get_all_references__expected_child_block_structure_equals_actual_child_block_structure(
         tmp_dir, expected_block_structure, add_blocks_before, add_blocks_after):
     # Setup environment
     expected_children_str = '\n'.join(expected_block_structure)
@@ -148,3 +148,41 @@ def test_handle_get_all_references__expected_block_structure_equals_actual_block
         expected_child = expected_block_structure[i].rstrip('\n')
         actual_child = actual_reference.children[i].rstrip('\n')
         assert actual_child == expected_child
+
+##
+## Block Reference Retrieval Tests
+##
+
+@pytest.mark.parametrize('ref_file_count,non_ref_file_count', [
+    (1, 5),
+    (5, 0),
+    (10, 5),
+    (25, 100),
+    (100, 25),
+])
+def test_handle_get_all_references__x_block_references_files_y_non_reference_files(
+        tmp_dir, ref_file_count, non_ref_file_count):
+    # Setup environment
+    block_id = uuid.uuid4()
+    page_ref_content = f'- (({block_id}))'
+    file_names = []
+    for i in range(ref_file_count):
+        file_name = f'example-{i}.md'
+        write_md_content(tmp_dir / file_name, page_ref_content)
+        file_names.append(file_name)
+    generate_and_write_n_md_files(tmp_dir, non_ref_file_count)
+    page_with_block_def_content = f'- text to reference\n  id:: {block_id}\n'
+    write_md_content(tmp_dir / 'actual.md', page_with_block_def_content)
+
+    # Perform function action under testing
+    block_id_list = [str(block_id)]
+    request = ReferencesRetrievalRequest(page_name='actual', block_ids=block_id_list)
+    block_refs = handle_get_all_references(request, tmp_dir).block_refs
+
+    # Verify results
+    assert len(block_refs) == ref_file_count
+    for block_ref in block_refs:
+        assert block_ref.block_id == str(block_id)
+        assert (block_ref.source + '.md') in file_names
+
+## Block references will most likely have more information in the future, so there'll likely be more tests on it later
