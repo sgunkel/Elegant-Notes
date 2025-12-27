@@ -186,3 +186,59 @@ def test_handle_get_all_references__x_block_references_files_y_non_reference_fil
         assert (block_ref.source + '.md') in file_names
 
 ## Block references will most likely have more information in the future, so there'll likely be more tests on it later
+
+###
+### Page searching
+###
+
+@pytest.mark.parametrize('query,expected_results,similar_names', [
+    ('A', ['Planning.md', 'Cleaning Tasks.md' 'Actual.md', 'Questions to ask.md', 'The answer to the universe.md'], []),
+    ('as', ['Cleaning Tasks.md', 'Questions to ask.md'], ['Actual.md', 'Planning.md', 'The answer to the universe.md']),
+    ('an', ['Planning.md', 'Cleaning Tasks.md', 'The answer to the universe.md'], ['Actual.md', 'Questions to ask.md']),
+    ('to', ['The answer to the universe.md', 'Questions to ask.md', 'Tokens.md'], ['Planning.md', 'Cleaning Tasks.md', 'Actual.md']),
+    ('To', ['The answer to the universe.md', 'Questions to ask.md', 'Tokens.md'], ['Planning.md', 'Cleaning Tasks.md', 'Actual.md']),
+    ('oo', ['Tasty foods.md', 'Nasty food recipes.md', 'Tool Inventory.md'], ['OH GREAT HEAVENS moments.md']),
+    ('dec', [f'Dec {day}.md' for day in range(31)], [])
+])
+def test_handle_page_search__query_and_expected_results_with_similar_page_names(tmp_dir, query, expected_results, similar_names):
+    # Setup environment
+    page_path = tmp_dir / 'pages'
+    page_path.mkdir(parents=True, exist_ok=True)
+    for i in range(50):
+        write_md_content(page_path / f'nothing-{i}.md', '- nothing')
+    for similar_name in similar_names:
+        write_md_content(page_path / similar_name, '- close, but should not find me')
+    for expected_file_name in expected_results:
+        write_md_content(page_path / expected_file_name, '- should find me')
+
+    # Perform function action under testing
+    actual_results = handle_page_search(query, tmp_dir)
+
+    # Verify results
+    assert len(expected_results) == len(actual_results)
+    for i in range(len(expected_results)):
+        assert f'/pages/{expected_results[i]}' in actual_results
+
+def test_handle_page_search__recursive_file_structure(tmp_dir):
+    # Setup environment
+    journals_path = tmp_dir / 'Journals'
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    for month in months:
+        for journal_entry_name in [f'{month} {day}.md' for day in range(31)]: # in a world were all months have 31 days in them...
+            path = journals_path / month
+            path.mkdir(parents=True, exist_ok=True)
+            write_md_content(path / journal_entry_name, '- What I did today:\n    - *nothing*')
+    
+    # Perform function action under testing
+    jan_results = handle_page_search('jan', tmp_dir)
+    fifteenth_of_the_months = handle_page_search('15', tmp_dir)
+    no_journal_entries = handle_page_search('does not exist', tmp_dir)
+
+    # Verify results
+    assert len(jan_results) == 31
+    assert len(fifteenth_of_the_months) == 12
+    assert len(no_journal_entries) == 0
+    for day in range(31):
+        assert f'/Journals/Jan/Jan {day}.md' in jan_results
+    for month in months:
+        assert f'/Journals/{month}/{month} 15.md' in fifteenth_of_the_months
