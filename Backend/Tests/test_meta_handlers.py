@@ -1,7 +1,14 @@
+import uuid
+
 import pytest
 
-from ..handlers.meta_handler import ReferenceLocator
-from ..models.meta_model import BackLink, BackLinkReference
+from ..handlers.meta_handler import (
+    handle_get_all_references,
+    handle_page_search,
+    handle_block_search,
+    handle_block_id_assignment,
+)
+from ..models.meta_model import BackLink, BackLinkReference, ReferencesRetrievalRequest
 from .utils import (
     generate_and_write_md_file,
     generate_and_write_n_md_files,
@@ -11,6 +18,10 @@ from .utils import (
 @pytest.fixture
 def tmp_dir(tmp_path):
     return tmp_path
+
+##
+## Page Reference (Backlink) Retrieval Tests
+##
 
 '''
     Test finding Page references in large quantities of Pages
@@ -23,26 +34,34 @@ def tmp_dir(tmp_path):
     (25, 100),
     (100, 25),
 ])
-def test_n_backlinks(tmp_dir, ref_file_count, non_ref_file_count):
+def test_handle_get_all_references__find_x_backlinks_in_y_files(tmp_dir, ref_file_count, non_ref_file_count):
+    # Setup environment
     generate_and_write_n_md_files(tmp_dir, non_ref_file_count)
     for i in range(ref_file_count):
         write_md_content(tmp_dir / f'example-{i}.md', '- [[actual]]')
-    locator = ReferenceLocator(tmp_dir, tmp_dir / 'actual.md', [])
-    actual_references = locator.retrieve_all_relationships().backlinks
-    assert len(actual_references) == ref_file_count
+    
+    # Perform function action under testing
+    request = ReferencesRetrievalRequest(page_name='actual', block_ids=[])
+    actual_backlinks = handle_get_all_references(request, tmp_dir).backlinks
 
-def test_double_backlinks_same_file(tmp_path):
-    generate_and_write_n_md_files(tmp_path, 5)
-    write_md_content(tmp_path / 'example.md', '- [[actual]]\n- [[actual]]')
-    generate_and_write_md_file(tmp_path / 'actual.md')
-    locator = ReferenceLocator(tmp_path, tmp_path / 'actual.md', [])
-    backlinks = locator.retrieve_all_relationships().backlinks
+    # Verify results
+    assert len(actual_backlinks) == ref_file_count
+
+def test_handle_get_all_references__two_backlinks_in_one_file(tmp_dir):
+    # Setup environment
+    generate_and_write_n_md_files(tmp_dir, 5)
+    write_md_content(tmp_dir / 'example.md', '- [[actual]]\n- [[actual]]')
+    generate_and_write_md_file(tmp_dir / 'actual.md')
+
+    # Perform function action under testing
+    request = ReferencesRetrievalRequest(page_name='actual', block_ids=[])
+    backlinks = handle_get_all_references(request, tmp_dir).backlinks
+
+    # Verify results
     assert len(backlinks) == 1
-
     backlink = backlinks[0]
     assert backlink.page_name == 'example'
     assert len(backlink.references) == 2
-
     for i in range(2):
         reference = backlink.references[i]
         assert reference.line.rstrip() == '- [[actual]]'
@@ -86,7 +105,9 @@ def test_double_backlinks_same_file(tmp_path):
         '    - c',
     ], True, True),
 ])
-def test_block_structures(tmp_dir, expected_block_structure, add_blocks_before, add_blocks_after):
+def test_handle_get_all_references__expected_block_structure_equals_actual_block_structure(
+        tmp_dir, expected_block_structure, add_blocks_before, add_blocks_after):
+    # Setup environment
     expected_children_str = '\n'.join(expected_block_structure)
     file_content = ''
     expected_line_number = 2
@@ -112,13 +133,15 @@ def test_block_structures(tmp_dir, expected_block_structure, add_blocks_before, 
     ]
     expected_backlink = BackLink(page_name='example', references=expected_references)
     generate_and_write_n_md_files(tmp_dir, 15)
-    locator = ReferenceLocator(tmp_dir, tmp_dir / 'actual.md', [])
-    actual_backlinks = locator.retrieve_all_relationships().backlinks
-    assert len(actual_backlinks) == 1
+    
+    # Perform function action under testing
+    request = ReferencesRetrievalRequest(page_name='actual', block_ids=[])
+    actual_backlinks = handle_get_all_references(request, tmp_dir).backlinks
 
+    # Verify results
+    assert len(actual_backlinks) == 1
     actual_backlink = actual_backlinks[0]
     assert len(actual_backlink.references) == len(expected_backlink.references)
-    
     actual_reference = actual_backlink.references[0]
     assert len(actual_reference.children) == len(expected_block_structure)
     for i in range(len(expected_block_structure)):
