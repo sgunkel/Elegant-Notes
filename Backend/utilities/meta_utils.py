@@ -94,13 +94,10 @@ class ReferenceLocator:
         self._ref_extractors: List[ReferenceExtractor] = []
         self._refs = References()
     
-    def _setup(self) -> None:
-        self._ref_extractors.append(BacklinkExtractor(self._page_path.name))
-        self._ref_extractors.append(BlockReferenceExtractor(self._block_ids))
-        # TODO Add Tag reference extraction
+    def add_extractor(self, extractor: ReferenceExtractor) -> None:
+        self._ref_extractors.append(extractor)
     
     def retrieve_all_relationships(self) -> PageLinkage:
-        self._setup()
         for page in self._get_all_files_in_repo():
             self._process_file(page)
         return self._refs.to_model()
