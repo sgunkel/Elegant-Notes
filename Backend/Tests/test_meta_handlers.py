@@ -242,3 +242,60 @@ def test_handle_page_search__recursive_file_structure(tmp_dir):
         assert f'/Journals/Jan/Jan {day}.md' in jan_results
     for month in months:
         assert f'/Journals/{month}/{month} 15.md' in fifteenth_of_the_months
+
+##
+## Block searching
+##
+
+def test_handle_block_search__find_block_with_exact_text(tmp_dir):
+    # Setup environment
+    block_id_str = str(uuid.uuid4())
+    block_text = 'This is a Block that has an ID assigned to it but nothing actually referencing it!'
+    content = f'- {block_text}\n  id:: {block_id_str}\n'
+    write_md_content(tmp_dir / 'test.md', content)
+    generate_and_write_n_md_files(tmp_dir, 25)
+
+    # Perform function action under testing
+    actual_results = handle_block_search(block_text, tmp_dir)
+
+    # Verify results
+    assert len(actual_results) == 1
+    actual = actual_results[0]
+    assert actual.block_id == block_id_str
+    assert actual.block_text == f'- {block_text}'
+    assert actual.line_number == 1
+    assert actual.page_name == 'test.md'
+
+@pytest.mark.parametrize('block_ref_count', [
+    5,
+    10,
+    25,
+    50,
+])
+def test_handle_block_search__find_x_blocks_with_case_insensitive_search(tmp_dir, block_ref_count):
+    # Setup environment
+    page_names = []
+    for i in range(block_ref_count):
+        page_name = f'example-{i}.md'
+        page_names.append(page_name)
+        write_md_content(tmp_dir / page_name, f'- Check out: (({uuid.uuid4()}))\n')
+    generate_and_write_n_md_files(tmp_dir, block_ref_count * 2)
+
+    # Perform function action under testing
+    actual_results_lowercase = handle_block_search('check out', tmp_dir)
+    actual_results_uppercase = handle_block_search('CHECK OUT', tmp_dir)
+
+    # Verify results
+    assert len(actual_results_lowercase) == block_ref_count
+    assert len(actual_results_uppercase) == block_ref_count
+    for i in range(block_ref_count):
+        lowercase = actual_results_lowercase[i]
+        uppercase = actual_results_uppercase[i]
+        assert lowercase.block_id == None
+        assert uppercase.block_id == None
+        assert 'Check out:' in lowercase.block_text
+        assert 'Check out:' in uppercase.block_text
+        assert lowercase.line_number == 1
+        assert uppercase.line_number == 1
+        assert lowercase.page_name in page_names
+        assert uppercase.page_name in page_names
