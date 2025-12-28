@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+from fastapi import HTTPException
 
 from ..handlers.meta_handler import (
     handle_get_all_references,
@@ -8,7 +9,12 @@ from ..handlers.meta_handler import (
     handle_block_search,
     handle_block_id_assignment,
 )
-from ..models.meta_model import BackLink, BackLinkReference, ReferencesRetrievalRequest
+from ..models.meta_model import (
+    BackLink,
+    BackLinkReference,
+    ReferencesRetrievalRequest,
+    BlockSearchResult,
+)
 from .utils import (
     generate_and_write_md_file,
     generate_and_write_n_md_files,
@@ -299,3 +305,150 @@ def test_handle_block_search__find_x_blocks_with_case_insensitive_search(tmp_dir
         assert uppercase.line_number == 1
         assert lowercase.page_name in page_names
         assert uppercase.page_name in page_names
+
+##
+## Block ID Assignment
+##
+
+def test_handle_block_id_assignment__root_level_update_should_succeed(tmp_dir): # this might be considered an integration test...
+    # Setup environment
+    block_text = 'I need an ID!'
+    block_id_str = str(uuid.uuid4())
+    (tmp_dir / 'pages').mkdir(parents=True, exist_ok=True)
+    actual_file_path = tmp_dir / 'pages' / 'actual.md'
+    write_md_content(actual_file_path, f'- {block_text}\n')
+
+    # Perform function action under testing
+    query = BlockSearchResult(
+        block_id=block_id_str, block_text=f'- {block_text}',
+        line_number=1, page_name='actual.md')
+    actual_result = handle_block_id_assignment(query, tmp_dir)
+
+    # Verify results
+    assert actual_result.msg == 'Block ID assignment successful'
+    with actual_file_path.open('r') as f:
+        content = f.read()
+    assert content == f'- {block_text}\n  id:: {block_id_str}\n'
+
+def test_handle_block_id_assignment__child_level_update_should_succeed(tmp_dir):
+    # Setup environment
+    block_text = 'I need an ID!'
+    block_id_str = str(uuid.uuid4())
+    (tmp_dir / 'pages').mkdir(parents=True, exist_ok=True)
+    actual_file_path = tmp_dir / 'pages' / 'actual.md'
+    write_md_content(actual_file_path, f'- parent!\n    - {block_text}\n')
+
+    # Perform function action under testing
+    query = BlockSearchResult(
+        block_id=block_id_str, block_text=f'    - {block_text}',
+        line_number=2, page_name='actual.md')
+    actual_result = handle_block_id_assignment(query, tmp_dir)
+
+    # Verify results
+    assert actual_result.msg == 'Block ID assignment successful'
+    with actual_file_path.open('r') as f:
+        content = f.read()
+    assert content == f'- parent!\n    - {block_text}\n      id:: {block_id_str}\n'
+
+def test_handle_block_id_assignment__siblings_around_block_to_update_should_succeed(tmp_dir):
+    # Setup environment
+    block_text = 'I need an ID!'
+    block_id_str = str(uuid.uuid4())
+    (tmp_dir / 'pages').mkdir(parents=True, exist_ok=True)
+    actual_file_path = tmp_dir / 'pages' / 'actual.md'
+    content_before_id = f'- parent\n    - first child\n    - {block_text}\n'
+    content_after_id = '    - last child\n'
+    content = content_before_id + content_after_id
+    write_md_content(actual_file_path, content)
+
+    # Perform function action under testing
+    query = BlockSearchResult(
+        block_id=block_id_str, block_text=f'    - {block_text}',
+        line_number=3, page_name='actual.md')
+    actual_result = handle_block_id_assignment(query, tmp_dir)
+
+    # Verify results
+    assert actual_result.msg == 'Block ID assignment successful'
+    with actual_file_path.open('r') as f:
+        content = f.read()
+    assert content == content_before_id + f'      id:: {block_id_str}\n' + content_after_id
+
+def test_handle_block_id_assignment__no_block_id_given_should_raise_id_required_error(tmp_dir):
+    # Setup environment
+    block_text = '- update me'
+    write_md_content(tmp_dir / 'test.md', f'- {block_text}\n')
+
+    # Perform function action under testing
+    query = BlockSearchResult(
+        block_id=None, block_text=f'- {block_text}',
+        line_number=123, page_name='test.md')
+    with pytest.raises(HTTPException) as e_info:
+        handle_block_id_assignment(query, tmp_dir)
+
+    # Verify results
+    # (A part of the verification is in that `with pytest.raises(..)` part)
+    assert str(e_info.value) == '404: New Block ID (in UUID V4 format) is required - none given'
+
+def test_handle_block_id_assignment__fake_page_should_raise_file_does_not_exists_error(tmp_dir):
+    # Setup environment
+    # (Not applicable)
+
+    # Perform function action under testing
+    query = BlockSearchResult(
+        block_id=str(uuid.uuid4()), block_text='This does not exist',
+        line_number=123, page_name='does not exist.md')
+    with pytest.raises(HTTPException) as e_info:
+        handle_block_id_assignment(query, tmp_dir)
+
+    # Verify results
+    # (A part of the verification is in that `with pytest.raises(..)` part)
+    assert str(e_info.value) == '404: Path to Page does not exist'
+
+def test_handle_block_id_assignment__empty_page_should_raise_page_having_less_lines_than_expected_error(tmp_dir):
+    # Setup environment
+    (tmp_dir / 'pages').mkdir(parents=True, exist_ok=True)
+    write_md_content(tmp_dir / 'pages' / 'empty.md', '')
+
+    # Perform function action under testing
+    query = BlockSearchResult(
+        block_id=str(uuid.uuid4()), block_text='This block does not exist in the Page object',
+        line_number=123, page_name='empty.md')
+    with pytest.raises(HTTPException) as e_info:
+        handle_block_id_assignment(query, tmp_dir)
+
+    # Verify results
+    # (A part of the verification is in that `with pytest.raises(..)` part)
+    assert str(e_info.value) == '409: Page file has less lines than given Block location (line_number too large)'
+
+def test_handle_block_id_assignment__wrong_line_number_should_raise_page_having_less_lines_than_expected_error(tmp_dir):
+    # Setup environment
+    block_text = 'This is a valid Page and Block structure but this test will fail since we say that `line_number` is some large number'
+    (tmp_dir / 'pages').mkdir(parents=True, exist_ok=True)
+    write_md_content(tmp_dir / 'pages' / 'test.md', f'- {block_text}\n')
+
+    # Perform function action under testing
+    query = BlockSearchResult(
+        block_id=str(uuid.uuid4()), block_text=f'- {block_text}',
+        line_number=123, page_name='test.md')
+    with pytest.raises(HTTPException) as e_info:
+        handle_block_id_assignment(query, tmp_dir)
+
+    # Verify results
+    # (A part of the verification is in that `with pytest.raises(..)` part)
+    assert str(e_info.value) == '409: Page file has less lines than given Block location (line_number too large)'
+
+def test_handle_block_id_assignment__block_text_mismatch_should_raise_text_mismatch_error(tmp_dir):
+    # Setup environment
+    (tmp_dir / 'pages').mkdir(parents=True, exist_ok=True)
+    write_md_content(tmp_dir / 'pages' / 'test.md', f'- This is the original text!\n')
+
+    # Perform function action under testing
+    query = BlockSearchResult(
+        block_id=str(uuid.uuid4()), block_text=f'- This does not match the original text on purpose',
+        line_number=1, page_name='test.md')
+    with pytest.raises(HTTPException) as e_info:
+        handle_block_id_assignment(query, tmp_dir)
+
+    # Verify results
+    # (A part of the verification is in that `with pytest.raises(..)` part)
+    assert str(e_info.value) == '409: Block in file does not match Block location given (text mismatch)'
