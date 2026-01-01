@@ -1425,4 +1425,34 @@ describe('BaseEditor Component Tests', () => {
             expect(actualFocusedText).toBe(expectedFocusedText)
         })
     })
+
+    describe('Reference selection', () => {
+        it('User typed `((` - should auto-pair and set flag to open reference selection dialog', async () => {
+            const sharedID = uuidv4()
+            const wrapper = mountBlockEditor({editingID: sharedID, blockObj: createBlockObj({id: sharedID, content: ''})})
+            const input = wrapper.get(editModeClassSelectorCSS)
+
+            expect(wrapper.vm.showRefSelectionDialog).not.toBeTruthy()
+            await input.trigger('keydown', {key: '('})
+            nextTick()
+            await input.trigger('keydown', {key: '('})
+            nextTick()
+            expect(wrapper.vm.showRefSelectionDialog).toBeTruthy()
+            expect(input.element.value).toBe('(())')
+        })
+
+        it('User typed `[[` - should auto-pair and set flag to open reference selection dialog', async () => {
+            const sharedID = uuidv4()
+            const wrapper = mountBlockEditor({editingID: sharedID, blockObj: createBlockObj({id: sharedID, content: ''})})
+            const input = wrapper.get(editModeClassSelectorCSS)
+
+            expect(wrapper.vm.showRefSelectionDialog).not.toBeTruthy()
+            await input.trigger('keydown', {key: '['})
+            nextTick()
+            await input.trigger('keydown', {key: '['})
+            nextTick()
+            expect(wrapper.vm.showRefSelectionDialog).toBeTruthy()
+            expect(input.element.value).toBe('[[]]')
+        })
+    })
 })
