@@ -27,9 +27,10 @@ import { mount } from "@vue/test-utils";
  * 
  * @param component The Vue component to mount
  * @param initialProps Initial props sent to the component
+ * @param componentLevelSettings Other settings applied to the component
  * @returns Function that take props to override initial props and returns a mounted component for testing
  */
-export const createMountingHelper = (component, initialProps) => {
+export const createMountingHelper = (component, initialProps, componentLevelSettings = {}) => {
     return (props = {}, globals = {}) => {
         return mount(component, {
             props: {
@@ -38,7 +39,8 @@ export const createMountingHelper = (component, initialProps) => {
             },
             global: {
                 ...globals
-            }
+            },
+            ...componentLevelSettings,
         })
     }
 }
