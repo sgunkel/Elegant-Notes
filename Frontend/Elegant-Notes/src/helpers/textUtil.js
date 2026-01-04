@@ -7,15 +7,14 @@
  *     wrong thing). This also includes helpers that detect if a user is trying to query a
  *     Page or Block and extract the reference query based on the cursor position.
  */
-import { v4 as uuidv4 } from 'uuid'
 
 const pairs = {
-  '(': ')',
-  '[': ']',
-  '{': '}',
-  '"': '"',
-  "'": "'",
-  '`': '`',
+    '(': ')',
+    '[': ']',
+    '{': '}',
+    '"': '"',
+    "'": "'",
+    '`': '`',
 }
 
 const BlockRefOpeningSymbol = '(('
@@ -84,11 +83,6 @@ export const textUtil = {
             inputElement.selectionStart = inputElement.selectionEnd = selectionStart - 1
         }
     },
-    handleBlockWithNoID(blockObj) {
-        const newID = uuidv4()
-        blockObj.id = newID
-        // actually do this!
-    },
     startedReferenceOpening(inputElement) {
         const { selectionStart, value } = inputElement
         if (selectionStart < 2) {
@@ -130,7 +124,7 @@ export const textUtil = {
         const textBeforeReference = fullText.slice(0, openIndex + openSymbol.length)
         const textAfterReference = fullText.slice(closeIndex)
         const newText = `${textBeforeReference}${reference.id}${textAfterReference}`
-        const newCursor = openIndex + openSymbol.length + reference.id.length + closeSymbol.length
+        const newCursor = openIndex + openSymbol.length + reference.id.length + closeSymbol.length // Outside reference pair
         return {
             text: newText,
             cursor: newCursor,

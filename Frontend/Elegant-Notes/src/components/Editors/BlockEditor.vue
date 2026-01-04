@@ -162,7 +162,7 @@ export default {
             console.log(msg)
         },
         handleReferenceSearchQueryUpdate(objType, query) {
-            if (!query) {
+            if (!query) { // empty text - user types in reference pair or presses backspace to clear search query
                 return
             }
             else if (objType === 'Page') {
