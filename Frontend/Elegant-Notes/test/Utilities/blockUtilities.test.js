@@ -468,10 +468,10 @@ describe('indent tests', () => {
     ]
 
     it('Single level indent at the end', () => {
-        /*      -> 
-         * - a      - a
-         * - b      - b
-         * - c          - c
+        /*        ->
+         * | - a     | - a
+         * | - b     | - b
+         * | - c     |     - c
          */
         const expected = blockUtilities.createBlocksCopy(singleLevel)
         const cBlock = expected.pop()
@@ -485,10 +485,10 @@ describe('indent tests', () => {
     })
 
     it('Single level indent in the middle', () => {
-        /*      -> 
-         * - a      - a
-         * - b          - b
-         * - c      - c
+        /*        ->
+         * | - a     | - a
+         * | - b     |     - b
+         * | - c     | - c
          */
         const expected = blockUtilities.createBlocksCopy(singleLevel)
         const [cBlock] = expected.splice(1, 1)
@@ -503,10 +503,10 @@ describe('indent tests', () => {
 
     it('Single level indent at the beginning', () => {
         /* Should fail - we cannot indent the first Block in a list
-         *      -> 
-         * - a      - a
-         * - b      - b
-         * - c      - c
+         *        -> 
+         * | - a     | - a
+         * | - b     | - b
+         * | - c     | - c
          */
         const expected = blockUtilities.createBlocksCopy(singleLevel)
 
@@ -518,11 +518,11 @@ describe('indent tests', () => {
     })
 
     it('Duel level indent at the end', () => {
-        /*        -> 
-         * - a        - a
-         *    - b        - b
-         *    - c        - c
-         *    - d            - d
+        /*          -> 
+         * | - a       | - a
+         * |    - b    |    - b
+         * |    - c    |    - c
+         * |    - d    |        - d
          */
         const expected = blockUtilities.createBlocksCopy(duelLevel)
         const dBlock = expected[0].children.pop()
@@ -536,11 +536,11 @@ describe('indent tests', () => {
     })
 
     it('Duel level indent in the middle', () => {
-        /*        -> 
-         * - a        - a
-         *    - b        - b
-         *    - c            - c
-         *    - d        - d
+        /*          ->
+         * | - a       | - a
+         * |    - b    |    - b
+         * |    - c    |        - c
+         * |    - d    |    - d
          */
         const expected = blockUtilities.createBlocksCopy(duelLevel)
         const [cBlock] = expected[0].children.splice(1, 1)
@@ -554,11 +554,11 @@ describe('indent tests', () => {
     })
 
     it('Duel level indent at the end', () => {
-        /*        -> 
-         * - a        - a
-         *    - b        - b
-         *    - c        - c
-         *    - d        - d
+        /*          ->
+         * | - a       | - a
+         * |    - b    |    - b
+         * |    - c    |    - c
+         * |    - d    |    - d
          */
         const expected = blockUtilities.createBlocksCopy(duelLevel)
 
@@ -570,15 +570,15 @@ describe('indent tests', () => {
     })
 
     it('Triple level indent at the end', () => {
-        /*             -> 
-         * - a              - a
-         *     - b              - b
-         *     - c              - c
-         *         - d              - d
-         *         - e              - e
-         *         - f                  - f
-         *     - g              - g
-         * - h              - h
+        /*               -> 
+         * | - a             | - a
+         * |     - b         |     - b
+         * |     - c         |     - c
+         * |         - d     |         - d
+         * |         - e     |         - e
+         * |         - f     |             - f
+         * |     - g         |     - g
+         * | - h             | - h
          */
         const expected = blockUtilities.createBlocksCopy(tripleLevel)
         const fBlock = expected[0].children[1].children.pop()
@@ -592,15 +592,15 @@ describe('indent tests', () => {
     })
 
     it('Triple level indent in the middle', () => {
-        /*             -> 
-         * - a              - a
-         *     - b              - b
-         *     - c              - c
-         *         - d              - d
-         *         - e                  - e
-         *         - f              - f
-         *     - g              - g
-         * - h              - h
+        /*               ->
+         * | - a             | - a
+         * |     - b         |     - b
+         * |     - c         |     - c
+         * |         - d     |         - d
+         * |         - e     |             - e
+         * |         - f     |         - f
+         * |     - g         |     - g
+         * | - h             | - h
          */
         const expected = blockUtilities.createBlocksCopy(tripleLevel)
         const [eBlock] = expected[0].children[1].children.splice(1, 1)
@@ -614,15 +614,15 @@ describe('indent tests', () => {
     })
 
     it('Triple level indent at the beginning', () => {
-        /*             -> 
-         * - a              - a
-         *     - b              - b
-         *     - c              - c
-         *         - d              - d
-         *         - e              - e
-         *         - f              - f
-         *     - g              - g
-         * - h              - h
+        /*               -> 
+         * | - a             | - a
+         * |     - b         |     - b
+         * |     - c         |     - c
+         * |         - d     |         - d
+         * |         - e     |         - e
+         * |         - f     |         - f
+         * |     - g         |     - g
+         * | - h             | - h
          */
         const expected = blockUtilities.createBlocksCopy(tripleLevel)
 
@@ -679,10 +679,10 @@ describe('outdentRecursive tests', () => {
 
     it('Single level at the beginning', () => {
         /* Cannot outdent anything at the root level
-         *      -> 
-         * - a      - a
-         * - b      - b
-         * - c      - c
+         *        -> 
+         * | - a     | - a
+         * | - b     | - b
+         * | - c     | - c
          */
         const expected = blockUtilities.createBlocksCopy(singleLevel)
 
@@ -697,10 +697,10 @@ describe('outdentRecursive tests', () => {
 
     it('Single level in the middle', () => {
         /* Cannot outdent anything at the root level
-         *      -> 
-         * - a      - a
-         * - b      - b
-         * - c      - c
+         *        -> 
+         * | - a     | - a
+         * | - b     | - b
+         * | - c     | - c
          */
         const expected = blockUtilities.createBlocksCopy(singleLevel)
 
@@ -715,10 +715,10 @@ describe('outdentRecursive tests', () => {
 
     it('Single level at the end', () => {
         /* Cannot outdent anything at the root level
-         *      -> 
-         * - a      - a
-         * - b      - b
-         * - c      - c
+         *        -> 
+         * | - a     | - a
+         * | - b     | - b
+         * | - c     | - c
          */
         const expected = blockUtilities.createBlocksCopy(singleLevel)
 
@@ -732,12 +732,12 @@ describe('outdentRecursive tests', () => {
     })
 
     it('Duel level at the beginning', () => {
-        /*        -> 
-         * - a        - a
-         *    - b     - b
-         *    - c         - c
-         *    - d         - d
-         * - e        - e
+        /*          ->
+         * | - a       | - a
+         * |    - b    | - b
+         * |    - c    |     - c
+         * |    - d    |     - d
+         * | - e       | - e
          */
         const expected = blockUtilities.createBlocksCopy(duelLevel)
         const children = expected[0].children
@@ -760,12 +760,12 @@ describe('outdentRecursive tests', () => {
     })
 
     it('Duel level in the middle', () => {
-        /*        -> 
-         * - a        - a
-         *    - b         - b
-         *    - c     - c
-         *    - d         - d
-         * - e        - e
+        /*         -> 
+         *  - a       | - a
+         *     - b    |     - b
+         *     - c    | - c
+         *     - d    |     - d
+         *  - e       | - e
          */
         const expected = blockUtilities.createBlocksCopy(duelLevel)
         const dBlock = expected[0].children.pop()
@@ -786,12 +786,12 @@ describe('outdentRecursive tests', () => {
     })
 
     it('Duel level at the end', () => {
-        /*        -> 
-         * - a        - a
-         *    - b         - b
-         *    - c         - c
-         *    - d     - d
-         * - e        - e
+        /*          ->
+         * | - a       | - a
+         * |    - b    |     - b
+         * |    - c    |     - c
+         * |    - d    | - d
+         * | - e       | - e
          */
         const expected = blockUtilities.createBlocksCopy(duelLevel)
         const dBlock = expected[0].children.pop()
@@ -808,15 +808,15 @@ describe('outdentRecursive tests', () => {
     })
 
     it('Triple level at the beginning', () => {
-        /*             -> 
-         * - a              - a
-         *     - b              - b
-         *     - c              - c
-         *         - d          - d
-         *         - e              - e
-         *         - f              - f
-         *     - g              - g
-         * - h              - h
+        /*               -> 
+         * | - a             | - a
+         * |     - b         |     - b
+         * |     - c         |     - c
+         * |         - d     |     - d
+         * |         - e     |         - e
+         * |         - f     |         - f
+         * |     - g         |     - g
+         * | - h             | - h
          */
         const expected = blockUtilities.createBlocksCopy(tripleLevel)
         const children = expected[0].children[1].children
@@ -839,15 +839,15 @@ describe('outdentRecursive tests', () => {
     })
 
     it('Triple level in the middle', () => {
-        /*             -> 
-         * - a              - a
-         *     - b              - b
-         *     - c              - c
-         *         - d              - d
-         *         - e          - e
-         *         - f              - f
-         *     - g              - g
-         * - h              - h
+        /*               -> 
+         * | - a             | - a
+         * |     - b         |     - b
+         * |     - c         |     - c
+         * |         - d     |         - d
+         * |         - e     |     - e
+         * |         - f     |         - f
+         * |     - g         |     - g
+         * | - h             | - h
          */
         const expected = blockUtilities.createBlocksCopy(tripleLevel)
         const [eBlock, fBlock] = expected[0].children[1].children.splice(1, 2)
@@ -868,14 +868,14 @@ describe('outdentRecursive tests', () => {
 
     it('Triple level at the end', () => {
         /*             -> 
-         * - a              - a
-         *     - b              - b
-         *     - c              - c
-         *         - d              - d
-         *         - e              - e
-         *         - f          - f
-         *     - g              - g
-         * - h              - h
+         * | - a             | - a
+         * |     - b         |     - b
+         * |     - c         |     - c
+         * |         - d     |         - d
+         * |         - e     |         - e
+         * |         - f     |     - f
+         * |     - g         |     - g
+         * | - h             | - h
          */
         const expected = blockUtilities.createBlocksCopy(tripleLevel)
         const fBlock = expected[0].children[1].children.pop()
@@ -892,15 +892,15 @@ describe('outdentRecursive tests', () => {
     })
 
     it('With children & acquires a child', () => {
-        /*             -> 
-         * - a              - a
-         *     - b              - b
-         *     - c          - c
-         *         - d          - d
-         *         - e          - e
-         *         - f          - f
-         *     - g              - g
-         * - h              - h
+        /*               -> 
+         * | - a             | - a
+         * |     - b         |     - b
+         * |     - c         | - c
+         * |         - d     |     - d
+         * |         - e     |     - e
+         * |         - f     |     - f
+         * |     - g         |     - g
+         * | - h             | - h
          */
         const expected = blockUtilities.createBlocksCopy(tripleLevel)
         const [cBlock] = expected[0].children.splice(1, 1)

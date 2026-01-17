@@ -80,8 +80,8 @@ describe('textUtil tests', () => {
 
             textUtil.handleTextAutoPair(input.element, mockEvent)
             
-            // '' -> '()'
-            //  ^      ^
+            // '|' -> '(|)'
+            //  ^       ^
             // Cursor does not move past closing symbol
             expect(input.element.selectionStart).toBe(expectedCursorPosPostAction)
             expect(input.element.value).toBe(expectedText)
