@@ -1,5 +1,7 @@
+import { v4 as uuidv4 } from 'uuid'
+
 import { blockUtilities } from '@/helpers/blockUtilities.js'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 
 describe('createBlocksCopy tests', () => {
     const emptyList = []
@@ -932,5 +934,27 @@ describe('outdentRecursive tests', () => {
         expect(movedBlock).toBeNull()
         expect(newCopy).toStrictEqual(actual)
         expect(actual).toStrictEqual(expected)
+    })
+})
+
+describe('assignAllBlockReferencesInPage tests', () => {
+    const sharedID = uuidv4()
+    const singleBlockNoReference = blockUtilities.createNewBlock()
+
+    const lastBlockInTwoBlocksWithSharedID = {...blockUtilities.createNewBlock(), id: sharedID}
+    const twoBlocksLastWithSharedID = [blockUtilities.createNewBlock(), lastBlockInTwoBlocksWithSharedID]
+    const twoBlocksLastWithSharedIDReferences = [{block_id: sharedID, source: 'some page'}]
+    const expectedTwoBlocksLastWithSharedID = blockUtilities.createBlocksCopy(twoBlocksLastWithSharedID)
+    expectedTwoBlocksLastWithSharedID[1].references = [twoBlocksLastWithSharedIDReferences[0].source]
+
+    test.each([
+        {title: 'No IDs & no Blocks', idList: [], blocks: [], expectedBlocks: []},
+        {title: 'No IDs with Blocks', idList: [], blocks: [singleBlockNoReference], expectedBlocks: [singleBlockNoReference]},
+        {title: 'Two Blocks - last with reference', idList: twoBlocksLastWithSharedIDReferences, blocks: twoBlocksLastWithSharedID, expectedBlocks: expectedTwoBlocksLastWithSharedID},
+        // we can (SHOULD) add more tests here later
+    ])('$title', ({idList, blocks, expectedBlocks}) => {
+        // Note that this function modifies `blocks` in place
+        blockUtilities.assignAllBlockReferencesInPage(blocks, idList)
+        expect(blocks).toStrictEqual(expectedBlocks)
     })
 })
