@@ -120,26 +120,10 @@ export default {
         ///
 
         handleBlockRefAssignment(reference) {
-            let blockIndex = 0
-            let lineIndex = 0
-            const lines = this.pageContent.split('\n')
-            lines.forEach(line => {
-                const justContent = line.trim().replace(/^- /, '')
-                console.log(lineIndex, line, '->', justContent)
-                if (!justContent.startsWith('id:: ') && lineIndex < reference.actual.line_number - 1) {
-                    blockIndex++
-                }
-                lineIndex++
-            })
-
-            const flattenBlocks = blockUtilities.flattenBlocks(this.rootLevelBlocks)
-            console.log('block index:', blockIndex, 'block', flattenBlocks[blockIndex], 'reference', reference)
-            const blockProxy = flattenBlocks[blockIndex]
-            // blockProxy.id = reference.id
-            reference.id = blockProxy.id
-            blockProxy.writeIDToFile = true
-            console.log('block', flattenBlocks[blockIndex], 'reference', reference)
-            this.updateDocument(this.rootLevelBlocks)
+            const blockCopy = blockUtilities.createBlocksCopy(this.rootLevelBlocks)
+            if (blockUtilities.assignBlockReference(this.pageContent, blockCopy, reference)) {
+                this.updateDocument(blockCopy)
+            }
         },
 
         ///
@@ -191,7 +175,7 @@ export default {
             this.linkage.backlinks = references.backlinks
             this.linkage.blockReferences = references.block_refs
             console.log('block_refs:', references.block_refs)
-            blockUtilities.assignBlockReferences(this.rootLevelBlocks, this.linkage.blockReferences)
+            blockUtilities.assignAllBlockReferencesInPage(this.rootLevelBlocks, this.linkage.blockReferences)
         },
         onReferencesReceivedFail(errorMsg) {
             // TODO how should we actually display the error? It'll most likely be large and

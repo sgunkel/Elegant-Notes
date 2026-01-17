@@ -11,6 +11,15 @@ const idRefListToMap = (idList) => {
     return refMap
 }
 
+const assignBlockIDsRecursively = (blocks, obj_src_map) => {
+    blocks.forEach(block => {
+        if (block.id in obj_src_map) {
+            block.references = obj_src_map[block.id]
+        }
+        assignBlockIDsRecursively(block.children, obj_src_map)
+    })
+}
+
 export const blockUtilities = {
     newID: () => uuidv4(),
     createBlocksCopy: (originalBlocks) => JSON.parse(JSON.stringify(originalBlocks)),
@@ -150,16 +159,35 @@ export const blockUtilities = {
             children: []
         }
     },
-    assignBlockReferences: (rootLevel, references) => {
-        const obj_src_map = idRefListToMap(references)
-        const do_assignment = (blocks) => {
-            blocks.forEach(block => {
-                if (block.id in obj_src_map) {
-                    block.references = obj_src_map[block.id]
-                }
-                do_assignment(block.children)
-            })
+    assignAllBlockReferencesInPage: (rootLevel, references) => {
+        if (references.length !== 0) {
+            const obj_src_map = idRefListToMap(references)
+            assignBlockIDsRecursively(rootLevel, obj_src_map)
         }
-        do_assignment(rootLevel)
+    },
+    assignBlockReference: (rawContent, rootLevelCopy, referenceProxy) => {
+        let blockIndex = 0
+        let lineIndex = 0
+        const referenceLineIndex = referenceProxy.actual.line_number - 1
+        const lines = rawContent.split('\n')
+        lines.forEach(line => {
+            const justContent = line.trim().replace(/^- /, '')
+            console.log(lineIndex, line, '->', justContent)
+            if (!justContent.startsWith('id:: ') && lineIndex < referenceLineIndex) {
+                blockIndex++
+            }
+            lineIndex++
+        })
+
+        const flattenBlocks = blockUtilities.flattenBlocks(rootLevelCopy)
+        const blockProxy = flattenBlocks[blockIndex]
+        if (blockProxy) {
+            blockProxy.writeIDToFile = true
+            referenceProxy.id = blockProxy.id
+            console.log('added id to reference')
+            return true
+        }
+        console.log('could not assign block reference')
+        return false
     },
 }
