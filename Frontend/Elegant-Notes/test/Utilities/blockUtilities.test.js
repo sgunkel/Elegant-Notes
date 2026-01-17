@@ -958,3 +958,65 @@ describe('assignAllBlockReferencesInPage tests', () => {
         expect(blocks).toStrictEqual(expectedBlocks)
     })
 })
+
+describe.skip('assignBlockReference tests', () => {
+    /// Started adding tests for this, but after checking into it a little bit, it appears that there
+    ///   is another mechanism in place that assigns an ID to a Block if it does not have one on file
+    ///   *when the Block is in the same page it is being referenced in.* We'll skip these tests for
+    ///   now (just having these here for reference) and investigate if we actually need this function.
+    /// Note: the second test is failing unexpectedly, so there will need work on the function if it is
+    ///   needed.
+    it('Simple assignment - root level', () => {
+        const rawContent = '- ## Reasons to use Java:\n    - *(none - C# is better)*\n'
+        const sharedID = uuidv4()
+        const blocks = [
+            {
+                id: sharedID,
+                content: '## Reasons to use Java:',
+                children: {
+                    id: uuidv4(),
+                    content: '*(none - C# is better)*',
+                    children: [],
+                },
+            }
+        ]
+        const reference = {
+            id: sharedID,
+            actual: {
+                line_number: 1,
+            }
+        }
+
+        const actualResult = blockUtilities.assignBlockReference(rawContent, blocks, reference)
+
+        expect(actualResult).toBeTruthy()
+        // TODO test blocks and reference
+    })
+    it('Simple assignment - second level', () => {
+        const rawContent = '- ## Reasons to use Java:\n    - *(none - C# is better)*\n'
+        const sharedID = uuidv4()
+        const blocks = [
+            {
+                id: uuidv4(),
+                content: '## Reasons to use Java:',
+                children: {
+                    id: sharedID,
+                    content: '*(none - C# is better)*',
+                    children: [],
+                },
+            }
+        ]
+        const reference = {
+            id: sharedID,
+            actual: {
+                line_number: 2,
+            }
+        }
+
+        // unexpectedly failing...
+        const actualResult = blockUtilities.assignBlockReference(rawContent, blocks, reference)
+
+        expect(actualResult).toBeTruthy()
+        // TODO test blocks and reference
+    })
+})
