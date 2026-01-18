@@ -14,14 +14,18 @@ import BlockEditor from './BlockEditor.vue';
 import { createDebounce } from '@/helpers/debouncer.js';
 import { blockUtilities } from '@/helpers/blockUtilities.js';
 import { editorConstants } from '@/constants/editorConstants.js';
+import { metaOperations } from '@/helpers/metaFetchers';
+import { notificationUtils } from '@/helpers/notifications';
 
 export default {
     props: {
         rootLevelBlocks: Array,
+        pageName: String,
     },
     emits: [
         'update-document',
         'update-root-level',
+        'assign-block-id',
     ],
     components: {
         BlockEditor,
@@ -138,6 +142,31 @@ export default {
             }
             this.refreshEditors()
         },
+        handleNewBlockReference(pageName, reference) {
+            // Mainly here to handle a use case when a user references a Block without a
+            //     persistent ID in the same Page object. Otherwise, when we update the
+            //     page and do not see the flag to keep the ID, we won't assign it to the
+            //     respective Block.
+            console.log('handling new block ref', pageName.replace('.md', ''), this.pageName)
+            if (pageName.replace('.md', '') === this.pageName) {
+                // Block with ID belongs to the active Page object
+                console.log('Block detected in current Block object')
+                this.$emit('assign-block-id', reference)
+            }
+            else {
+                // Block is not in the active Page object, so the backend handles the update
+                console.log('Block not in active Page')
+                reference.id = reference.actual.block_id = blockUtilities.newID()
+                metaOperations.assignBlockID(reference.actual, this.handleBlockIDAssignmentSuccess, this.handleBlockIDAssignmentFailure)
+            }
+        },
+        handleBlockIDAssignmentSuccess(msg) {
+            console.log('Block ID assignment status:', msg)
+        },
+        handleBlockIDAssignmentFailure(err) {
+            notificationUtils.toastError('An error occurred during Block ID assignment. Check console logs for message.')
+            console.log(err)
+        },
 
         //
         // Callbacks
@@ -170,6 +199,7 @@ export default {
             @request-navigate-down="focusBlockBelow"
             @request-create-block="createBlockAfter"
             @request-delete-block="deleteBlock"
+            @referenced-new-block="handleNewBlockReference"
         />
     </div>
 </template>

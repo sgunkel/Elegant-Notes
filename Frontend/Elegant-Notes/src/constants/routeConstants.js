@@ -12,7 +12,10 @@ export const PageRoutes = {
 }
 
 export const metaRoutes = {
-    getBacklinks: '/meta/backlinks',
+    references: '/meta/references',
+    pageLookup: '/meta/search-page',
+    blockLookup: '/meta/search-block',
+    blockIdAssignment: '/meta/assign-block-id',
 }
 
 export const authRoutes = {

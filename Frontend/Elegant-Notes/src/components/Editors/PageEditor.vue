@@ -16,6 +16,9 @@ import { metaOperations } from '@/helpers/metaFetchers.js'
 import { createDebounce } from '@/helpers/debouncer.js';
 import { pageUtils } from '@/helpers/pageUtils.js';
 import { notificationUtils } from '@/helpers/notifications.js';
+import { blockUtilities } from '@/helpers/blockUtilities';
+import { nextTick } from 'vue';
+import { json2md } from '@/helpers/MarkdownJSONUtils';
 
 export default {
     props: {
@@ -31,10 +34,13 @@ export default {
         return {
             store,
             page: store.getPage(), // moving this to be a prop might be beneficial
+            pageContent: '',
 
             rootLevelBlocks: [],
             linkage: {
                 backlinks: [],
+                blockIDs: [],
+                blockReferences: [],
             },
 
             pageRefocusKey: 0, // Easy way to update the root level editors after an action
@@ -53,8 +59,7 @@ export default {
     },
     mounted() {
         this.page.id = uuidv4()
-        pageOperations.getPageByName(this.page.name, this.onPageFetchSuccess, this.onPageFetchFail)
-        this.loadBacklinks()
+        this.loadPage()
     },
     methods: {
         logOut() {
@@ -69,9 +74,13 @@ export default {
             const data = pageUtils.createDocUpdateRequest(this.page.name, updatedRootBlocks)
             console.log(data)
             pageOperations.updatePage(data, this.onUpdateDocumentSuccess, this.onUpdateDocumentFail)
+            this.pageContent = json2md(updatedRootBlocks, 0)
         },
         updateRootLevel(newRootLevel) {
-            this.rootLevelBlocks = newRootLevel
+            this.updateDocument(newRootLevel)
+        },
+        loadPage() {
+            pageOperations.getPageByName(this.page.name, this.onPageFetchSuccess, this.onPageFetchFail)
         },
 
         ///
@@ -79,7 +88,7 @@ export default {
         ///
     
         loadBacklinks() {
-            metaOperations.getBacklinks(this.page.name, this.onBacklinksReceiveSuccess, this.onBacklinksReceiveFail)
+            metaOperations.getReferences(this.page.name, this.linkage.blockIDs, this.onReferencesReceivedSuccess, this.onReferencesReceivedFail)
         },
 
         ///
@@ -104,6 +113,17 @@ export default {
         HandlePageRenameCancel() {
             this.pageDialogMeta.showDialog = false
             this.pageDialogMeta.newName = this.pageDialogMeta.oldName
+        },
+
+        ///
+        /// Block Reference Handlers
+        ///
+
+        handleBlockRefAssignment(reference) {
+            const blockCopy = blockUtilities.createBlocksCopy(this.rootLevelBlocks)
+            if (blockUtilities.assignBlockReference(this.pageContent, blockCopy, reference)) {
+                this.updateDocument(blockCopy)
+            }
         },
 
         ///
@@ -133,7 +153,13 @@ export default {
         //
 
         onPageFetchSuccess(data) {
-            this.rootLevelBlocks = pageUtils.convertPageContentToBlockNodes(data.content)
+            this.pageContent = data.content
+            const meta = pageUtils.convertPageContentToBlockNodes(this.pageContent)
+            this.rootLevelBlocks = meta.rootLevel
+            this.linkage.blockIDs = meta.blockIDs
+            console.log(meta)
+
+            this.loadBacklinks()
         },
         onPageFetchFail(errorMsg) {
             console.log(`error receiving page: ${errorMsg}`)
@@ -145,14 +171,17 @@ export default {
         onUpdateDocumentFail(errorMsg) {
             notificationUtils.toastError(`Can not update Page: ${errorMsg}`)
         },
-        onBacklinksReceiveSuccess(backlinkData) {
-            this.linkage.backlinks = backlinkData
+        onReferencesReceivedSuccess(references) {
+            this.linkage.backlinks = references.backlinks
+            this.linkage.blockReferences = references.block_refs
+            console.log('block_refs:', references.block_refs)
+            blockUtilities.assignAllBlockReferencesInPage(this.rootLevelBlocks, this.linkage.blockReferences)
         },
-        onBacklinksReceiveFail(errorMsg) {
+        onReferencesReceivedFail(errorMsg) {
             // TODO how should we actually display the error? It'll most likely be large and
             //     shouldn't be part of the toast notification...
-            notificationUtils.toastError('Failed to receive backlinks. Check console.log')
-            console.log(`error receiving backlinks: ${errorMsg}`)
+            notificationUtils.toastError('Failed to receive references. Check console.log')
+            console.log(`error receiving references: ${errorMsg}`)
         },
         onPageRenameSuccess(msg) {
             console.log('Page rename successful', msg)
@@ -192,9 +221,11 @@ export default {
         <div class="pe-content-wrapper">
             <PageBlocksEditor
               :root-level-blocks="rootLevelBlocks"
+              :page-name="page.name"
               :key="rootLevelBlocks"
               @update-document="updateDocument"
               @update-root-level="updateRootLevel"
+              @assign-block-id="handleBlockRefAssignment"
             />
 
             <div class="pe-back-links-section">

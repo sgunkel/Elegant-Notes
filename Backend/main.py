@@ -21,7 +21,5 @@ app.include_router(auth_router_obj)
 def redirect_pages_to_home():
     return RedirectResponse(url='/')
 
-
-
 # this needs to be the last item after all routes
 app.mount('/', StaticFiles(directory='../Frontend/Elegant-Notes/dist', html=True))

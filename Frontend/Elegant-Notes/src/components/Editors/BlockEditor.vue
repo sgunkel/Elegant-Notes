@@ -3,13 +3,18 @@
  * Block editor with Markdown display.
  */
 
+import { nextTick } from 'vue';
 import BaseEditor from './BaseEditor.vue';
-
+import BlockReferenceSelectionDialog from '../Dialogs/BlockReferenceSelectionDialog.vue';
 import md from '@/helpers/MarkdownJSONUtils.js'
+import { metaOperations } from '@/helpers/metaFetchers';
+import { textUtil } from '@/helpers/textUtil';
+import { notificationUtils } from '@/helpers/notifications';
 
 export default {
     components: {
         BaseEditor,
+        BlockReferenceSelectionDialog,
     },
     props: {
         blockObj: Object,
@@ -27,10 +32,15 @@ export default {
         'request-create-block',
         'request-navigate-up',
         'request-navigate-down',
+        'referenced-new-block', // Use case: user links to Block in the same Page object and the newly referenced block needs to know - or else we will overwrite the temporary ID it was given when we save
     ],
     data() {
         return {
             editableContent: this.blockObj.content,
+            inputTagRect: null, // Used for positioning the search results when looking up references
+            refList: [], // Filled with Page and Block objects when searching for the respective object
+            showRefSelectionDialog: false,
+            refObjType: null, // Type of object - Page or Block - being searched when the user is typing between `((`/`[[` pairs
         }
     },
     computed: {
@@ -48,6 +58,7 @@ export default {
         ///
 
         handleBlockUpdate(newText) {
+            this.updateReferenceSelectionDialogPosition()
             console.log(new Date().toLocaleString(), 'block update', this.blockObj.id, newText)
             this.editableContent = newText
             const newBlock = {
@@ -57,6 +68,7 @@ export default {
             this.relayBlockUpdate(newBlock, this.isEditing)
         },
         handleBlurRequest() {
+            this.showRefSelectionDialog = false
             this.relayBlurRequest(this.blockObj.id, this.editableContent)
         },
         handleIndentRequest() {
@@ -72,6 +84,7 @@ export default {
             this.relayNavigateDownRequest()
         },
         handleFocusRequest() {
+            this.updateReferenceSelectionDialogPosition()
             this.relayFocusRequest(this.blockObj.id)
         },
         handleBlockDeleteRequest() {
@@ -85,6 +98,79 @@ export default {
         },
         handleNewBlockRequest() {
             this.relayNewBlockRequest(this.blockObj.id)
+        },
+        handleOpenReferenceSelectionDialog(trigger, event) {
+            this.refObjType = trigger
+            this.showRefSelectionDialog = true
+            console.log('handling open ref selection')
+
+            const query = textUtil.extractPageReferenceQuery(event.target.value)
+            if (query && trigger === 'Page') {
+                metaOperations.searchPagesByName(query, this.handlePageNameQuerySuccess, this.handlePageNameQueryFailure)
+            }
+            else if (query && trigger === 'Block') {
+                console.log('search blocks')
+                metaOperations.searchBlocksByText(query, this.handleBlockQuerySuccess, this.handleBlockQueryFailure)
+            }
+        },
+        handleCloseReferenceSelectionDialog() {
+            this.showRefSelectionDialog = false
+            this.refObjType = null
+        },
+        handleReferenceSelected(reference) {
+            const input = this.$refs.baseEditor.getInputElement()
+            const cursorPosition = input.selectionStart
+            console.log('ref.id:', reference.actual.block_id, 'this.block.id:', this.blockObj.id)
+            if (!reference.id) {
+                this.handleBlockNewlyReferencedBlock(reference.actual.page_name, reference)
+            }
+            console.log('ref.id:', reference.actual.block_id, 'this.block.id:', this.blockObj.id)
+            const updates = textUtil.replaceSearchQueryWithReference(this.editableContent, reference, cursorPosition, this.refObjType)
+            this.handleBlockUpdate(updates.text)
+            nextTick(() => input.setSelectionRange(updates.cursor, updates.cursor))
+
+            this.handleCloseReferenceSelectionDialog()
+        },
+        handleBlockNewlyReferencedBlock(pageName, reference) {
+            this.relayNewlyReferencedBlock(pageName, reference)
+        },
+        handlePageNameQuerySuccess(pages) {
+            this.refList = pages.map(x => {
+                const name = x.replace('/pages/', '').replace('.md', '')
+                return {
+                    id: name,
+                    text: name,
+                    actual: x,
+                }
+            })
+        },
+        handlePageNameQueryFailure(msg) {
+            notificationUtils.toastError('Something when wrong when searching Pages - check console log')
+            console.log(msg)
+        },
+        handleBlockQuerySuccess(blocks) {
+            console.log('received blocks:', blocks)
+            this.refList = blocks.map(x => {
+                return {
+                    id: x.block_id,
+                    text: x.block_text,
+                    actual: x,
+                }
+            })
+        },
+        handleBlockQueryFailure(msg) {
+            console.log(msg)
+        },
+        handleReferenceSearchQueryUpdate(objType, query) {
+            if (!query) { // empty text - user types in reference pair or presses backspace to clear search query
+                return
+            }
+            else if (objType === 'Page') {
+                metaOperations.searchPagesByName(query, this.handlePageNameQuerySuccess, this.handlePageNameQueryFailure)
+            }
+            else if (objType === 'Block') {
+                metaOperations.searchBlocksByText(query, this.handleBlockQuerySuccess, this.handleBlockQueryFailure)
+            }
         },
 
         ///
@@ -118,6 +204,15 @@ export default {
         relayNewBlockRequest(blockID) {
             this.$emit('request-create-block', blockID)
         },
+        relayNewlyReferencedBlock(pageName, reference) {
+            this.$emit('referenced-new-block', pageName, reference)
+        },
+
+        updateReferenceSelectionDialogPosition() {
+            this.$nextTick(() => {
+                this.inputTagRect = this.$refs.baseEditor?.getInputRect()
+            })
+        },
     },
 }
 </script>
@@ -147,12 +242,24 @@ export default {
               @delete-object-requested="handleBlockDeleteRequest"
               @navigate-down-requested="handleNavigateDownRequest"
               @create-new-object-requested="handleNewBlockRequest"
+              @reference-symbol-detected="handleOpenReferenceSelectionDialog"
+              @outside-ref-symbols-detected="handleCloseReferenceSelectionDialog"
+              @search-query-requested="handleReferenceSearchQueryUpdate"
+              ref="baseEditor"
             />
 
             <div>
                 <!-- TODO add reference information (# references with a dialog that shows all references when clicked)-->
+                 {{ blockObj.references?.length || '' }}
             </div>
         </div>
+        
+         <BlockReferenceSelectionDialog
+           :componentRect="inputTagRect"
+           :has-focus="isEditing && showRefSelectionDialog"
+           :search-results="refList"
+           @reference-selected="handleReferenceSelected"
+           ref="refSelectionDialog"/>
 
         <block-editor
           v-for="child in blockObj.children"
@@ -170,6 +277,7 @@ export default {
           @request-navigate-up="relayNavigateUpRequest"
           @request-navigate-down="relayNavigateDownRequest"
           @request-delete-block="relayBlockDeleteRequest"
+          @referenced-new-block="relayNewlyReferencedBlock"
         />
     </div>
 </template>

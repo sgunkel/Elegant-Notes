@@ -51,3 +51,55 @@ const flattenBlocks = (blocks, indention = 0) => {
     })
     return flatList
 }
+
+const textContentCases = [
+    '',               // Nothing before and/or after reference pair use case
+    'no space',       // Content before and/or after reference pair with no space use case
+    ' space around ', // Content before and/or after reference pair with space use case
+]
+
+/**
+ * (Absurd) Use cases around references when the user is typing.
+ * Case format:
+ *  - <pair>
+ *  - <pair>words
+ *  - <pair> words
+ *  - <pair> <other pairs>
+ *  - words<pair>
+ *  - words<pair>words
+ *  - words<pair> words
+ *  - words<pair> <other pairs>
+ *  - words <pair>
+ *  - words <pair>words
+ *  - words <pair> words
+ *  - words <pair> <other pairs>
+ *  - <other pairs> <pair>
+ *  - <other pairs> <pair>words
+ *  - <other pairs> <pair> words
+ *  - <other pairs> <pair> <other pairs>
+ * Note that we test when there's a space or not between a pair and words. This is used for where the cursor lands in some tests
+ */
+export const makeTestCasesWithSurroundingText = (given, otherPairs) => given.flatMap(pair => {
+    const contentUserCases = [...textContentCases] // Create a copy of `testContentCases` - messes stuff up otherwise
+    // All opening/closing symbol pairs converted to a single string for pre- and post- reference/pair tests
+    const withOtherPairs = otherPairs.map(pair => {
+        return (((pair.openingSymbol || pair.openSymbols) + (pair.closingSymbol || pair.closeSymbols)) || pair.content)
+    }).filter(x => x).join(' ')
+    contentUserCases.push(withOtherPairs)
+
+    const prependedText = contentUserCases.map(text => {
+        return {
+            ...pair,
+            textBefore: text,
+        }
+    })
+    const appendedText = prependedText.flatMap(x => {
+        return contentUserCases.map(text => {
+            return {
+                ...x, // Has the open/close reference symbols
+                textAfter: text,
+            }
+        })
+    })
+    return [...new Set(appendedText)]
+})

@@ -11,7 +11,4 @@ export const routerConstants = {
 
     pageEditorRoute: '/page-editor',
     pageEditorName: 'PageEditor',
-
-    newPageRoute: '/new-page',
-    newPageName: 'NewPage',
 }
