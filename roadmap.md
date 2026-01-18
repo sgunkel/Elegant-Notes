@@ -27,17 +27,19 @@ The full list of TODOs before releasing version 1.0.
         - [ ] Backlinks (Page references)
             - [x] Page links (`[[` ***page-name*** `]]` syntax)
                 - [x] Show page links in UI Backlink section
-                - [ ] Show available Pages when users type `[[` trigger, followed by closing `]]`
+                - [x] Show available Pages when users type `[[` trigger, followed by closing `]]`
                 - [ ] Logseq compatible
+                    - *(needs testing)*
             - [ ] Tags (`#` ***page-name*** syntax)
                 - [ ] Show tags in UI Backlink section
                 - [ ] Show available Pages when users type `#` trigger
                 - [ ] Logseq compatible
         - [ ] Block reference links
             - [ ] Copy Block ID to clipboard
-            - [ ] Show Block text by ID via `((` ***block-id*** `))` syntax as a link in Markdown
-            - [ ] Show available Blocks when user types the `((` trigger, followed by the closing `))`
+            - [x] Show Block text by ID via `((` ***block-id*** `))` syntax as a link in Markdown
+            - [x] Show available Blocks when user types the `((` trigger, followed by the closing `))`
             - [ ] Logseq compatible
+                - *(needs testing)*
         - [ ] Block embedded links
             - [ ] Copy embedded Block to clipboard
             - [ ] Show Block text and Block's children
@@ -108,6 +110,10 @@ The full list of TODOs before releasing version 1.0.
         - [x] Frontend (Vitest) structure
         - [x] Run tests in Pull Requests
         - [x] Require all tests to pass for merge
+        - [ ] Python linter
+        - [ ] JS/Vue linter
+        - [ ] Python formatter
+        - [ ] JS/Vue formatter
     - [ ] Docker image
         - [ ] Create Docker image for each release
         - [ ] Update to latest version when released
