@@ -68,7 +68,7 @@ class BlockReferenceExtractor(ReferenceExtractor):
             if f'id:: {block_id}' in text:
                 return # just a line that indicates the reference assigned to a Block
             if block_id in self._block_ids:
-                ref = BlockRef(block_id=block_id, source=active_page_name)
+                ref = BlockRef(block_id=block_id, source=active_page_name, line_index=line_index)
                 collected.add_block_ref(ref)
     
     def _generate_match_regex_str(self, block_ids: List[str]) -> str:

@@ -945,7 +945,10 @@ describe('assignAllBlockReferencesInPage tests', () => {
     const twoBlocksLastWithSharedID = [blockUtilities.createNewBlock(), lastBlockInTwoBlocksWithSharedID]
     const twoBlocksLastWithSharedIDReferences = [{block_id: sharedID, source: 'some page'}]
     const expectedTwoBlocksLastWithSharedID = blockUtilities.createBlocksCopy(twoBlocksLastWithSharedID)
-    expectedTwoBlocksLastWithSharedID[1].references = [twoBlocksLastWithSharedIDReferences[0].source]
+    expectedTwoBlocksLastWithSharedID[1].references = [{
+        block_id: sharedID,
+        source: twoBlocksLastWithSharedIDReferences[0].source,
+    }]
 
     test.each([
         {title: 'No IDs & no Blocks', idList: [], blocks: [], expectedBlocks: []},
