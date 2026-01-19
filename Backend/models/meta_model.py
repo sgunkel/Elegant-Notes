@@ -14,6 +14,7 @@ class BackLink(BaseModel):
 class BlockRef(BaseModel):
     block_id: str
     source: str
+    line_index: int
 
 class PageLinkage(BaseModel):
     backlinks: List[BackLink]

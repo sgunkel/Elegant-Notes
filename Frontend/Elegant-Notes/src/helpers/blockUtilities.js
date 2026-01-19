@@ -6,7 +6,7 @@ const idRefListToMap = (idList) => {
         if (!(ref.block_id in refMap)) {
             refMap[ref.block_id] = []
         }
-        refMap[ref.block_id].push(ref.source)
+        refMap[ref.block_id].push(ref)
     })
     return refMap
 }
