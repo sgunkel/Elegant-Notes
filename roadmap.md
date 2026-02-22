@@ -42,7 +42,7 @@ The full list of TODOs before releasing version 1.0.
                 - *(needs testing)*
         - [ ] Block embedded links
             - [ ] Copy embedded Block to clipboard
-            - [ ] Show Block text and Block's children
+            - [x] Show Block text and Block's children
             - [ ] Show available Blocks when user types the `{{embed ((` trigger, followed by the closing `))}}`
             - [ ] Copy Block and embedded Block options via children in embedded Block
             - [ ] Edit children in embedded Block
