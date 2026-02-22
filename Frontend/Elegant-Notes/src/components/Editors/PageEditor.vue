@@ -172,10 +172,11 @@ export default {
             notificationUtils.toastError(`Can not update Page: ${errorMsg}`)
         },
         onReferencesReceivedSuccess(references) {
-            this.linkage.backlinks = references.backlinks
-            this.linkage.blockReferences = references.block_refs
-            console.log('block_refs:', references.block_refs)
-            blockUtilities.assignAllBlockReferencesInPage(this.rootLevelBlocks, this.linkage.blockReferences)
+            console.log(references)
+            blockUtilities.extractBlocksFromReferences(references.references)
+                .then(data => blockUtilities.applyReferencesToRootLevelBlocks(this.rootLevelBlocks, this.linkage.backlinks, data))
+                .catch(errorMsg => notificationUtils.toastError(`Error occurred when retrieving references: ${errorMsg}`))
+            console.log('backlinks', this.linkage.backlinks)
         },
         onReferencesReceivedFail(errorMsg) {
             // TODO how should we actually display the error? It'll most likely be large and

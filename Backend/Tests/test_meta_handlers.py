@@ -10,8 +10,6 @@ from ..handlers.meta_handler import (
     handle_block_id_assignment,
 )
 from ..models.meta_model import (
-    BackLink,
-    BackLinkReference,
     ReferencesRetrievalRequest,
     BlockSearchResult,
 )
@@ -48,7 +46,9 @@ def test_handle_get_all_references__find_x_backlinks_in_y_files(tmp_dir, ref_fil
     
     # Perform function action under testing
     request = ReferencesRetrievalRequest(page_name='actual', block_ids=[])
-    actual_backlinks = handle_get_all_references(request, tmp_dir).backlinks
+    actual_backlinks =[]
+    for ref in handle_get_all_references(request, tmp_dir).references:
+        actual_backlinks.extend(ref.backlinks)
 
     # Verify results
     assert len(actual_backlinks) == ref_file_count
@@ -61,99 +61,18 @@ def test_handle_get_all_references__two_backlinks_in_one_file(tmp_dir):
 
     # Perform function action under testing
     request = ReferencesRetrievalRequest(page_name='actual', block_ids=[])
-    backlinks = handle_get_all_references(request, tmp_dir).backlinks
+    backlinks = []
+    refs = handle_get_all_references(request, tmp_dir).references
+    for ref in refs:
+        backlinks.extend(ref.backlinks)
 
     # Verify results
-    assert len(backlinks) == 1
-    backlink = backlinks[0]
-    assert backlink.page_name == 'example'
-    assert len(backlink.references) == 2
-    for i in range(2):
-        reference = backlink.references[i]
-        assert reference.line.rstrip() == '- [[actual]]'
-        assert reference.line_number == i + 1
-        assert len(reference.children) == 0
-
-'''
-    Test finding references with appropriate Block children (those indented after the referenced Page)
-'''
-@pytest.mark.parametrize('expected_block_structure,add_blocks_before,add_blocks_after', [
-    ([
-        '    - a',
-        '    - b',
-        '    - c',
-    ], False, False),
-    ([
-        '    - a',
-        '',
-        '    - b',
-        '    - c',
-    ], False, False),
-    ([
-        '    - a',
-        '        - b',
-        '        - c',
-        '    - d',
-    ], False, False),
-    ([
-        '    - a',
-        '    - b',
-        '    - c',
-    ], True, False),
-    ([
-        '    - a',
-        '        - b',
-        '    - c',
-    ], False, True),
-    ([
-        '    - a',
-        '        - b',
-        '    - c',
-    ], True, True),
-])
-def test_handle_get_all_references__expected_child_block_structure_equals_actual_child_block_structure(
-        tmp_dir, expected_block_structure, add_blocks_before, add_blocks_after):
-    # Setup environment
-    expected_children_str = '\n'.join(expected_block_structure)
-    file_content = ''
-    expected_line_number = 2
-    if add_blocks_before:
-        file_content += '''
-- abc
-    - def
-    - ghi
-'''
-        expected_line_number += 4
-
-    file_content += f'- [[actual]]\n{expected_children_str}'
-    if add_blocks_after:
-        file_content += '''
-- jkl
-    - mno
-    - pqr
-'''
-
-    write_md_content(tmp_dir / 'example.md', file_content)
-    expected_references = [
-        BackLinkReference(line='- [[actual]]', line_number=expected_line_number, children=expected_block_structure),
-    ]
-    expected_backlink = BackLink(page_name='example', references=expected_references)
-    generate_and_write_n_md_files(tmp_dir, 15)
-    
-    # Perform function action under testing
-    request = ReferencesRetrievalRequest(page_name='actual', block_ids=[])
-    actual_backlinks = handle_get_all_references(request, tmp_dir).backlinks
-
-    # Verify results
-    assert len(actual_backlinks) == 1
-    actual_backlink = actual_backlinks[0]
-    assert len(actual_backlink.references) == len(expected_backlink.references)
-    actual_reference = actual_backlink.references[0]
-    assert len(actual_reference.children) == len(expected_block_structure)
-    for i in range(len(expected_block_structure)):
-        expected_child = expected_block_structure[i].rstrip('\n')
-        actual_child = actual_reference.children[i].rstrip('\n')
-        assert actual_child == expected_child
+    assert len(refs) == 1
+    assert len(backlinks) == 2
+    ref = refs[0]
+    assert ref.page_name == 'example'
+    assert backlinks[0].block_index == 0
+    assert backlinks[1].block_index == 1
 
 ##
 ## Block Reference Retrieval Tests
@@ -183,15 +102,22 @@ def test_handle_get_all_references__x_block_references_files_y_non_reference_fil
     # Perform function action under testing
     block_id_list = [str(block_id)]
     request = ReferencesRetrievalRequest(page_name='actual', block_ids=block_id_list)
-    block_refs = handle_get_all_references(request, tmp_dir).block_refs
+    block_refs = []
+    backlinks = []
+    references = handle_get_all_references(request, tmp_dir).references
+    for ref in references:
+        block_refs.extend(ref.blocks)
+        backlinks.extend(ref.backlinks)
 
     # Verify results
+    assert len(backlinks) == 0
     assert len(block_refs) == ref_file_count
     for block_ref in block_refs:
-        assert block_ref.block_id == str(block_id)
-        assert (block_ref.source + '.md') in file_names
-
-## Block references will most likely have more information in the future, so there'll likely be more tests on it later
+        assert block_ref.block_index == 0
+    
+    assert len(references) == len(file_names)
+    for ref in references:
+        assert (ref.page_name + '.md') in file_names
 
 ###
 ### Page searching

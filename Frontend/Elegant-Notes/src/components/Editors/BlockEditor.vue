@@ -40,6 +40,7 @@ export default {
             inputTagRect: null, // Used for positioning the search results when looking up references
             refList: [], // Filled with Page and Block objects when searching for the respective object
             showRefSelectionDialog: false,
+            showRefList: false, // The references a Block has (the number on the right side of the editor) and whether to show the dialog for it or not
             refObjType: null, // Type of object - Page or Block - being searched when the user is typing between `((`/`[[` pairs
         }
     },
@@ -172,6 +173,11 @@ export default {
                 metaOperations.searchBlocksByText(query, this.handleBlockQuerySuccess, this.handleBlockQueryFailure)
             }
         },
+        handleBlockReferencesDialog() {
+            this.showRefList = !this.showRefList
+            console.log(this.blockObj.references)
+            console.log('show ref list:', this.showRefList)
+        },
 
         ///
         /// Relays
@@ -248,9 +254,10 @@ export default {
               ref="baseEditor"
             />
 
-            <div>
+            <div @click="handleBlockReferencesDialog">
                 <!-- TODO add reference information (# references with a dialog that shows all references when clicked)-->
                  {{ blockObj.references?.length || '' }}
+                 <code v-if="showRefList">{{ blockObj.references }}</code>
             </div>
         </div>
         

@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
+import { md2json } from './MarkdownJSONUtils'
 
 const idRefListToMap = (idList) => {
     const refMap = {}
@@ -6,7 +7,7 @@ const idRefListToMap = (idList) => {
         if (!(ref.block_id in refMap)) {
             refMap[ref.block_id] = []
         }
-        refMap[ref.block_id].push(ref.source)
+        refMap[ref.block_id].push(ref)
     })
     return refMap
 }
@@ -18,6 +19,14 @@ const assignBlockIDsRecursively = (blocks, obj_src_map) => {
         }
         assignBlockIDsRecursively(block.children, obj_src_map)
     })
+}
+
+const createMapWithIdKeys = (blocks, map = {}) => {
+    blocks.forEach(block => {
+        map[block.id] = block
+        createMapWithIdKeys(block.children, map)
+    })
+    return map
 }
 
 export const blockUtilities = {
@@ -189,5 +198,45 @@ export const blockUtilities = {
         }
         console.log('could not assign block reference')
         return false
+    },
+    extractBlocksFromReferences: (references) => {
+        return new Promise((resolve, reject) => {
+            // TODO should we really support a timeout feature?
+            setTimeout(() => reject('Timed out when parsing references'), 10000) // 10 seconds good enough?
+
+            // TODO should we do a full-stop if that fails? i.e. file was not in the correct format?
+            // TODO this can benefit by running in parallel
+            references.forEach(ref => {
+                const rootLevel = md2json(ref.content)
+                ref.blockStructure = rootLevel
+            })
+            resolve(references)
+        })
+    },
+    applyReferencesToRootLevelBlocks: (rootLevelBlocks, backlinksProxy, references) => {
+        console.log('References data:', references)
+        const createRefObject = (ref, meta, flatArray) => {
+            return {
+                blockOfInterest: flatArray[meta.block_index],
+                ref,
+                meta,
+            }
+        }
+        const rootLevelMap = createMapWithIdKeys(rootLevelBlocks)
+        references.forEach(reference => {
+            const flattenBlocks = blockUtilities.flattenBlocks(reference.blockStructure.rootLevel)
+            reference.blocks.forEach(block => {
+                if (block.ref_id in rootLevelMap) {
+                    if (!rootLevelMap[block.ref_id].references) {
+                        rootLevelMap[block.ref_id].references = []
+                    }
+                    rootLevelMap[block.ref_id].references.push(createRefObject(reference, block, flattenBlocks))
+                }
+            })
+            reference.backlinks.forEach(backlink => {
+                console.log(backlink.block_index, flattenBlocks[backlink.block_index], flattenBlocks)
+                backlinksProxy.push(createRefObject(reference, backlink, flattenBlocks))
+            })
+        })
     },
 }
