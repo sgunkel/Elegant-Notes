@@ -21,9 +21,8 @@ from ..models.meta_model import (
 )
 
 def handle_get_all_references(retrieval_request: ReferencesRetrievalRequest, user_path: Path) -> PageLinkage:
-    page_path = user_path / (retrieval_request.page_name + '.md')
-    ref_locator = ReferenceLocator(user_path, page_path, retrieval_request.block_ids)
-    ref_locator.add_extractor(BacklinkExtractor(page_path.name))
+    ref_locator = ReferenceLocator(user_path, retrieval_request.page_name)
+    ref_locator.add_extractor(BacklinkExtractor())
     ref_locator.add_extractor(BlockReferenceExtractor(retrieval_request.block_ids))
     return ref_locator.retrieve_all_relationships()
 

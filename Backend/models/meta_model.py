@@ -2,23 +2,20 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-class BackLinkReference(BaseModel):
-    line: str
-    line_number: int
-    children: List[str]
+class RefMetadata(BaseModel):
+    ref_id: str
+    block_index: int
+    start_pos: int
+    end_pos: int
 
-class BackLink(BaseModel):
+class PageMetadata(BaseModel):
     page_name: str
-    references: List[BackLinkReference]
-
-class BlockRef(BaseModel):
-    block_id: str
-    source: str
-    line_index: int
+    content: str
+    blocks: List[RefMetadata]
+    backlinks: List[RefMetadata]
 
 class PageLinkage(BaseModel):
-    backlinks: List[BackLink]
-    block_refs: List[BlockRef]
+    references: List[PageMetadata]
 
 class ReferencesRetrievalRequest(BaseModel):
     page_name: str
