@@ -4,12 +4,14 @@
  */
 
 import { nextTick } from 'vue';
+
 import BaseEditor from './BaseEditor.vue';
 import BlockReferenceSelectionDialog from '../Dialogs/BlockReferenceSelectionDialog.vue';
+
 import md from '@/helpers/MarkdownJSONUtils.js'
-import { metaOperations } from '@/helpers/metaFetchers';
-import { textUtil } from '@/helpers/textUtil';
-import { notificationUtils } from '@/helpers/notifications';
+import { metaOperations } from '@/helpers/metaFetchers.js';
+import { textUtil } from '@/helpers/textUtil.js';
+import { notificationUtils } from '@/helpers/notifications.js';
 
 export default {
     components: {
@@ -255,19 +257,33 @@ export default {
             />
 
             <div @click="handleBlockReferencesDialog">
-                <!-- TODO add reference information (# references with a dialog that shows all references when clicked)-->
                  {{ blockObj.references?.length || '' }}
-                 <code v-if="showRefList">{{ blockObj.references }}</code>
             </div>
         </div>
-        
-         <BlockReferenceSelectionDialog
+
+        <!-- Search Results Dialog - teleported to <body> but owned by BlockEditor components -->
+        <BlockReferenceSelectionDialog
            :componentRect="inputTagRect"
            :has-focus="isEditing && showRefSelectionDialog"
            :search-results="refList"
            @reference-selected="handleReferenceSelected"
            ref="refSelectionDialog"/>
+        
+        <!-- References -->
+         <div v-if="showRefList">
+            <div class="be-block-ref" v-for="ref in blockObj.references">
+                <h2>{{ ref.ref.page_name }}</h2>
+                <BlockEditor
+                  :key="ref.blockOfInterest.id"
+                  :block-obj="ref.blockOfInterest"
+                  :editingID="editingID"
+                  :indention-level="(indentionLevel + 1.5)"
+                  :refocus-key="refocusKey"
+                />
+            </div>
+         </div>
 
+        <!-- Block Children -->
         <block-editor
           v-for="child in blockObj.children"
           :key="child.id"
@@ -315,5 +331,10 @@ export default {
 .be-converted-text {
     padding: 0;
     width: 100%;
+}
+
+.be-block-ref {
+    background-color: beige;
+    padding-left: 0.15em;
 }
 </style>

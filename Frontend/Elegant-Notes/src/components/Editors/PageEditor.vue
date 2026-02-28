@@ -8,8 +8,8 @@ import { store } from '@/store.js'
 
 import PageNameEditor from './PageNameEditor.vue';
 import PageRenameDialog from '../Dialogs/PageRenameDialog.vue';
-import BacklinkReference from './BacklinkReferenceEditor.vue';
 import PageBlocksEditor from './PageBlocksEditor.vue';
+import BlockEditor from './BlockEditor.vue';
 
 import { pageOperations } from '@/helpers/pageFetchers.js';
 import { metaOperations } from '@/helpers/metaFetchers.js'
@@ -17,7 +17,6 @@ import { createDebounce } from '@/helpers/debouncer.js';
 import { pageUtils } from '@/helpers/pageUtils.js';
 import { notificationUtils } from '@/helpers/notifications.js';
 import { blockUtilities } from '@/helpers/blockUtilities';
-import { nextTick } from 'vue';
 import { json2md } from '@/helpers/MarkdownJSONUtils';
 
 export default {
@@ -27,8 +26,8 @@ export default {
     components: {
         PageBlocksEditor,
         PageNameEditor,
-        BacklinkReference,
         PageRenameDialog,
+        BlockEditor,
     },
     data() {
         return {
@@ -230,10 +229,17 @@ export default {
             />
 
             <div class="pe-back-links-section">
-                <BacklinkReference
+                <div
                   v-for="backlink in linkage.backlinks"
-                  :pageReferences="backlink">
-                </BacklinkReference>
+                  class="pe-block-ref">
+                    <h2>{{ backlink.ref.page_name }}</h2>
+                    <BlockEditor
+                      :key="backlink.blockOfInterest.id"
+                      :block-obj="backlink.blockOfInterest"
+                      :editingID="store.editingId"
+                      :indention-level="1"
+                    />
+                </div>
             </div>
         </div>
     </div>
@@ -257,5 +263,10 @@ export default {
 .page-content-back-links-section {
     overflow: auto;
     flex: 1 0 0;
+}
+
+.pe-block-ref {
+    background-color: beige;
+    padding-left: 0.15em;
 }
 </style>
