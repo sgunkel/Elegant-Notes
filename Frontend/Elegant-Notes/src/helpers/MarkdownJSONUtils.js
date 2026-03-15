@@ -1,16 +1,31 @@
 import { v4 as uuidv4 } from 'uuid'
 import MarkdownIt from 'markdown-it'
+import { blockUtilities } from './blockUtilities'
+import { textConstants } from '@/constants/textConstants'
 
 const md = new MarkdownIt()
 // TODO add rules for changing Block references to links that go to that reference
 export default md
+
+const extractBlockReferences = (blockText) => {
+    // Note: matches is an array of arrays - nested arrays have one string in them
+    const matches = [...blockText.matchAll(textConstants.blockRefRegex)]
+    const extractedIDs = matches.map(x => x[0].replaceAll(textConstants.blockRefPairRemovalRegex, ''))
+    return extractedIDs
+}
+
+const extractBlockIndention = (line) => line.match(textConstants.blockIndentionRegex)[0].length
+
+const extractIdFromText = (blockText) => blockText.replace(textConstants.blockIdAssignmentRemoval, '').trim()
 
 export function md2json(markdownContent) {
     const lines = markdownContent.split('\n')
     const stack = []
     const rootLevel = []
     const blockIDs = []
+    const blockIDsInBlockText = {}
     let lastBlock = null
+    let blockIndex = 0
 
     lines.forEach(line => {
         const trimmed = line.trim()
@@ -19,12 +34,13 @@ export function md2json(markdownContent) {
             return
         }
 
-        const indent = line.match(/^\s*/)[0].length
+        /// TODO add support for multiple line Block text i.e. multiline list text in Markdown
+
+        const indent = extractBlockIndention(line)
         const blockText = trimmed.replace(/^- /, '')
         const newBlock = {
-            id: uuidv4(),
+            ...blockUtilities.createNewBlock(),
             content: blockText,
-            children: [],
             indent,
             writeIDToFile: false,
         }
@@ -33,11 +49,22 @@ export function md2json(markdownContent) {
         //     text (not the `-` list character). The syntax is `<indention>id:: <uuid>`, but
         //     we do not enforce any requirement for `<indention>` *yet*
         if (blockText.startsWith('id:: ') && lastBlock) {
-            lastBlock.id = blockText.replace(/^id:: /, '').trim()
+            lastBlock.id = extractIdFromText(blockText)
             lastBlock.writeIDToFile = true
             blockIDs.push(lastBlock.id)
             return
         }
+
+        // Grab all the other Blocks we reference in text.
+        // Syntax is `((<Block ID>))` and can appear multiple times anywhere in the string.
+        // Note that Block IDs are UUID4, so we specifically check for that in the Regex pattern
+        const referencesInBlock = extractBlockReferences(blockText)
+        referencesInBlock.forEach(ref => {
+            if (!(ref in blockIDsInBlockText)) {
+                blockIDsInBlockText[ref] = []
+            }
+            blockIDsInBlockText[ref].push({blockIndex})
+        })
 
         while (stack.length && indent <= stack[stack.length - 1].indent) {
             stack.pop()
@@ -53,6 +80,7 @@ export function md2json(markdownContent) {
         }
 
         lastBlock = newBlock
+        blockIndex++
     });
 
     // Empty file
@@ -64,7 +92,8 @@ export function md2json(markdownContent) {
             indent: 0,
         })
     }
-    return {rootLevel, blockIDs}
+    
+    return {rootLevel, blockIDs, blockIDsInBlockText}
 }
 
 export const json2md = (blocks, level) => {

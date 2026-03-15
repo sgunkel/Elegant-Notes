@@ -24,6 +24,7 @@ def handle_get_all_references(retrieval_request: ReferencesRetrievalRequest, use
     ref_locator = ReferenceLocator(user_path, retrieval_request.page_name)
     ref_locator.add_extractor(BacklinkExtractor())
     ref_locator.add_extractor(BlockReferenceExtractor(retrieval_request.block_ids))
+    print(retrieval_request.block_ids_in_text) # TODO implement this
     return ref_locator.retrieve_all_relationships()
 
 def handle_page_search(partial_page_name: str, user_path: Path) -> List[str]:

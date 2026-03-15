@@ -103,3 +103,11 @@ export const makeTestCasesWithSurroundingText = (given, otherPairs) => given.fla
     })
     return [...new Set(appendedText)]
 })
+
+/**
+ * Helper function generate a set of IDs.
+ * 
+ * @param size The number of IDs to generate
+ * @returns Array of UUID4 IDs
+ */
+export const generateIdList = (size) => [...Array(size || 64)].map(_ => uuidv4())

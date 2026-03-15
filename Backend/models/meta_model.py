@@ -20,6 +20,7 @@ class PageLinkage(BaseModel):
 class ReferencesRetrievalRequest(BaseModel):
     page_name: str
     block_ids: List[str]
+    block_ids_in_text: List[str]
 
 class ReferenceSearchQuery(BaseModel):
     query: str

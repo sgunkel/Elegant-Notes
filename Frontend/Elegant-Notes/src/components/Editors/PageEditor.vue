@@ -39,6 +39,7 @@ export default {
             linkage: {
                 backlinks: [],
                 blockIDs: [],
+                blockIDsInText: {},
                 blockReferences: [],
             },
 
@@ -87,7 +88,8 @@ export default {
         ///
     
         loadBacklinks() {
-            metaOperations.getReferences(this.page.name, this.linkage.blockIDs, this.onReferencesReceivedSuccess, this.onReferencesReceivedFail)
+            metaOperations.getReferences(this.page.name, this.linkage.blockIDs, Object.keys(this.linkage.blockIDsInText),
+                this.onReferencesReceivedSuccess, this.onReferencesReceivedFail)
         },
 
         ///
@@ -156,6 +158,7 @@ export default {
             const meta = pageUtils.convertPageContentToBlockNodes(this.pageContent)
             this.rootLevelBlocks = meta.rootLevel
             this.linkage.blockIDs = meta.blockIDs
+            this.linkage.blockIDsInText = meta.blockIDsInBlockText
             console.log(meta)
 
             this.loadBacklinks()
