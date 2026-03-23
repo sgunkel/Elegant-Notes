@@ -12,6 +12,7 @@ import md from '@/helpers/MarkdownJSONUtils.js'
 import { metaOperations } from '@/helpers/metaFetchers.js';
 import { textUtil } from '@/helpers/textUtil.js';
 import { notificationUtils } from '@/helpers/notifications.js';
+import { blockUtilities } from '@/helpers/blockUtilities';
 
 export default {
     components: {
@@ -53,7 +54,8 @@ export default {
     },
     methods: {
         MarkdownToHTML(content) {
-            return md.render(content)
+            const replaceIDsWithText = blockUtilities.replaceInternalBlockReferencesWithExternalBlockText(content, this.blockObj.externalReferencedBlocks)
+            return md.render(replaceIDsWithText)
         },
 
         ///

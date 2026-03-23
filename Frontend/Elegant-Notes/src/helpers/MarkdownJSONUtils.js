@@ -1,13 +1,17 @@
-import { v4 as uuidv4 } from 'uuid'
 import MarkdownIt from 'markdown-it'
 import { blockUtilities } from './blockUtilities'
 import { textConstants } from '@/constants/textConstants'
 
-const md = new MarkdownIt()
+const mdFlags = {
+    html: true, // might be a security concern and we should revisit this
+}
+const md = new MarkdownIt(mdFlags)
 // TODO add rules for changing Block references to links that go to that reference
 export default md
 
-const extractBlockReferences = (blockText) => {
+// Since we're using this outside this file now, it might be best to place it somewhere else that
+//     makes sense
+export const extractBlockReferences = (blockText) => {
     // Note: matches is an array of arrays - nested arrays have one string in them
     const matches = [...blockText.matchAll(textConstants.blockRefRegex)]
     const extractedIDs = matches.map(x => x[0].replaceAll(textConstants.blockRefPairRemovalRegex, ''))
@@ -85,12 +89,7 @@ export function md2json(markdownContent) {
 
     // Empty file
     if (rootLevel.length === 0) {
-        rootLevel.push({
-            id: uuidv4(),
-            content: '',
-            children: [],
-            indent: 0,
-        })
+        rootLevel.push(blockUtilities.createNewBlock())
     }
     
     return {rootLevel, blockIDs, blockIDsInBlockText}

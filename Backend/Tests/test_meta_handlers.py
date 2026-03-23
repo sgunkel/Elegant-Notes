@@ -106,7 +106,7 @@ def test_handle_get_all_references__x_block_references_files_y_non_reference_fil
     backlinks = []
     references = handle_get_all_references(request, tmp_dir).references
     for ref in references:
-        block_refs.extend(ref.blocks)
+        block_refs.extend(ref.blocksInsidePage)
         backlinks.extend(ref.backlinks)
 
     # Verify results

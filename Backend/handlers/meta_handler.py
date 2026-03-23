@@ -7,6 +7,7 @@ from ..utilities.meta_utils import (
     ReferenceLocator,
     BacklinkExtractor,
     BlockReferenceExtractor,
+    ReferencedBlocksInTextExtractor,
     search_blocks,
 )
 from ..utilities.user_repo_utils import get_page_objects
@@ -23,8 +24,9 @@ from ..models.meta_model import (
 def handle_get_all_references(retrieval_request: ReferencesRetrievalRequest, user_path: Path) -> PageLinkage:
     ref_locator = ReferenceLocator(user_path, retrieval_request.page_name)
     ref_locator.add_extractor(BacklinkExtractor())
+    # might want to add checks for an empty array on both below
     ref_locator.add_extractor(BlockReferenceExtractor(retrieval_request.block_ids))
-    print(retrieval_request.block_ids_in_text) # TODO implement this
+    ref_locator.add_extractor(ReferencedBlocksInTextExtractor(retrieval_request.block_ids_in_text))
     return ref_locator.retrieve_all_relationships()
 
 def handle_page_search(partial_page_name: str, user_path: Path) -> List[str]:

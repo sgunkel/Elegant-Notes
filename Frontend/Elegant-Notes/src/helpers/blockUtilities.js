@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { md2json } from './MarkdownJSONUtils'
+import { extractBlockReferences, md2json } from './MarkdownJSONUtils'
 
 const idRefListToMap = (idList) => {
     const refMap = {}
@@ -163,9 +163,11 @@ export const blockUtilities = {
     },
     createNewBlock: () => {
         return {
-            id: uuidv4(),
+            id: blockUtilities.newID(),
             content: '',
-            children: []
+            children: [],
+            indent: 0,
+            externalReferencedBlocks: [],
         }
     },
     assignAllBlockReferencesInPage: (rootLevel, references) => {
@@ -223,9 +225,13 @@ export const blockUtilities = {
             }
         }
         const rootLevelMap = createMapWithIdKeys(rootLevelBlocks)
+        const externalReferencedBlocks = {}
         references.forEach(reference => {
             const flattenBlocks = blockUtilities.flattenBlocks(reference.blockStructure.rootLevel)
-            reference.blocks.forEach(block => {
+
+            // Block references - Blocks IDs in the active page that are referenced in other Page
+            //     objects.
+            reference.blocksInsidePage.forEach(block => {
                 if (block.ref_id in rootLevelMap) {
                     if (!rootLevelMap[block.ref_id].references) {
                         rootLevelMap[block.ref_id].references = []
@@ -233,10 +239,48 @@ export const blockUtilities = {
                     rootLevelMap[block.ref_id].references.push(createRefObject(reference, block, flattenBlocks))
                 }
             })
+
+            // Externally referenced Blocks - Block text has one or more `((<Block ID>))` in it
+            //     where `<Block ID>` is assigned in another Page object.
+            reference.blocksOutsidePage.forEach(block => {
+                const blockId = flattenBlocks[block.block_index].id
+                externalReferencedBlocks[blockId] = createRefObject(reference, block, flattenBlocks)
+            })
+
+            // Backlinks - linkage to Page objects
             reference.backlinks.forEach(backlink => {
                 console.log(backlink.block_index, flattenBlocks[backlink.block_index], flattenBlocks)
                 backlinksProxy.push(createRefObject(reference, backlink, flattenBlocks))
             })
         })
+
+        // Apply all the external references to all the Blocks
+        Object.keys(rootLevelBlocks).forEach(blockID => rootLevelBlocks[blockID].externalReferencedBlocks = externalReferencedBlocks)
+        console.log('Added external references')
     },
+    replaceInternalBlockReferencesWithExternalBlockText: (activeBlockText, externalBlockReferences) => {
+        // Changes the following
+        //   Check out ((<Block ID>)) for more info
+        // to
+        //   Check out <mark><Block text></mark> for more info
+        //
+        // In the future, this will replace the text to a link where we can click on the Block
+        //     text and get taken to its Page object and have that Block be briefly highlighted
+        let newText = activeBlockText.replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;') // Basic HTML tag removal since we're (temporally) using raw HTML in the MD parser
+        if (externalBlockReferences.length !== 0) {
+            const idsInText = extractBlockReferences(newText)
+            idsInText.forEach(id => {
+                if (id in externalBlockReferences) {
+                    const textReplacement = `<mark>${externalBlockReferences[id].blockOfInterest.content}</mark>`
+                    const regex = RegExp(`\\(\\(${id}\\)\\)`, 'g')
+                    newText = newText.replace(regex, textReplacement)
+                }
+                else {
+                    console.warn('ID not found in list:', id, '\nContext:', activeBlockText, '\nID list:', externalBlockReferences)
+                }
+            })
+        }
+        return newText
+    }
 }

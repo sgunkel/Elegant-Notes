@@ -13,6 +13,9 @@ ID_ASSIGNMENT_CHECK_REGEX = r'id:: \w+-\w+-\w+-\w+-\w+' # looks for: `id:: <UUID
 def is_line_block_id_assignment(text: str) -> bool:
     return re.search(ID_ASSIGNMENT_CHECK_REGEX, text) != None
 
+def extract_block_id_from_assignment(text: str) -> str:
+    return text.split('id::')[1].strip()
+
 def extract_text_ref_metadata(search_pattern: str, ref_text_extraction_pattern: str, text: str) -> List[Tuple[str, int, int]]:
     '''## Extract metadata about a reference
     **Note:** The start/end positions include the reference open/close pair (if applicable)'''
@@ -35,7 +38,7 @@ class References:
         This should be called *before* processing a Page's file content
         '''
         if page_name not in self._ref_map:
-            self._ref_map[page_name] = PageMetadata(page_name=page_name, content=content, blocks=[], backlinks=[])
+            self._ref_map[page_name] = PageMetadata(page_name=page_name, content=content, blocksInsidePage=[], blocksOutsidePage=[], backlinks=[])
         else:
             msg = f'Page already registered: "{page_name}" - '
             if self._ref_map[page_name].content == content:
@@ -53,7 +56,7 @@ class References:
             print(f'"{page_name}" not registered when attempting to de-register!')
         else:
             metadata = self._ref_map[page_name]
-            if len(metadata.backlinks) == 0 and len(metadata.blocks) == 0:
+            if len(metadata.backlinks) == 0 and len(metadata.blocksInsidePage) == 0 and len(metadata.blocksOutsidePage) == 0:
                 self._ref_map.pop(page_name)
 
     def add_backlink(self, page_name: str, backlink: RefMetadata) -> None:
@@ -63,9 +66,12 @@ class References:
             # TODO log this below
             print(f'Attempted to add a Backlink to a page ("{page_name}") not registered')
 
-    def add_block_ref(self, page_name: str, block_ref: RefMetadata) -> None:
+    def add_block_ref(self, page_name: str, block_ref: RefMetadata, block_belongs_to_active_page_obj: bool) -> None:
         if page_name in self._ref_map:
-            self._ref_map[page_name].blocks.append(block_ref)
+            if block_belongs_to_active_page_obj:
+                self._ref_map[page_name].blocksInsidePage.append(block_ref)
+            else:
+                self._ref_map[page_name].blocksOutsidePage.append(block_ref)
         else:
             # TODO log this below
             print(f'Attempted to add a Block to a page ("{page_name}") not registered')
@@ -143,13 +149,24 @@ class BlockReferenceExtractor(ReferenceExtractor):
     def __init__(self, block_ids: List[str]):
         self._block_ids: List[str] = block_ids
     
-    def extract(self, text: str, metadata: ReferenceExtractionMetadata, reference_collection: References) -> None:        
+    def extract(self, text: str, metadata: ReferenceExtractionMetadata, reference_collection: References) -> None:
         references = extract_text_ref_metadata(self.REFERENCE_SEARCH_REGEX, self.TEXT_EXTRACTION_REGEX, text)
         for reference in references:
             (block_id, start_pos, end_pos) = reference
             if block_id in self._block_ids:
                 ref = RefMetadata(ref_id=block_id, block_index=metadata.get_block_index(), start_pos=start_pos, end_pos=end_pos)
-                reference_collection.add_block_ref(metadata.get_active_page_name(), ref)
+                reference_collection.add_block_ref(metadata.get_active_page_name(), ref, block_belongs_to_active_page_obj=True)
+
+class ReferencedBlocksInTextExtractor(ReferenceExtractor):
+    def __init__(self, block_ids: List[str]):
+        self._block_ids = block_ids
+    
+    def extract(self, text: str, metadata: ReferenceExtractionMetadata, reference_collection: References) -> None:
+        if is_line_block_id_assignment(text):
+            block_id = extract_block_id_from_assignment(text)
+            if block_id in self._block_ids:
+                ref = RefMetadata(ref_id=block_id, block_index=metadata.get_block_index(), start_pos=0, end_pos=0)
+                reference_collection.add_block_ref(metadata.get_active_page_name(), ref, block_belongs_to_active_page_obj=False)
 
 ## TODO Add Tag reference extraction
 

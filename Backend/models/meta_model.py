@@ -11,7 +11,8 @@ class RefMetadata(BaseModel):
 class PageMetadata(BaseModel):
     page_name: str
     content: str
-    blocks: List[RefMetadata]
+    blocksInsidePage: List[RefMetadata]
+    blocksOutsidePage: List[RefMetadata]
     backlinks: List[RefMetadata]
 
 class PageLinkage(BaseModel):
