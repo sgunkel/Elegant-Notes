@@ -1371,7 +1371,7 @@ describe('BaseEditor Component Tests', () => {
             },
         ])('$title', async ({block, signalsToBeEmitted, signalsNotToBeEmitted, useNewEditID, simulateEventFn, eventHandlerFn}) => {
             /**
-             * Verify component renders correctly before and after a event happens. Also verifies the correct signals are emitted as well.
+             * Verify component renders correctly before and after an event happens. Also verifies the correct signals are emitted as well.
              * 
              * 1. mount component and setup structure
              * 2. compare component structure with same Block structure

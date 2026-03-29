@@ -45,7 +45,7 @@ def test_handle_get_all_references__find_x_backlinks_in_y_files(tmp_dir, ref_fil
         write_md_content(tmp_dir / f'example-{i}.md', '- [[actual]]')
     
     # Perform function action under testing
-    request = ReferencesRetrievalRequest(page_name='actual', block_ids=[])
+    request = ReferencesRetrievalRequest(page_name='actual', block_ids=[], block_ids_in_text=[])
     actual_backlinks =[]
     for ref in handle_get_all_references(request, tmp_dir).references:
         actual_backlinks.extend(ref.backlinks)
@@ -60,7 +60,7 @@ def test_handle_get_all_references__two_backlinks_in_one_file(tmp_dir):
     generate_and_write_md_file(tmp_dir / 'actual.md')
 
     # Perform function action under testing
-    request = ReferencesRetrievalRequest(page_name='actual', block_ids=[])
+    request = ReferencesRetrievalRequest(page_name='actual', block_ids=[], block_ids_in_text=[])
     backlinks = []
     refs = handle_get_all_references(request, tmp_dir).references
     for ref in refs:
@@ -101,15 +101,18 @@ def test_handle_get_all_references__x_block_references_files_y_non_reference_fil
 
     # Perform function action under testing
     block_id_list = [str(block_id)]
-    request = ReferencesRetrievalRequest(page_name='actual', block_ids=block_id_list)
+    request = ReferencesRetrievalRequest(page_name='actual', block_ids=block_id_list, block_ids_in_text=[])
     block_refs = []
+    block_in_text_refs = []
     backlinks = []
     references = handle_get_all_references(request, tmp_dir).references
     for ref in references:
         block_refs.extend(ref.blocksInsidePage)
+        block_in_text_refs.extend(ref.blocksOutsidePage)
         backlinks.extend(ref.backlinks)
 
     # Verify results
+    assert len(block_in_text_refs) == 0
     assert len(backlinks) == 0
     assert len(block_refs) == ref_file_count
     for block_ref in block_refs:
@@ -118,6 +121,33 @@ def test_handle_get_all_references__x_block_references_files_y_non_reference_fil
     assert len(references) == len(file_names)
     for ref in references:
         assert (ref.page_name + '.md') in file_names
+
+def test_handle_get_all_references__block_ids_in_text(tmp_dir):
+    # Setup Environment
+    id1 = str(uuid.uuid4())
+    id2 = str(uuid.uuid4())
+    id3 = str(uuid.uuid4())
+    something_content = f'- some text (1/3)\n  id:: {id1}\n- some other text (2/3)\n  id:: {id2}\n- even some more text (3/3)\n  id:: {id3}\n'
+    write_md_content(tmp_dir / 'something.md', something_content)
+    actual_content = f'- (({id1})) (({id2})) (({id3}))\n'
+    write_md_content(tmp_dir / 'actual.md', actual_content)
+
+    # Perform function action under testing
+    block_ids_in_text = [id1, id2, id3]
+    request = ReferencesRetrievalRequest(page_name='actual', block_ids=[], block_ids_in_text=block_ids_in_text)
+    references = handle_get_all_references(request, tmp_dir).references
+    block_refs = []
+    block_in_text_refs = []
+    backlinks = []
+    for ref in references:
+        block_refs.extend(ref.blocksInsidePage)
+        block_in_text_refs.extend(ref.blocksOutsidePage)
+        backlinks.extend(ref.backlinks)
+
+    # Verify results
+    assert len(backlinks) == 0
+    assert len(block_refs) == 0
+    assert len(block_in_text_refs) == len(block_ids_in_text)
 
 ###
 ### Page searching

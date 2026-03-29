@@ -31,6 +31,7 @@ export const createBlockObj = (args = {}) => {
         id,
         content: `Hello World from Block with ID **${id}**`,
         children: [],
+        externalReferencedBlocks: [],
         ...args
     }
 }
