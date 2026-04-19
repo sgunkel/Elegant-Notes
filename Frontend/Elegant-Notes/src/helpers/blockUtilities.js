@@ -65,6 +65,22 @@ const resolveBlockText = (blockID, blockStack, allBlockReferences) => {
     return [text, [...new Set(idsNotFound)]]
 }
 
+const setAllExternalReferencedBlocks = (root, references, stack = []) => {
+    if (stack.includes(root.id)) {
+        return
+    }
+
+    const currentStack = [...stack, root.id]
+    if (!root.externalReferencedBlocks) {
+        root.externalReferencedBlocks = {}
+    }
+    root.externalReferencedBlocks = {...root.externalReferencedBlocks, ...references}
+    root.children.forEach(child => setAllExternalReferencedBlocks(child, references, currentStack))
+    if (root.references) {
+        root.references.forEach(blockRef => setAllExternalReferencedBlocks(blockRef.blockOfInterest, references, currentStack))
+    }
+}
+
 export const blockUtilities = {
     newID: () => uuidv4(),
     createBlocksCopy: (originalBlocks) => JSON.parse(JSON.stringify(originalBlocks)),
@@ -298,7 +314,10 @@ export const blockUtilities = {
         // Apply all the external references to all the Blocks
         if (Object.keys(externalReferencedBlocks).length > 0) {
             Object.keys(rootLevelMap).forEach(blockID => {
-                rootLevelMap[blockID].externalReferencedBlocks = {...rootLevelMap[blockID].externalReferencedBlocks, ...externalReferencedBlocks}
+                setAllExternalReferencedBlocks(rootLevelMap[blockID], externalReferencedBlocks)
+            })
+            backlinksProxy.forEach(backlink => {
+                setAllExternalReferencedBlocks(backlink.blockOfInterest, externalReferencedBlocks)
             })
         }
     },
@@ -315,8 +334,7 @@ export const blockUtilities = {
         //     forth; this will recursively fetch all referenced IDs until everything is found.
         //     What isn't found in the `allReferences` is returned for PageEditor to request
         //     from the backend, and will call this function again with the new references.
-        const referencesCopy = blockUtilities.createBlocksCopy(allReferences)
-        referencesCopy['root'] = rootBlock
-        return resolveBlockText('root', [], referencesCopy)
+        allReferences['root'] = rootBlock
+        return resolveBlockText('root', [], allReferences)
     },
 }
