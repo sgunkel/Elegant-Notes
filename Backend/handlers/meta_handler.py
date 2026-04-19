@@ -18,7 +18,8 @@ from ..models.status_model import (
 from ..models.meta_model import (
     PageLinkage,
     ReferencesRetrievalRequest,
-    BlockSearchResult
+    BlockSearchResult,
+    BulkBlockLoadRequest,
 )
 
 def handle_get_all_references(retrieval_request: ReferencesRetrievalRequest, user_path: Path) -> PageLinkage:
@@ -71,3 +72,13 @@ def handle_block_id_assignment(query: BlockSearchResult, user_repo_path: Path) -
     with path.open('w') as f:
         f.write(new_content + '\n')
     return SuccessResponse(msg='Block ID assignment successful')
+
+def handle_block_id_list_bulk_load(request: BulkBlockLoadRequest, user_repo_path: Path):
+    # And since we're reusing functionality that's already been tested, I'm not too worried about
+    #   having strict tests for this if any
+    block_references = []
+    if len(request.block_ids) > 0:
+        ref_locator = ReferenceLocator(user_repo_path, '')
+        ref_locator.add_extractor(ReferencedBlocksInTextExtractor(request.block_ids))
+        block_references = ref_locator.retrieve_all_relationships()
+    return block_references

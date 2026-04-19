@@ -29,6 +29,42 @@ const createMapWithIdKeys = (blocks, map = {}) => {
     return map
 }
 
+const resolveBlockText = (blockID, blockStack, allBlockReferences) => {
+    // TODO change the error reporting to be better on the styling i.e. maybe have it a different
+    //   color with a tooltip in the future if we can embed html/css here safely
+    // TODO change the styling on the substituted text (might also add the JS to go to the page
+    //   with the Block being reference when clicked)
+    if (blockStack.includes(blockID)) {
+        console.log('circular ref detected:', blockStack.join(' -> ') + `-> ${blockID}`)
+        return ['CIRCULAR REFERENCE DETECTED', []]
+    }
+
+    const idsNotFound = []
+    let text = `"${blockID}" NOT FOUND`
+    if (blockID in allBlockReferences) {
+        let block = allBlockReferences[blockID]
+        if (block && 'blockOfInterest' in block) {
+            block = block.blockOfInterest
+        }
+        text = block.content
+        const subIDs = extractBlockReferences(text)
+        subIDs.forEach(subID => {
+            const subBlockStack = [...blockStack, blockID]
+            const [subText, subIDsNotFound] = resolveBlockText(subID, subBlockStack, allBlockReferences)
+            idsNotFound.push(...subIDsNotFound)
+            if ([`"${subID}" NOT FOUND`, 'CIRCULAR REFERENCE DETECTED'].includes(subText)) {
+                idsNotFound.push(subID)
+            }
+            const regex = RegExp(`\\(\\(${subID}\\)\\)`, 'g')
+            text = text.replace(regex, `<mark>${subText}</mark>`)
+        })
+    }
+    else {
+        idsNotFound.push(blockID)
+    }
+    return [text, [...new Set(idsNotFound)]]
+}
+
 export const blockUtilities = {
     newID: () => uuidv4(),
     createBlocksCopy: (originalBlocks) => JSON.parse(JSON.stringify(originalBlocks)),
@@ -215,8 +251,7 @@ export const blockUtilities = {
             resolve(references)
         })
     },
-    applyReferencesToRootLevelBlocks: (rootLevelBlocks, backlinksProxy, references) => {
-        console.log('References data:', references)
+    applyReferencesToRootLevelBlocks: (rootLevelBlocks, backlinksProxy, references, idsOutsideBlockRequested = false) => {
         const createRefObject = (ref, meta, flatArray) => {
             return {
                 blockOfInterest: flatArray[meta.block_index],
@@ -232,11 +267,17 @@ export const blockUtilities = {
             // Block references - Blocks IDs in the active page that are referenced in other Page
             //     objects.
             reference.blocksInsidePage.forEach(block => {
-                if (block.ref_id in rootLevelMap) {
-                    if (!rootLevelMap[block.ref_id].references) {
-                        rootLevelMap[block.ref_id].references = []
+                if (idsOutsideBlockRequested) {
+                    const blockId = flattenBlocks[block.block_index].id
+                    externalReferencedBlocks[blockId] = createRefObject(reference, block, flattenBlocks)
+                }
+                else {
+                    if (block.ref_id in rootLevelMap) {
+                        if (!rootLevelMap[block.ref_id].references) {
+                            rootLevelMap[block.ref_id].references = []
+                        }
+                        rootLevelMap[block.ref_id].references.push(createRefObject(reference, block, flattenBlocks))
                     }
-                    rootLevelMap[block.ref_id].references.push(createRefObject(reference, block, flattenBlocks))
                 }
             })
 
@@ -255,32 +296,27 @@ export const blockUtilities = {
         })
 
         // Apply all the external references to all the Blocks
-        Object.keys(rootLevelBlocks).forEach(blockID => rootLevelBlocks[blockID].externalReferencedBlocks = externalReferencedBlocks)
-        console.log('Added external references')
+        if (Object.keys(externalReferencedBlocks).length > 0) {
+            Object.keys(rootLevelMap).forEach(blockID => {
+                rootLevelMap[blockID].externalReferencedBlocks = {...rootLevelMap[blockID].externalReferencedBlocks, ...externalReferencedBlocks}
+            })
+        }
     },
-    replaceInternalBlockReferencesWithExternalBlockText: (activeBlockText, externalBlockReferences) => {
+    resolveBlockReferences: (rootBlock, allReferences) => {
         // Changes the following
         //   Check out ((<Block ID>)) for more info
         // to
         //   Check out <mark><Block text></mark> for more info
         //
         // In the future, this will replace the text to a link where we can click on the Block
-        //     text and get taken to its Page object and have that Block be briefly highlighted
-        let newText = activeBlockText.replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;') // Basic HTML tag removal since we're (temporally) using raw HTML in the MD parser
-        if (externalBlockReferences.length !== 0) {
-            const idsInText = extractBlockReferences(newText)
-            idsInText.forEach(id => {
-                if (id in externalBlockReferences) {
-                    const textReplacement = `<mark>${externalBlockReferences[id].blockOfInterest.content}</mark>`
-                    const regex = RegExp(`\\(\\(${id}\\)\\)`, 'g')
-                    newText = newText.replace(regex, textReplacement)
-                }
-                else {
-                    console.warn('ID not found in list:', id, '\nContext:', activeBlockText, '\nID list:', externalBlockReferences)
-                }
-            })
-        }
-        return newText
-    }
+        //     text and get taken to its Page object and have that Block be briefly highlighted.
+        // Note that this automatically resolves all Block references, including references in
+        //     references i.e. Block 1 references Block 2 and Block 2 references Block 3, and so
+        //     forth; this will recursively fetch all referenced IDs until everything is found.
+        //     What isn't found in the `allReferences` is returned for PageEditor to request
+        //     from the backend, and will call this function again with the new references.
+        const referencesCopy = blockUtilities.createBlocksCopy(allReferences)
+        referencesCopy['root'] = rootBlock
+        return resolveBlockText('root', [], referencesCopy)
+    },
 }

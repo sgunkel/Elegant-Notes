@@ -31,6 +31,7 @@ def extract_text_ref_metadata(search_pattern: str, ref_text_extraction_pattern: 
 class References:
     def __init__(self):
         self._ref_map: Dict[str, PageMetadata] = {}
+        self._referenced_blocks_in_ref_text: List[str] = []
         # TODO make this thread safe when we parallelize everything later - the whole point of abstracting this instead of using meta_model.PageLinkage directly
     
     def register_page(self, page_name: str, content: str) -> None:
@@ -76,6 +77,10 @@ class References:
             # TODO log this below
             print(f'Attempted to add a Block to a page ("{page_name}") not registered')
     
+    def add_referenced_block_id_from_text(self, block_id: str) -> None:
+        if block_id not in self._referenced_blocks_in_ref_text:
+            self._referenced_blocks_in_ref_text.append(block_id)
+    
     def to_model(self) -> PageLinkage:
         return PageLinkage(references=self._ref_map.values())
     
@@ -87,6 +92,7 @@ class ReferenceExtractionMetadata:
         self._block_idx = -1
         self._can_advance_block_idx = True # Use case: a Block can reference multiple Blocks, and we advance the Block index if the text is not the Block's UUID line
         self._remaining_lines = all_lines
+        self._all_lines = all_lines
     
     def get_page_name_to_find(self) -> str:
         return self._page_name_to_find
@@ -104,7 +110,11 @@ class ReferenceExtractionMetadata:
         return self._block_idx
     
     def get_remaining_lines(self) -> List[str]:
-        return self._remaining_lines
+        return self._all_lines[self.get_line_index():]
+    
+    def get_previous_line(self) -> Optional[str]:
+        index = self.get_line_index()
+        return self._all_lines[index] if index >= 1 and index < len(self._all_lines) else None
     
     def increment_line_index(self) -> None:
         self._line_idx += 1

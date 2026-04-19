@@ -31,3 +31,6 @@ class BlockSearchResult(BaseModel):
     block_text: str
     line_number: int
     page_name: str
+
+class BulkBlockLoadRequest(BaseModel):
+    block_ids: List[str]

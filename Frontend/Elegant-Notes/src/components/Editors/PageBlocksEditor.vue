@@ -26,6 +26,7 @@ export default {
         'update-document',
         'update-root-level',
         'assign-block-id',
+        'request-block-by-id',
     ],
     components: {
         BlockEditor,
@@ -177,6 +178,14 @@ export default {
         onBlockIndentEditIDChange(newID) {
             store.editingId = newID
         },
+
+        //
+        // Relays
+        //
+
+        relayBlockReferenceRequest(blockID) {
+            this.$emit('request-block-by-id', blockID)
+        },
     }
 }
 </script>
@@ -200,6 +209,7 @@ export default {
             @request-create-block="createBlockAfter"
             @request-delete-block="deleteBlock"
             @referenced-new-block="handleNewBlockReference"
+            @request-block-reference-by-id="relayBlockReferenceRequest"
         />
     </div>
 </template>
