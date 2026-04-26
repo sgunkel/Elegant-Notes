@@ -334,7 +334,9 @@ export const blockUtilities = {
         //     forth; this will recursively fetch all referenced IDs until everything is found.
         //     What isn't found in the `allReferences` is returned for PageEditor to request
         //     from the backend, and will call this function again with the new references.
-        allReferences['root'] = rootBlock
-        return resolveBlockText('root', [], allReferences)
+        allReferences[rootBlock.id] = rootBlock
+        const info = resolveBlockText(rootBlock.id, [], allReferences)
+        delete allReferences[rootBlock.id]
+        return info
     },
 }
