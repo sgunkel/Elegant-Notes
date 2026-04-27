@@ -261,7 +261,7 @@ describe('BaseEditor Component Tests', () => {
                 cssSelector = editModeClassSelectorCSS
             }
             else {
-                wrapper = mountBlockEditor(createBlockObj(blockProps))
+                wrapper = mountBlockEditor({blockObj: createBlockObj(blockProps)})
                 cssSelector = presentationModeClassSelectorCSS
             }
             expect(wrapper.exists()).toBeTruthy()
