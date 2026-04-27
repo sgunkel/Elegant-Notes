@@ -23,7 +23,7 @@ export const removeIDsFromBlockObjects = (blockList) => {
  *     with the fields to change.
  * 
  * @param {Object} args Block values to overwrite
- * @returns Block object - default with the text "Hello World" and no children
+ * @returns Block object - default with the text "Hello World from Block with ID <id>" and no children
  */
 export const createBlockObj = (args = {}) => {
     const id = args?.id || uuidv4()

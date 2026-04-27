@@ -16,6 +16,7 @@ export const metaRoutes = {
     pageLookup: '/meta/search-page',
     blockLookup: '/meta/search-block',
     blockIdAssignment: '/meta/assign-block-id',
+    bulkBlockLoadRequest: '/meta/bulk-block-load',
 }
 
 export const authRoutes = {

@@ -36,6 +36,7 @@ export default {
         'request-navigate-up',
         'request-navigate-down',
         'referenced-new-block', // Use case: user links to Block in the same Page object and the newly referenced block needs to know - or else we will overwrite the temporary ID it was given when we save
+        'request-block-reference-by-id',
     ],
     data() {
         return {
@@ -45,6 +46,8 @@ export default {
             showRefSelectionDialog: false,
             showRefList: false, // The references a Block has (the number on the right side of the editor) and whether to show the dialog for it or not
             refObjType: null, // Type of object - Page or Block - being searched when the user is typing between `((`/`[[` pairs
+
+            externalBlockIDsNotFound: [],
         }
     },
     computed: {
@@ -53,9 +56,16 @@ export default {
         },
     },
     methods: {
-        MarkdownToHTML(content) {
-            const replaceIDsWithText = blockUtilities.replaceInternalBlockReferencesWithExternalBlockText(content, this.blockObj.externalReferencedBlocks)
-            return md.render(replaceIDsWithText)
+        MarkdownToHTML() {
+            const [resolvedBlockReferencesText, idsNotFound] = blockUtilities.resolveBlockReferences(this.blockObj, this.blockObj.externalReferencedBlocks)
+            idsNotFound.forEach(id => {
+                // prevents a continuous loop with fetching the same IDs
+                if (!this.externalBlockIDsNotFound.includes(id)) {
+                    this.relayBlockReferenceRetrieval(id)
+                    this.externalBlockIDsNotFound.push(id)
+                }
+            })
+            return md.render(resolvedBlockReferencesText)
         },
 
         ///
@@ -217,6 +227,9 @@ export default {
         relayNewlyReferencedBlock(pageName, reference) {
             this.$emit('referenced-new-block', pageName, reference)
         },
+        relayBlockReferenceRetrieval(blockID) {
+            this.$emit('request-block-reference-by-id', blockID)
+        },
 
         updateReferenceSelectionDialogPosition() {
             this.$nextTick(() => {
@@ -281,6 +294,7 @@ export default {
                   :editingID="editingID"
                   :indention-level="(indentionLevel + 1.5)"
                   :refocus-key="refocusKey"
+                  @request-block-reference-by-id="relayBlockReferenceRetrieval"
                 />
             </div>
          </div>
@@ -303,6 +317,7 @@ export default {
           @request-navigate-down="relayNavigateDownRequest"
           @request-delete-block="relayBlockDeleteRequest"
           @referenced-new-block="relayNewlyReferencedBlock"
+          @request-block-reference-by-id="relayBlockReferenceRetrieval"
         />
     </div>
 </template>

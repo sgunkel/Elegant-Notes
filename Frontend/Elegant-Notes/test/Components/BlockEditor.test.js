@@ -23,6 +23,17 @@ const blockEditorWrapperSelectorCSS = '.be-wrapper'
 const editModeClassSelectorCSS = '.base-editor-text-edit'
 const presentationModeClassSelectorCSS = '.base-editor-converted-text'
 
+const referenceSubstitution = {
+    refNotFoundStart: '<mark>"',
+    refNotFoundEnd: '" NOT FOUND</mark>',
+
+    refTextReplacementStart: '<mark>',
+    refTextReplacementEnd: '</mark>',
+
+    circularRefDetectionStart: '<mark>CIRCULAR REFERENCE DETECTED',
+    circularRefDetectionEnd: '</mark>'
+}
+
 const mountBlockEditor = createMountingHelper(BlockEditor, {
     blockObj: createBlockObj(),
     editingID: uuidv4(),
@@ -261,7 +272,7 @@ describe('BaseEditor Component Tests', () => {
                 cssSelector = editModeClassSelectorCSS
             }
             else {
-                wrapper = mountBlockEditor(createBlockObj(blockProps))
+                wrapper = mountBlockEditor({blockObj: createBlockObj(blockProps)})
                 cssSelector = presentationModeClassSelectorCSS
             }
             expect(wrapper.exists()).toBeTruthy()
@@ -1453,6 +1464,88 @@ describe('BaseEditor Component Tests', () => {
             nextTick()
             expect(wrapper.vm.showRefSelectionDialog).toBeTruthy()
             expect(input.element.value).toBe('[[]]')
+        })
+    })
+
+    describe('Reference retrieval and text replacement', () => {
+        it('Valid Block reference - should replace text correctly', async () => {
+            const refBlockID = uuidv4()
+            const refBlockText = 'this is the reference text'
+            const blockTextPre = 'here is the reference:'
+            const refBlock = createBlockObj({id: refBlockID, content: refBlockText})
+            const externalReferencedBlocks = {}
+            const mainBlock = createBlockObj({content: `${blockTextPre} ((${refBlockID}))`, externalReferencedBlocks})
+            const wrapper = mountBlockEditor({blockObj: mainBlock})
+            
+            expect(wrapper.html()).toContain(`${blockTextPre} ${referenceSubstitution.refNotFoundStart}${refBlockID}${referenceSubstitution.refNotFoundEnd}`)
+            expect(wrapper.emitted()).toHaveProperty('request-block-reference-by-id')
+            mainBlock.externalReferencedBlocks[refBlockID] = refBlock
+            wrapper.setProps({blockObj: {...mainBlock, externalReferencedBlocks}})
+
+            await nextTick()
+            await flushPromises()
+
+            expect(wrapper.html()).toContain(`${blockTextPre} ${referenceSubstitution.refTextReplacementStart}${refBlockText}${referenceSubstitution.refTextReplacementEnd}`)
+        })
+
+        it('Block reference does not exist even after update', async () => {
+            const nonExistentBlockRefID = uuidv4()
+            const mainBlockText = 'this reference does not exist:'
+            const mainBlock = createBlockObj({content: `${mainBlockText} ((${nonExistentBlockRefID}))`})
+            const wrapper = mountBlockEditor({blockObj: mainBlock})
+            const expectedNotFoundText = `${mainBlockText} ${referenceSubstitution.refNotFoundStart}${nonExistentBlockRefID}${referenceSubstitution.refNotFoundEnd}`
+            const externalReferencedBlocks = {}
+
+            expect(wrapper.html()).toContain(expectedNotFoundText)
+            expect(wrapper.emitted()).toHaveProperty('request-block-reference-by-id')
+
+            // Fill up with other Block references to simulate (possibly) real world use (a user deleted
+            //     a Block that is referenced by others)
+            for (let i = 0; i < 25; i++) {
+                const newBlock = createBlockObj()
+                externalReferencedBlocks[newBlock.id] = newBlock
+            }
+            wrapper.setProps({blockObj: {...mainBlock, externalReferencedBlocks}})
+
+            await nextTick()
+            await flushPromises()
+
+            expect(wrapper.html()).toContain(expectedNotFoundText)
+        })
+
+        it('Circular Block reference detection (self reference)', () => {
+            const mainID = uuidv4()
+            const mainBlock = createBlockObj({id: mainID, content: `This is myself: ((${mainID}))`})
+            const wrapper = mountBlockEditor({blockObj: mainBlock})
+            expect(wrapper.html()).toContain(`${referenceSubstitution.circularRefDetectionStart}${referenceSubstitution.circularRefDetectionEnd}`)
+        })
+
+        test.each([
+            2,
+            5,
+            10,
+            25,
+            50,
+        ])('Circular Block reference detection with %i Blocks', async (blockCount) => {
+            const mainID = uuidv4()
+            const externalReferencedBlocks = {}
+            let lastBlockID = mainID
+            for (let i = 0; i < blockCount; i++) {
+                const newBlock = createBlockObj({content: `Check out: ((${lastBlockID}))`})
+                externalReferencedBlocks[newBlock.id] = newBlock
+                lastBlockID = newBlock.id
+            }
+            const mainBlock = createBlockObj({id: mainID, content: `Check out: ((${lastBlockID}))`})
+            const wrapper = mountBlockEditor({blockObj: mainBlock})
+
+            expect(wrapper.html()).toContain(`Check out: ${referenceSubstitution.refNotFoundStart}${lastBlockID}${referenceSubstitution.refNotFoundEnd}`)
+            expect(wrapper.emitted()).toHaveProperty('request-block-reference-by-id')
+            wrapper.setProps({blockObj: {...mainBlock, externalReferencedBlocks}})
+
+            await nextTick()
+            await flushPromises()
+
+            expect(wrapper.html()).toContain(`Check out: ${referenceSubstitution.circularRefDetectionStart}${referenceSubstitution.circularRefDetectionEnd}`)
         })
     })
 })

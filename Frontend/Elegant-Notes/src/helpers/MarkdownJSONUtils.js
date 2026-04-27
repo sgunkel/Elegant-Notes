@@ -12,7 +12,7 @@ export default md
 // Since we're using this outside this file now, it might be best to place it somewhere else that
 //     makes sense
 export const extractBlockReferences = (blockText) => {
-    // Note: matches is an array of arrays - nested arrays have one string in them
+    // Note: `matches` is an array of arrays - nested arrays have one string in them
     const matches = [...blockText.matchAll(textConstants.blockRefRegex)]
     const extractedIDs = matches.map(x => x[0].replaceAll(textConstants.blockRefPairRemovalRegex, ''))
     return extractedIDs

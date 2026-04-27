@@ -5,12 +5,18 @@ from fastapi import APIRouter, Depends
 from ..models.user_model import User
 from ..utilities.db_utils import get_current_user
 from ..utilities.user_repo_utils import get_user_repo_path
-from ..models.meta_model import ReferencesRetrievalRequest, ReferenceSearchQuery, BlockSearchResult
+from ..models.meta_model import (
+    ReferencesRetrievalRequest,
+    ReferenceSearchQuery,
+    BlockSearchResult,
+    BulkBlockLoadRequest,
+)
 from ..handlers.meta_handler import (
     handle_get_all_references,
     handle_page_search,
     handle_block_search,
     handle_block_id_assignment,
+    handle_block_id_list_bulk_load,
 )
 
 router = APIRouter(
@@ -38,3 +44,9 @@ def get_block_results_by_text(search_request: ReferenceSearchQuery, current_user
 def assign_id_to_block_search_result(search_result: BlockSearchResult, current_user: Annotated[User, Depends(get_current_user)]):
     user_repo_path = get_user_repo_path(current_user)
     return handle_block_id_assignment(search_result, user_repo_path)
+
+@router.post('/bulk-block-load')
+def bulk_load_blocks_by_ids(request: BulkBlockLoadRequest, current_user: Annotated[User, Depends(get_current_user)]):
+    user_repo_path = get_user_repo_path(current_user)
+    print(request.block_ids)
+    return handle_block_id_list_bulk_load(request, user_repo_path)

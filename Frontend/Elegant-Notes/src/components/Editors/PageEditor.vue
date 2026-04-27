@@ -18,6 +18,7 @@ import { pageUtils } from '@/helpers/pageUtils.js';
 import { notificationUtils } from '@/helpers/notifications.js';
 import { blockUtilities } from '@/helpers/blockUtilities';
 import { json2md } from '@/helpers/MarkdownJSONUtils';
+import { editorConstants } from '@/constants/editorConstants';
 
 export default {
     props: {
@@ -40,6 +41,7 @@ export default {
                 backlinks: [],
                 blockIDs: [],
                 blockIDsInText: {},
+                blockIDsRequested: [], // Queue for grabbing referenced Blocks that reference other Blocks
                 blockReferences: [],
             },
 
@@ -126,6 +128,20 @@ export default {
                 this.updateDocument(blockCopy)
             }
         },
+        handleBlockReferenceRetrieval(blockID) {
+            if (this.linkage.blockIDsRequested.includes(blockID)) {
+                return;
+            }
+
+            this.linkage.blockIDsRequested.push(blockID)
+            this.debounce(() => {
+                const idListCopy = JSON.parse(JSON.stringify(this.linkage.blockIDsRequested))
+                this.linkage.blockIDsRequested = []
+
+                // starting and stopping a progress loading bar before and after this call might be beneficial for UX...
+                metaOperations.bulkBlockLoad(idListCopy, this.onBlockReferenceRequestSuccess, this.onBlockReferenceRequestFailure)
+            }, editorConstants.referenceRetrievalDebounceDelayMS)
+        },
 
         ///
         /// Handlers
@@ -173,12 +189,10 @@ export default {
         onUpdateDocumentFail(errorMsg) {
             notificationUtils.toastError(`Can not update Page: ${errorMsg}`)
         },
-        onReferencesReceivedSuccess(references) {
-            console.log(references)
+        onReferencesReceivedSuccess(references, idsOutsideBlockRequested = false) {
             blockUtilities.extractBlocksFromReferences(references.references)
-                .then(data => blockUtilities.applyReferencesToRootLevelBlocks(this.rootLevelBlocks, this.linkage.backlinks, data))
+                .then(data => blockUtilities.applyReferencesToRootLevelBlocks(this.rootLevelBlocks, this.linkage.backlinks, data, idsOutsideBlockRequested))
                 .catch(errorMsg => notificationUtils.toastError(`Error occurred when retrieving references: ${errorMsg}`))
-            console.log('backlinks', this.linkage.backlinks)
         },
         onReferencesReceivedFail(errorMsg) {
             // TODO how should we actually display the error? It'll most likely be large and
@@ -194,6 +208,19 @@ export default {
         onPageRenameFail(msg) {
             notificationUtils.toastError(msg)
             console.log('Page could not be renamed:', msg)
+        },
+        onBlockReferenceRequestSuccess(data) {
+            if (data.references) {
+                this.onReferencesReceivedSuccess(data, true)
+            }
+            else {
+                notificationUtils.toastError('Could not resolve Block external references. Check console.')
+                console.log('error when receiving block reference request:', data)
+            }
+        },
+        onBlockReferenceRequestFailure(msg) {
+            notificationUtils.toastError('Could not resolve Block references in text. Check console.')
+            console.error(msg)
         },
     }
 }
@@ -229,6 +256,7 @@ export default {
               @update-document="updateDocument"
               @update-root-level="updateRootLevel"
               @assign-block-id="handleBlockRefAssignment"
+              @request-block-by-id="handleBlockReferenceRetrieval"
             />
 
             <div class="pe-back-links-section">
@@ -241,6 +269,7 @@ export default {
                       :block-obj="backlink.blockOfInterest"
                       :editingID="store.editingId"
                       :indention-level="1"
+                      @request-block-reference-by-id="handleBlockReferenceRetrieval"
                     />
                 </div>
             </div>

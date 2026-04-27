@@ -38,5 +38,14 @@ export const metaOperations = {
             .then(response => response.json())
             .then(info => successFn(info))
             .catch(err => failureFn(err))
-    }
+    },
+    bulkBlockLoad: (idList, successFn, failureFn) => {
+        const data = {
+            'block_ids': idList
+        }
+        authUtils.postWithAuth(metaRoutes.bulkBlockLoadRequest, data)
+            .then(response => response.json())
+            .then(data => successFn(data))
+            .catch(err => failureFn(err))
+    },
 }
