@@ -1,6 +1,8 @@
 <script>
 import { Combobox, ComboboxOption, ComboboxOptions, TransitionRoot } from '@headlessui/vue'
 
+const dialogMargin = 8
+
 export default {
     components: {
         Combobox,
@@ -24,19 +26,23 @@ export default {
     computed: {
         styles() {
             if (!this.componentRect) {
-                console.log('Editor to display reference results not found or given') // might turn into a notification with a nicer message later
+                console.log('Editor to display reference results not found or given')
                 return {}
             }
 
-            const margin = 8
-            const hoverBelow = this.componentRect.bottom + 200 < window.innerHeight
-            // TODO change the `px` units to `em` once we go to a production UI
+            const spaceBelow = window.innerHeight - this.componentRect.bottom
+            const spaceAbove = this.componentRect.top
+            const shouldHoverBelow = spaceBelow >= spaceAbove
             this.lastKnownComponentPosition = {
-                position: 'absolute',
-                top: (hoverBelow
-                    ? `${this.componentRect.bottom + margin}px`
-                    : `${this.componentRect.top - margin}px`),
+                position: 'fixed',
+                top: (shouldHoverBelow
+                    ? `${this.componentRect.bottom + dialogMargin}px`
+                    : 'auto'),
+                bottom: (shouldHoverBelow
+                    ? 'auto'
+                    : `${window.innerHeight - this.componentRect.top + dialogMargin}px`),
                 left: `${this.componentRect.left}px`,
+                width: `${this.componentRect.width}px`,
             }
             return this.lastKnownComponentPosition
         },
@@ -76,20 +82,23 @@ export default {
 
 <style>
 .brsd-wrapper {
+    z-index: 1000;
     padding: 0;
 }
 
 .brsd-results-popup {
-  border: 1px solid #ccc;
-  background: white;
+    border: 1px solid #ccc;
+    background: white;
+    max-height: min(40vh, 320px);
+    overflow-y: auto;
 }
 
 .brsd-result-item {
-  padding: 6px;
-  cursor: pointer;
+    padding: 6px;
+    cursor: pointer;
 }
 
 .brsd-result-item .active {
-  background: #eee;
+    background: #eee;
 }
 </style>
