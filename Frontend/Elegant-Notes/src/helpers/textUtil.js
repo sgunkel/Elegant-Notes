@@ -67,7 +67,7 @@ export const textUtil = {
         inputElement.selectionStart = inputElement.selectionEnd = selectionStart + 1
         inputElement.dispatchEvent(new Event('input'))
     },
-    handleAutoPairDeletion(inputElement, event) {
+    handleAutoPairDeletion(inputElement) {
         const { selectionStart, selectionEnd, value } = inputElement
         if (selectionStart !== selectionEnd) {
             return
@@ -76,11 +76,9 @@ export const textUtil = {
         const prev = value[selectionStart - 1]
         const next = value[selectionStart]
         if (pairs[prev] === next) {
-            event.preventDefault()
-            inputElement.value =
-                value.slice(0, selectionStart - 1) +
-                value.slice(selectionStart + 1)
-            inputElement.selectionStart = inputElement.selectionEnd = selectionStart - 1
+            // Remove the character directly behind the cursor
+            inputElement.value = value.slice(0, selectionStart) + value.slice(selectionStart + 1)
+            inputElement.selectionStart = inputElement.selectionEnd = selectionStart
         }
     },
     startedReferenceOpening(inputElement) {
